@@ -4,17 +4,15 @@ from pykinect_azure.k4a import _k4a
 from pykinect_azure.k4a.capture import Capture
 from pykinect_azure.k4a.imu_sample import ImuSample
 from pykinect_azure.k4a.calibration import Calibration
-from pykinect_azure.k4a.configuration import Configuration
 from pykinect_azure.k4arecord.record import Record
 from pykinect_azure.k4a._k4atypes import K4A_WAIT_INFINITE
 
-class Device:
-	calibration = None
-	capture = None
-	imu_sample = None
 
+class Device:
 	def __init__(self, index=0):
-		self._handle = None
+		self.calibration = None
+		self.capture = None
+		self.imu_sample = None
 		self._handle = self.open(index)
 		self.recording = False
 
@@ -25,10 +23,10 @@ class Device:
 		return self._handle
 
 	def is_capture_initialized(self):
-		return Device.capture
+		return self.capture
 
 	def is_imu_sample_initialized(self):
-		return Device.imu_sample
+		return self.imu_sample
 
 	def handle(self):
 		return self._handle
@@ -58,15 +56,15 @@ class Device:
 		capture_handle = self.get_capture(timeout_in_ms)
 
 		if self.is_capture_initialized():
-			Device.capture._handle = capture_handle
+			self.capture._handle = capture_handle
 		else :
-			Device.capture = Capture(capture_handle, Device.calibration)
+			self.capture = Capture(capture_handle, self.calibration)
 		
 		# Write capture if recording
 		if self.recording:
-			self.record.write_capture(Device.capture.handle())
+			self.record.write_capture(self.capture.handle())
 			
-		return Device.capture
+		return self.capture
 
 	def update_imu(self, timeout_in_ms=K4A_WAIT_INFINITE):
 		
@@ -74,18 +72,18 @@ class Device:
 		imu_sample = self.get_imu_sample(timeout_in_ms)
 
 		if self.is_imu_sample_initialized():
-			Device.imu_sample._struct = imu_sample
-			Device.imu_sample.parse_data()
+			self.imu_sample._struct = imu_sample
+			self.imu_sample.parse_data()
 		else :
-			Device.imu_sample = ImuSample(imu_sample)
+			self.imu_sample = ImuSample(imu_sample)
 				
-		return Device.imu_sample
+		return self.imu_sample
 
 	def get_capture(self, timeout_in_ms=_k4a.K4A_WAIT_INFINITE):
 
 		# Release current handle
 		if self.is_capture_initialized():
-			Device.capture.release_handle()
+			self.capture.release_handle()
 
 		capture_handle = _k4a.k4a_capture_t()
 		_k4a.VERIFY(_k4a.k4a_device_get_capture(self._handle, capture_handle, timeout_in_ms),"Get capture failed!")
@@ -101,7 +99,7 @@ class Device:
 		return imu_sample
 
 	def start_cameras(self, device_config):
-		Device.calibration = self.get_calibration(device_config.depth_mode, device_config.color_resolution)
+		self.calibration = self.get_calibration(device_config.depth_mode, device_config.color_resolution)
 
 		_k4a.VERIFY(_k4a.k4a_device_start_cameras(self._handle, device_config.handle()),"Start K4A cameras failed!")
 
@@ -156,4 +154,3 @@ class Device:
 	@staticmethod
 	def device_get_installed_count():
 		return int(_k4a.k4a_device_get_installed_count())
-
