@@ -15,13 +15,14 @@ if __name__ == "__main__":
 
 	# Start device
 	device = pykinect.start_device(config=device_config)
+	calibration = device.calibration
 
 	# Start body tracker
 	tracker_config = pykinect.default_tracker_configuration
 	tracker_config.sensor_orientation = pykinect.K4ABT_SENSOR_ORIENTATION_DEFAULT
 	tracker_config.tracker_processing_mode = pykinect.K4ABT_TRACKER_PROCESSING_MODE_GPU
 	tracker_config.gpu_device_id = 0
-	bodyTracker = pykinect.start_body_tracker(tracker_configuration=tracker_config)
+	bodyTracker = pykinect.start_body_tracker(tracker_configuration=tracker_config, calibration=calibration)
 
 	cv2.namedWindow('Color image with skeleton',cv2.WINDOW_NORMAL)
 	while True:
@@ -30,7 +31,7 @@ if __name__ == "__main__":
 		capture = device.update()
 
 		# Get body tracker frame
-		body_frame = bodyTracker.update()
+		body_frame = bodyTracker.update(capture=capture)
 
 		# Get the color image
 		ret, color_image = capture.get_color_image()
