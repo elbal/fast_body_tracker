@@ -791,9 +791,10 @@ def k4a_transformation_depth_image_to_point_cloud(transformation_handle, depth_i
 
 	return _k4a_transformation_depth_image_to_point_cloud(transformation_handle, depth_image, camera, xyz_image)
 	
+class AzureKinectSensorException(Exception):
+	pass
+
 def VERIFY(result, error):
 	if result != K4A_RESULT_SUCCEEDED:
-		print(error)
-		# traceback.print_stack()
-		sys.exit(1)
+		raise AzureKinectSensorException
 
