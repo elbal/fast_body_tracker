@@ -89,6 +89,9 @@ class Image:
 	def get_stride_bytes(self):
 		return int(_k4a.k4a_image_get_stride_bytes(self._handle))
 
+	def get_device_timestamp_usec(self) -> int:
+		return _k4a.k4a_image_get_device_timestamp_usec(self._handle)
+
 	def to_numpy(self):
 
 		if not self.is_valid():
