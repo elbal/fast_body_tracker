@@ -15,7 +15,7 @@ if __name__ == "__main__":
 	playback_config = playback.get_record_configuration()
 	# print(playback_config)
 
-	playback_calibration = playback.get_calibration()
+	playback_calibration = playback._get_calibration(,
 
 	# Start body tracker
 	bodyTracker = pykinect.start_body_tracker(calibration=playback_calibration)

@@ -28,7 +28,7 @@ class Transformation:
 
 	def depth_image_to_color_camera(self, depth_image):
 
-		if not depth_image.is_valid():
+		if not depth_image._is_valid():
 			return Image()
 
 		transformed_depth_image = Image.create(depth_image.format,
@@ -42,7 +42,7 @@ class Transformation:
 
 	def depth_image_to_color_camera_custom(self, depth_image, custom_image, interpolation = _k4a.K4A_TRANSFORMATION_INTERPOLATION_TYPE_LINEAR):
 		
-		if not depth_image.is_valid() or not custom_image.is_valid():
+		if not depth_image._is_valid() or not custom_image._is_valid():
 			return Image()
 
 		transformed_custom_image = Image.create(custom_image.format,
@@ -65,7 +65,7 @@ class Transformation:
 
 	def color_image_to_depth_camera(self, depth_image, color_image):
 
-		if not depth_image.is_valid() or not color_image.is_valid():
+		if not depth_image._is_valid() or not color_image._is_valid():
 			return Image()
 
 		transformed_color_image = Image.create(_k4a.K4A_IMAGE_FORMAT_COLOR_BGRA32,
@@ -79,7 +79,7 @@ class Transformation:
 
 	def depth_image_to_point_cloud(self, depth_image, calibration_type = _k4a.K4A_CALIBRATION_TYPE_DEPTH):
 
-		if not depth_image.is_valid():
+		if not depth_image._is_valid():
 			return Image()
 
 		xyz_image = Image.create(_k4a.K4A_IMAGE_FORMAT_CUSTOM,

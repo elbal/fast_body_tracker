@@ -7,50 +7,32 @@ from pykinect_azure.utils.postProcessing import smooth_depth_image
 
 
 class Capture:
-
 	def __init__(self, capture_handle, calibration):
-
 		self._handle = capture_handle
 		self.calibration = calibration
 		self.camera_transform = Transformation(calibration)
 
 	def __del__(self):
-		self.reset()
-
-	def is_valid(self):
-		return self._handle
+		if self._handle:
+			_k4a.k4a_capture_release(self._handle)
 
 	def handle(self):
 		return self._handle
 
-	def reset(self):
-		if self.is_valid():
-			self.release_handle()
-			self._handle = None
-
-	def release_handle(self):
-		if self.is_valid():
-			_k4a.k4a_capture_release(self._handle)
-
-	@staticmethod
-	def create():
-
-		handle = _k4a.k4a_capture_t
-		_k4a.VERIFY(Capture._k4a.k4a_capture_create(handle),"Create capture failed!")
-
-		return Capture(handle)
-
 	def get_color_image_object(self):
-		
-		return Image(_k4a.k4a_capture_get_color_image(self._handle))
+		image_handle = _k4a.k4a_capture_get_color_image(self._handle)
+
+		return Image(image_handle)
 
 	def get_depth_image_object(self):
+		image_handle = _k4a.k4a_capture_get_depth_image(self._handle)
 
-		return Image(_k4a.k4a_capture_get_depth_image(self._handle))
+		return Image(image_handle)
 
 	def get_ir_image_object(self):
+		image_handle = _k4a.k4a_capture_get_ir_image(self._handle)
 
-		return Image(_k4a.k4a_capture_get_ir_image(self._handle))
+		return Image(image_handle)
 
 	def get_transformed_depth_object(self):
 		return self.camera_transform.depth_image_to_color_camera(self.get_depth_image_object())
@@ -119,10 +101,3 @@ class Capture:
 		depth_color_image = cv2.applyColorMap(depth_color_image, cv2.COLORMAP_JET)
 
 		return depth_color_image
-
-
-
-
-
-
-
