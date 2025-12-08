@@ -3,6 +3,7 @@ import ctypes
 from pykinect_azure.k4a import _k4a
 from pykinect_azure.k4a.image import Image
 
+
 class Transformation:
 
 	def __init__(self, calibration):

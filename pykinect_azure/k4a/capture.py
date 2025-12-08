@@ -5,6 +5,7 @@ from pykinect_azure.k4a.image import Image
 from pykinect_azure.k4a.transformation import Transformation
 from pykinect_azure.utils.postProcessing import smooth_depth_image
 
+
 class Capture:
 
 	def __init__(self, capture_handle, calibration):

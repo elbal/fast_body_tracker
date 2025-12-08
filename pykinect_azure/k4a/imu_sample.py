@@ -1,5 +1,6 @@
 from pykinect_azure.utils import getdict
 
+
 class ImuSample:
 
 	def __init__(self, imu_sample_struct):

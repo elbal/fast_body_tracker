@@ -3,18 +3,15 @@ import cv2
 
 from pykinect_azure.k4a import _k4a
 
+
 class Image:
-	_handle = None
-	buffer_pointer = None
 
 	def __init__(self, image_handle=None):
-
 		self._handle = image_handle
 		# Get the pointer to the buffer containing the image data
 		self.buffer_pointer = self.get_buffer() if self.is_valid() else None
 
 	def __del__(self):
-
 		self.reset()
 
 	def is_valid(self):
