@@ -1,4 +1,5 @@
 import numpy as np
+from numpy import typing as npt
 import cv2
 
 from pykinect_azure.k4a import _k4a
@@ -14,11 +15,11 @@ _IMAGE_FORMATS_HANDLER = {
 			img.reshape(img.shape[0], -1, 2), cv2.COLOR_YUV2BGR_YUY2)),
 	_k4a.K4A_IMAGE_FORMAT_COLOR_BGRA32: (
 		np.uint8, 1, 4, lambda img: img.reshape(img.shape[0], -1, 4).copy()),
-	_k4a.K4A_IMAGE_FORMAT_DEPTH16:   ("<u2", 1, 1, None),
-	_k4a.K4A_IMAGE_FORMAT_IR16:      ("<u2", 1, 1, None),
-	_k4a.K4A_IMAGE_FORMAT_CUSTOM8:   ("<u1", 1, 1, None),
-	_k4a.K4A_IMAGE_FORMAT_CUSTOM16:  ("<u2", 1, 1, None),
-	_k4a.K4A_IMAGE_FORMAT_CUSTOM:    ("<i2", 1, 1, None)}
+	_k4a.K4A_IMAGE_FORMAT_DEPTH16: ("<u2", 1, 1, None),
+	_k4a.K4A_IMAGE_FORMAT_IR16: ("<u2", 1, 1, None),
+	_k4a.K4A_IMAGE_FORMAT_CUSTOM8: ("<u1", 1, 1, None),
+	_k4a.K4A_IMAGE_FORMAT_CUSTOM16: ("<u2", 1, 1, None),
+	_k4a.K4A_IMAGE_FORMAT_CUSTOM: ("<i2", 1, 1, None)}
 
 
 class WrongImageFormat(Exception):
@@ -26,7 +27,7 @@ class WrongImageFormat(Exception):
 
 
 class Image:
-	def __init__(self, image_handle):
+	def __init__(self, image_handle: _k4a.k4a_image_t):
 		self._handle = image_handle
 		self.buffer_pointer = _k4a.k4a_image_get_buffer(self._handle)
 
@@ -61,12 +62,13 @@ class Image:
 	def device_timestamp_usec(self) -> int:
 		return _k4a.k4a_image_get_device_timestamp_usec(self._handle)
 
-	def to_numpy(self):
+	def to_numpy(self) -> tuple[
+			bool, npt.NDArray[np.uint8 | np.uint16 | np.int16]]:
 		if self.format not in _IMAGE_FORMATS_HANDLER:
 			raise WrongImageFormat("The image format is not supported.")
 		dtype, h_scale, w_scale, process_fn = _IMAGE_FORMATS_HANDLER[self.format]
 		buffer_array = np.ctypeslib.as_array(
-			self.buffer_pointer, shape=(self.size,))
+			_k4a.k4a_image_get_buffer(self._handle), shape=(self.size,))
 		image = np.frombuffer(buffer_array, dtype=dtype)
 		if h_scale is None:
 			return True, process_fn(image)
