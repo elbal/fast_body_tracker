@@ -1,20 +1,15 @@
-import ctypes
-import sys
-import traceback
 from pykinect_azure.k4a._k4atypes import *
 
 k4a_dll = None
 
 
+class AzureKinectSensorException(Exception):
+	pass
+
+
 def setup_library(module_k4a_path):
 	global k4a_dll
-
-	try: 
-		k4a_dll = ctypes.CDLL(module_k4a_path)
-
-	except Exception as e:
-		print("Failed to load library", e)
-		sys.exit(1)
+	k4a_dll = ctypes.CDLL(module_k4a_path)
 
 
 def k4a_device_get_installed_count():
@@ -774,10 +769,6 @@ def k4a_transformation_depth_image_to_point_cloud(
 
 	return _k4a_transformation_depth_image_to_point_cloud(
 		transformation_handle, depth_image, camera, xyz_image)
-
-
-class AzureKinectSensorException(Exception):
-	pass
 
 
 def VERIFY(result, error):
