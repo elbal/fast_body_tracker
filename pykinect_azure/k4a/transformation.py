@@ -33,7 +33,7 @@ class Transformation:
 	def depth_image_to_color_camera(self, depth_image: Image):
 		transformed_depth_image_handle = self._create_image_handle(
 			depth_image.format, self.color_resolution.width,
-			self.color_resolution.height, self.color_resolution.width*2)
+			self.color_resolution.height, stride_bytes=0)
 
 		_k4a.k4a_transformation_depth_image_to_color_camera(
 			self._handle, depth_image.handle(), transformed_depth_image_handle)
@@ -46,15 +46,10 @@ class Transformation:
 			interpolation=_k4a.K4A_TRANSFORMATION_INTERPOLATION_TYPE_LINEAR):
 		transformed_depth_image_handle = self._create_image_handle(
 			_k4a.K4A_IMAGE_FORMAT_DEPTH16, self.color_resolution.width,
-			self.color_resolution.height, self.color_resolution.width * 2)
-
-		stride_bytes = (
-				self.color_resolution.width
-				* self._get_custom_bytes_per_pixel(custom_image))
+			self.color_resolution.height, stride_bytes=0)
 		transformed_custom_image_handle = self._create_image_handle(
 			custom_image.format, self.color_resolution.width,
-			self.color_resolution.height, stride_bytes)
-
+			self.color_resolution.height, stride_bytes=0)
 		invalid_custom_value = ctypes.c_uint32()
 
 		_k4a.k4a_transformation_depth_image_to_color_camera_custom(
@@ -70,7 +65,7 @@ class Transformation:
 			self, depth_image: Image, color_image: Image):
 		transformed_color_image_handle = self._create_image_handle(
 			_k4a.K4A_IMAGE_FORMAT_COLOR_BGRA32, self.depth_resolution.width,
-			self.depth_resolution.height, self.depth_resolution.width*4)
+			self.depth_resolution.height, stride_bytes=0)
 
 		_k4a.k4a_transformation_color_image_to_depth_camera(
 			self._handle, depth_image.handle(), color_image.handle(),
@@ -84,7 +79,7 @@ class Transformation:
 			calibration_type=_k4a.K4A_CALIBRATION_TYPE_DEPTH):
 		xyz_image_handle = self._create_image_handle(
 			_k4a.K4A_IMAGE_FORMAT_CUSTOM, depth_image.width,
-			depth_image.height, depth_image.width*3*2)
+			depth_image.height, stride_bytes=0)
 
 		_k4a.k4a_transformation_depth_image_to_point_cloud(
 			self._handle, depth_image.handle(), calibration_type,
