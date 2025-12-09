@@ -29,7 +29,6 @@ class WrongImageFormat(Exception):
 class Image:
 	def __init__(self, image_handle: _k4a.k4a_image_t):
 		self._handle = image_handle
-		self.buffer_pointer = _k4a.k4a_image_get_buffer(self._handle)
 
 	def __del__(self):
 		if self._handle:
