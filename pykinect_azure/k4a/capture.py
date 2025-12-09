@@ -4,7 +4,6 @@ from numpy import typing as npt
 
 from pykinect_azure.k4a import _k4a
 from pykinect_azure.k4a.image import Image
-from pykinect_azure.k4a.calibration import Calibration
 from pykinect_azure.k4a.transformation import Transformation
 from pykinect_azure.utils.postProcessing import smooth_depth_image
 
@@ -12,10 +11,9 @@ from pykinect_azure.utils.postProcessing import smooth_depth_image
 class Capture:
 	def __init__(
 			self, capture_handle: _k4a.k4a_capture_t,
-			calibration: Calibration):
+			camera_transform: Transformation):
 		self._handle = capture_handle
-		self.calibration = calibration
-		self.camera_transform = Transformation(calibration)
+		self.camera_transform = camera_transform
 
 	def __del__(self):
 		if self._handle:

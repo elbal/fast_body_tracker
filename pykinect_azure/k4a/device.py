@@ -4,6 +4,7 @@ from pykinect_azure.k4a import _k4a
 from pykinect_azure.k4a.capture import Capture
 from pykinect_azure.k4a.imu_sample import ImuSample
 from pykinect_azure.k4a.calibration import Calibration
+from pykinect_azure.k4a.transformation import Transformation
 from pykinect_azure.k4a.configuration import Configuration
 from pykinect_azure.k4arecord.record import Record
 from pykinect_azure.k4a._k4atypes import K4A_WAIT_INFINITE
@@ -16,6 +17,7 @@ class Device:
 		self.version = self._get_version()
 		self.configuration = None
 		self.calibration = None
+		self.transformation = None
 		self.record = None
 		self.recording = False
 
@@ -42,7 +44,7 @@ class Device:
 	def update(self, timeout_in_ms: int = K4A_WAIT_INFINITE) -> Capture:
 		# Get cameras capture
 		capture_handle = self._get_capture(timeout_in_ms)
-		capture = Capture(capture_handle, self.calibration)
+		capture = Capture(capture_handle, self.transformation)
 		if self.recording:
 			self.record.write_capture(capture.handle())
 
@@ -71,6 +73,7 @@ class Device:
 	def _start_cameras(self, device_config: Configuration):
 		self.calibration = self._get_calibration(
 			device_config.depth_mode, device_config.color_resolution)
+		self.transformation = Transformation(self.calibration)
 		result_code = _k4a.k4a_device_start_cameras(
 			self._handle, device_config.handle())
 		if result_code != _k4a.K4A_RESULT_SUCCEEDED:
