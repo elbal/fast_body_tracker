@@ -244,7 +244,7 @@ k4a_calibration_camera_t = _k4a_calibration_camera_t
 
 
 class _k4a_calibration_t(ctypes.Structure):
-	_fields_= [
+	_fields_ = [
 		("depth_camera_calibration", k4a_calibration_camera_t),
 		("color_camera_calibration", k4a_calibration_camera_t),
 		("extrinsics", (k4a_calibration_extrinsics_t * K4A_CALIBRATION_TYPE_NUM) * K4A_CALIBRATION_TYPE_NUM),
@@ -255,7 +255,7 @@ k4a_calibration_t = _k4a_calibration_t
 
 
 class _k4a_version_t(ctypes.Structure):
-	_fields_= [
+	_fields_ = [
 		("major", ctypes.c_uint32),
 		("minor", ctypes.c_uint32),
 		("iteration", ctypes.c_uint32),
@@ -322,7 +322,7 @@ class _xyz(ctypes.Structure):
 
 
 class k4a_float3_t(ctypes.Union):
-	_fields_= [
+	_fields_ = [
 		("xyz", _xyz),
 		("v", ctypes.c_float * 3)
 	]
@@ -341,7 +341,7 @@ class k4a_float3_t(ctypes.Union):
 
 
 class k4a_imu_sample_t(ctypes.Structure):
-	_fields_= [
+	_fields_ = [
 		("temperature", ctypes.c_float),
 		("acc_sample", k4a_float3_t),
 		("acc_timestamp_usec", ctypes.c_uint64),

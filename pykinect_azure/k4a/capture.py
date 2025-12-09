@@ -97,7 +97,7 @@ class Capture:
 
 	@staticmethod
 	def color_depth_image(depth_image):
-		depth_color_image = cv2.convertScaleAbs (depth_image, alpha=0.05)  #alpha is fitted by visual comparison with Azure k4aviewer results 
+		depth_color_image = cv2.convertScaleAbs(depth_image, alpha=0.05)  #alpha is fitted by visual comparison with Azure k4aviewer results
 		depth_color_image = cv2.applyColorMap(depth_color_image, cv2.COLORMAP_JET)
 
 		return depth_color_image

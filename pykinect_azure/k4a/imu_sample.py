@@ -66,5 +66,3 @@ class ImuSample:
 
 	def get_sample(self):
 		return self.imu_sample_dict
-
-
