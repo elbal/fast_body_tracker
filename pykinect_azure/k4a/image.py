@@ -61,8 +61,7 @@ class Image:
 	def device_timestamp_usec(self) -> int:
 		return _k4a.k4a_image_get_device_timestamp_usec(self._handle)
 
-	def to_numpy(self) -> tuple[
-			bool, npt.NDArray[np.uint8 | np.uint16 | np.int16]]:
+	def to_numpy(self) -> npt.NDArray[np.uint8 | np.uint16 | np.int16]:
 		if self.format not in _IMAGE_FORMATS_HANDLER:
 			raise WrongImageFormat("The image format is not supported.")
 		dtype, h_scale, w_scale, process_fn = _IMAGE_FORMATS_HANDLER[self.format]
@@ -70,7 +69,7 @@ class Image:
 			_k4a.k4a_image_get_buffer(self._handle), shape=(self.size,))
 		image = np.frombuffer(buffer_array, dtype=dtype)
 		if h_scale is None:
-			return True, process_fn(image)
+			return process_fn(image)
 
 		rows = int(self.height * h_scale)
 		itemsize = np.dtype(dtype).itemsize
@@ -83,4 +82,4 @@ class Image:
 			image = image.reshape(self.height, self.width)
 			image = image.copy()
 
-		return True, image
+		return image

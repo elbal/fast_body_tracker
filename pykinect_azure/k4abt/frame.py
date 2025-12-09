@@ -8,6 +8,7 @@ from pykinect_azure.k4abt._k4abtTypes import k4abt_body_t, body_colors
 from pykinect_azure.k4a import Image, Capture, Transformation
 from pykinect_azure.k4a._k4atypes import K4A_CALIBRATION_TYPE_DEPTH
 
+
 class Frame:
 	def __init__(self, frame_handle, calibration):
 
@@ -105,7 +106,7 @@ class Frame:
 		return self.get_body_index_map().to_numpy()
 
 	def get_transformed_body_index_map(self):
-		depth_image = self.get_capture().get_depth_image_object()	
+		depth_image = self.get_capture()._get_depth_object()
 		return self.transformation.depth_image_to_color_camera_custom(depth_image, self.get_body_index_map())
 
 	def get_transformed_body_index_map_image(self):
@@ -122,4 +123,3 @@ class Frame:
 		
 	def get_capture(self):
 		return Capture(_k4abt.k4abt_frame_get_capture(self._handle), self.calibration._handle)
-
