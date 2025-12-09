@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 from pykinect_azure.k4a import _k4a
 from pykinect_azure.k4a.image import Image
+from pykinect_azure.k4a.calibration import Calibration
 
 
 @dataclass
@@ -12,7 +13,7 @@ class Resolution:
 
 
 class Transformation:
-	def __init__(self, calibration):
+	def __init__(self, calibration: Calibration):
 		self.calibration = calibration
 		self._handle = _k4a.k4a_transformation_create(calibration.handle())
 		self.color_resolution = Resolution(
@@ -29,7 +30,7 @@ class Transformation:
 	def handle(self):
 		return self._handle
 
-	def depth_image_to_color_camera(self, depth_image):
+	def depth_image_to_color_camera(self, depth_image: Image):
 		transformed_depth_image_handle = self._create_image_handle(
 			depth_image.format, self.color_resolution.width,
 			self.color_resolution.height, self.color_resolution.width*2)
@@ -41,7 +42,7 @@ class Transformation:
 		return transformed_depth_image
 
 	def depth_image_to_color_camera_custom(
-			self, depth_image, custom_image,
+			self, depth_image: Image, custom_image: Image,
 			interpolation=_k4a.K4A_TRANSFORMATION_INTERPOLATION_TYPE_LINEAR):
 		transformed_depth_image_handle = self._create_image_handle(
 			_k4a.K4A_IMAGE_FORMAT_DEPTH16, self.color_resolution.width,
@@ -60,12 +61,13 @@ class Transformation:
 			self._handle, depth_image.handle(), custom_image.handle(),
 			transformed_depth_image_handle, transformed_custom_image_handle,
 			interpolation, invalid_custom_value)
-		transformed_depth_image = Image(transformed_depth_image_handle)
+		_ = Image(transformed_depth_image_handle)
 		transformed_custom_image = Image(transformed_custom_image_handle)
 
 		return transformed_custom_image
 
-	def color_image_to_depth_camera(self, depth_image, color_image):
+	def color_image_to_depth_camera(
+			self, depth_image: Image, color_image: Image):
 		transformed_color_image_handle = self._create_image_handle(
 			_k4a.K4A_IMAGE_FORMAT_COLOR_BGRA32, self.depth_resolution.width,
 			self.depth_resolution.height, self.depth_resolution.width*4)
@@ -78,12 +80,11 @@ class Transformation:
 		return transformed_color_image
 
 	def depth_image_to_point_cloud(
-			self, depth_image,
+			self, depth_image: Image,
 			calibration_type=_k4a.K4A_CALIBRATION_TYPE_DEPTH):
 		xyz_image_handle = self._create_image_handle(
-			_k4a.K4A_IMAGE_FORMAT_CUSTOM, depth_image.get_width_pixels(),
-			depth_image.get_height_pixels(),
-			depth_image.get_width_pixels()*3*2)
+			_k4a.K4A_IMAGE_FORMAT_CUSTOM, depth_image.width,
+			depth_image.height, depth_image.width*3*2)
 
 		_k4a.k4a_transformation_depth_image_to_point_cloud(
 			self._handle, depth_image.handle(), calibration_type,
@@ -93,7 +94,7 @@ class Transformation:
 		return xyz_image
 
 	@staticmethod
-	def _get_custom_bytes_per_pixel(custom_image):
+	def _get_custom_bytes_per_pixel(custom_image: Image):
 		custom_image_format = custom_image.format
 
 		if custom_image_format == _k4a.K4A_IMAGE_FORMAT_CUSTOM8:
