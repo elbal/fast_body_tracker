@@ -104,7 +104,11 @@ class Device:
 
 	def _get_serialnum(self):
 		serial_number_size = ctypes.c_size_t()
-		serial_number = ctypes.create_string_buffer(serial_number_size.value)
+		result_code = _k4a.k4a_device_get_serialnum(
+			self._handle, None, serial_number_size)
+
+		serial_number = ctypes.create_string_buffer(
+			serial_number_size.value)
 		result_code = _k4a.k4a_device_get_serialnum(
 			self._handle, serial_number, serial_number_size)
 		if result_code != _k4a.K4A_RESULT_SUCCEEDED:
