@@ -263,15 +263,6 @@ def k4a_image_get_stride_bytes(image_handle):
 	return _k4a_image_get_stride_bytes(image_handle)	
 
 
-def k4a_image_get_timestamp_usec(image_handle):
-	#K4A_DEPRECATED_EXPORT uint64_t k4a_image_get_timestamp_usec(k4a_image_t image_handle);
-	_k4a_image_get_timestamp_usec = k4a_dll.k4a_image_get_timestamp_usec
-	_k4a_image_get_timestamp_usec.restype = ctypes.c_uint64
-	_k4a_image_get_timestamp_usec.argtypes = (k4a_image_t, )
-
-	return _k4a_image_get_timestamp_usec(image_handle)		
-
-
 def k4a_image_get_device_timestamp_usec(image_handle):
 	#K4A_EXPORT uint64_t k4a_image_get_device_timestamp_usec(k4a_image_t image_handle);
 	_k4a_image_get_device_timestamp_usec = (
@@ -330,15 +321,6 @@ def k4a_image_set_device_timestamp_usec(image_handle, timestamp_usec):
 	_k4a_image_set_device_timestamp_usec(image_handle, timestamp_usec)		
 
 
-def k4a_image_set_timestamp_usec(image_handle, timestamp_usec):
-	#K4A_DEPRECATED_EXPORT void k4a_image_set_timestamp_usec(k4a_image_t image_handle, uint64_t timestamp_usec);
-	_k4a_image_set_timestamp_usec = k4a_dll.k4a_image_set_timestamp_usec
-	_k4a_image_set_timestamp_usec.restype = None
-	_k4a_image_set_timestamp_usec.argtypes = (k4a_image_t, ctypes.c_uint64,)
-
-	_k4a_image_set_timestamp_usec(image_handle, timestamp_usec)
-
-
 def k4a_image_set_system_timestamp_nsec(image_handle, timestamp_nsec):
 	#K4A_EXPORT void k4a_image_set_system_timestamp_nsec(k4a_image_t image_handle, uint64_t timestamp_nsec);
 	_k4a_image_set_system_timestamp_nsec = (
@@ -348,6 +330,7 @@ def k4a_image_set_system_timestamp_nsec(image_handle, timestamp_nsec):
 
 	_k4a_image_set_system_timestamp_nsec(image_handle, timestamp_nsec)
 
+
 def k4a_image_set_exposure_usec(image_handle, exposure_usec):
 	#K4A_EXPORT void k4a_image_set_exposure_usec(k4a_image_t image_handle, uint64_t exposure_usec);
 	_k4a_image_set_exposure_usec = k4a_dll.k4a_image_set_exposure_usec
@@ -355,16 +338,6 @@ def k4a_image_set_exposure_usec(image_handle, exposure_usec):
 	_k4a_image_set_exposure_usec.argtypes = (k4a_image_t, ctypes.c_uint64,)
 
 	_k4a_image_set_exposure_usec(image_handle, exposure_usec)
-
-
-def k4a_image_set_exposure_time_usec(image_handle, exposure_usec):
-	#K4A_DEPRECATED_EXPORT void k4a_image_set_exposure_time_usec(k4a_image_t image_handle, uint64_t exposure_usec);
-	_k4a_image_set_exposure_time_usec = k4a_dll.k4a_image_set_exposure_time_usec
-	_k4a_image_set_exposure_time_usec.restype = None
-	_k4a_image_set_exposure_time_usec.argtypes = (
-		k4a_image_t, ctypes.c_uint64,)
-
-	_k4a_image_set_exposure_time_usec(image_handle, exposure_usec)
 
 
 def k4a_image_set_white_balance(image_handle, white_balance):
