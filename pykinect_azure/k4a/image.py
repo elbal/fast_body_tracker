@@ -5,20 +5,20 @@ from pykinect_azure.k4a import _k4a
 
 _IMAGE_FORMATS_HANDLER = {
 	_k4a.K4A_IMAGE_FORMAT_COLOR_MJPG: (
-		np.uint8, None, lambda img: cv2.imdecode(img, -1)),
+		np.uint8, None, None, lambda img: cv2.imdecode(img, -1)),
 	_k4a.K4A_IMAGE_FORMAT_COLOR_NV12: (
-		np.uint8, lambda h, w: (int(h*1.5), w),
+		np.uint8, 1.5, 1,
 		lambda img: cv2.cvtColor(img, cv2.COLOR_YUV2BGR_NV12)),
 	_k4a.K4A_IMAGE_FORMAT_COLOR_YUY2: (
-		np.uint8, lambda h, w: (h, w, 2),
-		lambda img: cv2.cvtColor(img, cv2.COLOR_YUV2BGR_YUY2)),
+		np.uint8, 1, 2, lambda img: cv2.cvtColor(
+			img.reshape(img.shape[0], -1, 2), cv2.COLOR_YUV2BGR_YUY2)),
 	_k4a.K4A_IMAGE_FORMAT_COLOR_BGRA32: (
-		np.uint8, lambda h, w: (h, w, 4), None),
-	_k4a.K4A_IMAGE_FORMAT_DEPTH16: ("<u2", lambda h, w: (h, w), None),
-	_k4a.K4A_IMAGE_FORMAT_IR16: ("<u2", lambda h, w: (h, w), None),
-	_k4a.K4A_IMAGE_FORMAT_CUSTOM8: ("<u1", lambda h, w: (h, w), None),
-	_k4a.K4A_IMAGE_FORMAT_CUSTOM16: ("<u2", lambda h, w: (h, w), None),
-	_k4a.K4A_IMAGE_FORMAT_CUSTOM: ("<i2", None, None)}
+		np.uint8, 1, 4, lambda img: img.reshape(img.shape[0], -1, 4).copy()),
+	_k4a.K4A_IMAGE_FORMAT_DEPTH16:   ("<u2", 1, 1, None),
+	_k4a.K4A_IMAGE_FORMAT_IR16:      ("<u2", 1, 1, None),
+	_k4a.K4A_IMAGE_FORMAT_CUSTOM8:   ("<u1", 1, 1, None),
+	_k4a.K4A_IMAGE_FORMAT_CUSTOM16:  ("<u2", 1, 1, None),
+	_k4a.K4A_IMAGE_FORMAT_CUSTOM:    ("<i2", 1, 1, None)}
 
 
 class WrongImageFormat(Exception):
@@ -64,14 +64,22 @@ class Image:
 	def to_numpy(self):
 		if self.format not in _IMAGE_FORMATS_HANDLER:
 			raise WrongImageFormat("The image format is not supported.")
-
-		dtype, shape_fn, process_fn = _IMAGE_FORMATS_HANDLER[self.format]
+		dtype, h_scale, w_scale, process_fn = _IMAGE_FORMATS_HANDLER[self.format]
 		buffer_array = np.ctypeslib.as_array(
 			self.buffer_pointer, shape=(self.size,))
-		image = np.frombuffer(buffer_array, dtype=dtype).copy()
-		if shape_fn:
-			image = image.reshape(shape_fn(self.height, self.width))
+		image = np.frombuffer(buffer_array, dtype=dtype)
+		if h_scale is None:
+			return True, process_fn(image)
+
+		rows = int(self.height * h_scale)
+		itemsize = np.dtype(dtype).itemsize
+		stride_elements = self.stride // itemsize
+		image = image.reshape(rows, stride_elements)
+		image = image[:, :int(self.width * w_scale)]
 		if process_fn:
 			image = process_fn(image)
+		else:
+			image = image.reshape(self.height, self.width)
+			image = image.copy()
 
 		return True, image
