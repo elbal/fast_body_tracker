@@ -27,10 +27,10 @@ class Transformation:
 		if self._handle:
 			_k4a.k4a_transformation_destroy(self._handle)
 
-	def handle(self):
+	def handle(self) -> _k4a.k4a_transformation_t:
 		return self._handle
 
-	def depth_image_to_color_camera(self, depth_image: Image):
+	def depth_image_to_color_camera(self, depth_image: Image) -> Image:
 		transformed_depth_image_handle = self._create_image_handle(
 			depth_image.format, self.color_resolution.width,
 			self.color_resolution.height, stride_bytes=0)
@@ -43,7 +43,7 @@ class Transformation:
 
 	def depth_image_to_color_camera_custom(
 			self, depth_image: Image, custom_image: Image,
-			interpolation=_k4a.K4A_TRANSFORMATION_INTERPOLATION_TYPE_LINEAR):
+			interpolation=_k4a.K4A_TRANSFORMATION_INTERPOLATION_TYPE_LINEAR) -> Image:
 		transformed_depth_image_handle = self._create_image_handle(
 			_k4a.K4A_IMAGE_FORMAT_DEPTH16, self.color_resolution.width,
 			self.color_resolution.height, stride_bytes=0)
@@ -62,7 +62,7 @@ class Transformation:
 		return transformed_custom_image
 
 	def color_image_to_depth_camera(
-			self, depth_image: Image, color_image: Image):
+			self, depth_image: Image, color_image: Image) -> Image:
 		transformed_color_image_handle = self._create_image_handle(
 			_k4a.K4A_IMAGE_FORMAT_COLOR_BGRA32, self.depth_resolution.width,
 			self.depth_resolution.height, stride_bytes=0)
@@ -76,7 +76,7 @@ class Transformation:
 
 	def depth_image_to_point_cloud(
 			self, depth_image: Image,
-			calibration_type=_k4a.K4A_CALIBRATION_TYPE_DEPTH):
+			calibration_type=_k4a.K4A_CALIBRATION_TYPE_DEPTH) -> Image:
 		xyz_image_handle = self._create_image_handle(
 			_k4a.K4A_IMAGE_FORMAT_CUSTOM, depth_image.width,
 			depth_image.height, stride_bytes=0)
@@ -89,17 +89,16 @@ class Transformation:
 		return xyz_image
 
 	@staticmethod
-	def _get_custom_bytes_per_pixel(custom_image: Image):
-		custom_image_format = custom_image.format
-
-		if custom_image_format == _k4a.K4A_IMAGE_FORMAT_CUSTOM8:
+	def _get_custom_bytes_per_pixel(custom_image: Image) -> int:
+		if custom_image.format == _k4a.K4A_IMAGE_FORMAT_CUSTOM8:
 			return 1
 		else:
 			return 2
 
 	@staticmethod
 	def _create_image_handle(
-			image_format, width_pixels, height_pixels, stride_bytes):
+			image_format: int, width_pixels: int, height_pixels: int,
+			stride_bytes: int) -> _k4a.k4a_image_t:
 		image_handle = _k4a.k4a_image_t()
 		result_code = _k4a.k4a_image_create(
 			image_format, width_pixels, height_pixels, stride_bytes,
