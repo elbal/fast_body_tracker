@@ -61,7 +61,7 @@ class Configuration:
 			f"when the color or depth camera's are in use.\n\n")
 		return message
 
-	def _on_value_change(self) -> _k4a._k4a_device_configuration_t:
+	def _on_value_change(self) -> _k4a.k4a_device_configuration_t:
 		configuration_handle = _k4a.k4a_device_configuration_t(
 			self.color_format, self.color_resolution, self.depth_mode,
 			self.camera_fps, self.synchronized_images_only,
