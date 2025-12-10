@@ -24,7 +24,7 @@ class Configuration:
 			if name != "_handle":
 				if int(self.__dict__[name]) != value:
 					self.__dict__[name] = value
-					self._on_value_change()
+					self._handle = self._on_value_change()
 			else:
 				self.__dict__[name] = value
 		else:
