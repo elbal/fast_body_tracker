@@ -1,5 +1,6 @@
 import ctypes
 
+
 # K4A_DECLARE_HANDLE(k4a_device_t);
 class _handle_k4a_device_t(ctypes.Structure):
 	 _fields_= [

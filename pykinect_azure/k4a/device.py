@@ -1,13 +1,13 @@
 import ctypes
 
 from pykinect_azure.k4a import _k4a
+from pykinect_azure.k4a._k4atypes import K4A_WAIT_INFINITE
 from pykinect_azure.k4a.capture import Capture
 from pykinect_azure.k4a.imu_sample import ImuSample
 from pykinect_azure.k4a.calibration import Calibration
 from pykinect_azure.k4a.transformation import Transformation
 from pykinect_azure.k4a.configuration import Configuration
 from pykinect_azure.k4arecord.record import Record
-from pykinect_azure.k4a._k4atypes import K4A_WAIT_INFINITE
 
 
 class Device:
