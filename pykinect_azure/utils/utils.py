@@ -1,7 +1,7 @@
-import numpy as np
 import platform
 import sys
 import os
+
 
 def get_k4a_module_path():
 
@@ -28,6 +28,7 @@ def get_k4a_module_path():
     # Otherwise return the x86 Windows version
     return sdk_dir + '\\sdk\\windows-desktop\\x86\\release\\bin\\k4a.dll'
 
+
 def get_k4abt_module_path():
 
     # Check if running in Jetson Nano or similar ARM chips
@@ -42,8 +43,10 @@ def get_k4abt_module_path():
     # Otherwise return the Windows version
     return 'C:\\Program Files\\Azure Kinect Body Tracking SDK\\sdk\\windows-desktop\\amd64\\release\\bin\\k4abt.dll'
 
+
 def get_k4arecord_module_path(modulePath):
     return modulePath.replace('k4a', 'k4arecord')
+
 
 def get_k4abt_lite_model_path():
 
@@ -53,20 +56,3 @@ def get_k4abt_lite_model_path():
 
     # Return the Windows version
     return 'C:/Program Files/Azure Kinect Body Tracking SDK/sdk/windows-desktop/amd64/release/bin/dnn_model_2_0_lite_op11.onnx'.encode('utf-8')
-
-def getdict(struct):
-	result = {}
-	for field, _ in struct._fields_:
-		value = getattr(struct, field)
-		# if the type is not a primitive and it evaluates to False ...
-		if (type(value) not in [int, float, bool]) and not bool(value):
-			# it's a null pointer
-			value = None
-		elif hasattr(value, "_length_") and hasattr(value, "_type_"):
-			# Probably an array
-			value = np.array(list(value))
-		elif hasattr(value, "_fields_"):
-			# Probably another struct
-			value = getdict(value)
-		result[field] = value
-	return result
