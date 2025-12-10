@@ -5,3 +5,5 @@ from .device import Device
 from .image import Image
 from .imu_sample import ImuSample
 from .transformation import Transformation
+from .visualizer import PointCloudVisualizer
+

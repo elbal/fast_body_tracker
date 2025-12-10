@@ -19,7 +19,8 @@ _IMAGE_FORMATS_HANDLER = {
 	_k4a.K4A_IMAGE_FORMAT_IR16: ("<u2", 1, 1, None),
 	_k4a.K4A_IMAGE_FORMAT_CUSTOM8: ("<u1", 1, 1, None),
 	_k4a.K4A_IMAGE_FORMAT_CUSTOM16: ("<u2", 1, 1, None),
-	_k4a.K4A_IMAGE_FORMAT_CUSTOM: ("<i2", 1, 1, None)}
+	_k4a.K4A_IMAGE_FORMAT_CUSTOM: (
+		"<i2", 1, 3, lambda img: img.reshape((-1, 3)))}
 
 
 class WrongImageFormat(Exception):

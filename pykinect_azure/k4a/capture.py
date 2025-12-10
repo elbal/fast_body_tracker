@@ -47,7 +47,7 @@ class Capture:
 			self, maximum_hole_size: int = 10) -> npt.NDArray[np.uint16]:
 		depth_image = self.get_depth_image()
 
-		return smooth_depth_image(depth_image, maximum_hole_size)
+		return self._smooth_depth_image(depth_image, maximum_hole_size)
 
 	def get_smooth_colored_depth_image(
 			self, maximum_hole_size=10) -> npt.NDArray[np.uint8]:

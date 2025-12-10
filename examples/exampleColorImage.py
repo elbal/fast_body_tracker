@@ -2,7 +2,8 @@ import cv2
 
 import pykinect_azure as pykinect
 
-if __name__ == "__main__":
+
+def main():
 	# Initialize the library.
 	# If the library is not found add the library path as argument
 	pykinect.initialize_libraries()
@@ -13,12 +14,16 @@ if __name__ == "__main__":
 	# print(device_config)
 
 	device = pykinect.start_device(config=device_config)
-	cv2.namedWindow('Color Image', cv2.WINDOW_NORMAL)
+	cv2.namedWindow("Color Image", cv2.WINDOW_NORMAL)
 	while True:
 		capture = device.update()
 		color_image = capture.get_color_image()
 		cv2.imshow("Color Image", color_image)
-		
+
 		# Press q key to stop
-		if cv2.waitKey(1) == ord('q'): 
+		if cv2.waitKey(1) == ord("q"):
 			break
+
+
+if __name__ == "__main__":
+	main()

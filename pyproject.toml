@@ -8,6 +8,10 @@ authors = ["Ibai Gorordo"]
 python = "^3.9"
 opencv-python = "^4.5.5"
 numpy = "^1.22.2"
+pyqt6 = "^6.10.1"
+vispy = "^0.15.2"
+pynput = "^1.8.1"
+
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
