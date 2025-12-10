@@ -7,10 +7,10 @@ from pykinect_azure.k4a import PointCloudVisualizer
 
 def main():
 	# Initialize the library.
-	# If the library is not found, add the library path as argument
+	# If the library is not found, add the library path as argument.
 	pykinect.initialize_libraries()
 
-	# Modify camera configuration
+	# Modify camera configuration.
 	device_config = pykinect.default_configuration
 	device_config.color_format = pykinect.K4A_IMAGE_FORMAT_COLOR_BGRA32
 	device_config.color_resolution = pykinect.K4A_COLOR_RESOLUTION_720P

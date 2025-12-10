@@ -1,8 +1,9 @@
 import numpy as np
 import cv2
 from vispy.scene import SceneCanvas
-from vispy.scene.visuals import Markers
+from vispy.scene.visuals import Markers, Text
 from vispy.scene.cameras import TurntableCamera
+from time import perf_counter
 
 
 class PointCloudVisualizer:
@@ -18,6 +19,13 @@ class PointCloudVisualizer:
 		self.flip_vector = np.array([1, -1, -1], dtype=np.float32)
 		self.scatter = Markers(parent=self.view.scene)
 
+		self.fps_text = Text(
+			"FPS: 0", color="white", font_size=12, bold=True,
+			parent=self.canvas.scene, anchor_x="left", anchor_y="top",
+			pos=(10, self.canvas.size[1] - 10))
+		self._last_time = perf_counter()
+		self._frames = 0
+
 		self.first_valid_frame = True
 		self.initial_center = np.array(
 			[0, 0, 1.5], dtype=np.float32)
@@ -28,6 +36,7 @@ class PointCloudVisualizer:
 		self.update(points_3d, rgb_image)
 
 	def update(self, points_3d, rgb_image=None):
+		self._update_fps()
 		if points_3d is None or len(points_3d) == 0:
 			return
 		if rgb_image is not None:
@@ -60,3 +69,13 @@ class PointCloudVisualizer:
 			pos=points_filtered, face_color=colors_filtered, size=2,
 			edge_width=0)
 		self.canvas.app.process_events()
+
+	def _update_fps(self):
+		self._frames += 1
+		now = perf_counter()
+		dt = now - self._last_time
+		if dt >= 1.0:
+			fps = self._frames / dt
+			self.fps_text.text = f"FPS: {fps:.1f}"
+			self._frames = 0
+			self._last_time = now

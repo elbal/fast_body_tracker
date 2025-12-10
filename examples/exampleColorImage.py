@@ -5,12 +5,14 @@ import pykinect_azure as pykinect
 
 def main():
 	# Initialize the library.
-	# If the library is not found add the library path as argument
+	# If the library is not found, add the library path as argument.
 	pykinect.initialize_libraries()
 
-	# Modify camera configuration
+	# Modify camera configuration.
 	device_config = pykinect.default_configuration
+	device_config.color_format = pykinect.K4A_IMAGE_FORMAT_COLOR_BGRA32
 	device_config.color_resolution = pykinect.K4A_COLOR_RESOLUTION_1080P
+	device_config.depth_mode = pykinect.K4A_DEPTH_MODE_OFF
 	# print(device_config)
 
 	device = pykinect.start_device(config=device_config)
@@ -20,7 +22,7 @@ def main():
 		color_image = capture.get_color_image()
 		cv2.imshow("Color Image", color_image)
 
-		# Press q key to stop
+		# Press q key to stop.
 		if cv2.waitKey(1) == ord("q"):
 			break
 
