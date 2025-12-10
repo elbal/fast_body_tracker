@@ -5,7 +5,6 @@ from numpy import typing as npt
 from pykinect_azure.k4a import _k4a
 from pykinect_azure.k4a.image import Image
 from pykinect_azure.k4a.transformation import Transformation
-from pykinect_azure.utils.postProcessing import smooth_depth_image
 
 
 class Capture:
@@ -119,3 +118,31 @@ class Capture:
 			depth_color_image, cv2.COLORMAP_CIVIDIS)
 
 		return depth_color_image
+
+	@staticmethod
+	def _smooth_depth_image(depth_image, max_hole_size=10):
+		"""
+		Smoothes depth image by filling the holes using inpainting method.
+
+		Parameters:
+		depth_image(Image): Original depth image
+		max_hole_size(int): Maximum size of hole to fill
+
+		Returns:
+		Image: Smoothed depth image
+
+		Remarks:
+		Bigger maximum hole size will try to fill bigger holes but requires longer
+		time
+		"""
+		mask = np.zeros(depth_image.shape, dtype=np.uint8)
+		mask[depth_image == 0] = 1
+
+		kernel = np.ones((max_hole_size, max_hole_size), np.uint8)
+		erosion = cv2.erode(mask, kernel, iterations=1)
+		mask = mask - erosion
+
+		smoothed_depth_image = cv2.inpaint(
+			depth_image.astype(np.uint16), mask, max_hole_size, cv2.INPAINT_NS)
+
+		return smoothed_depth_image
