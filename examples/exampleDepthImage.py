@@ -16,7 +16,7 @@ def main():
 	# print(device_config)
 
 	device = pykinect.start_device(config=device_config)
-	cv2.namedWindow('Depth Image',cv2.WINDOW_NORMAL)
+	cv2.namedWindow("Depth Image",cv2.WINDOW_NORMAL)
 	FRAME_WINDOW = 600
 	frame_count = 0
 	start_time = time.perf_counter()
@@ -24,7 +24,7 @@ def main():
 		frame_count += 1
 		capture = device.update()
 		depth_image = capture.get_colored_depth_image()
-		cv2.imshow('Depth Image', depth_image)
+		cv2.imshow("Depth Image", depth_image)
 
 		if frame_count >= FRAME_WINDOW:
 			end_time = time.perf_counter()
@@ -35,9 +35,9 @@ def main():
 			frame_count = 0
 
 		# Press q key to stop.
-		if cv2.waitKey(1) == ord('q'):  
+		if cv2.waitKey(1) == ord("q"):
 			break
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 	main()
