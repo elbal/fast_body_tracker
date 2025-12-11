@@ -42,6 +42,5 @@ def main():
 	del capture
 	del device
 
-
 if __name__ == "__main__":
 	main()
