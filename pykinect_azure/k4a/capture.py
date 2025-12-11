@@ -115,7 +115,7 @@ class Capture:
 			depth_image: npt.NDArray[np.uint16 | np.int16]) -> npt.NDArray[np.uint8]:
 		depth_color_image = cv2.convertScaleAbs(depth_image, alpha=0.05)
 		depth_color_image = cv2.applyColorMap(
-			depth_color_image, cv2.COLORMAP_CIVIDIS)
+			depth_color_image, cv2.COLORMAP_TURBO)
 
 		return depth_color_image
 
