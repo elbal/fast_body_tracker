@@ -40,6 +40,9 @@ def main():
 		color_image = capture.get_color_image()
 
 		visualizer(points, color_image)
+	# Manually deallocate the memory.
+	del capture
+	del device
 
 
 if __name__ == "__main__":

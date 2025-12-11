@@ -42,6 +42,9 @@ def main():
 		# Press q key to stop.
 		if cv2.waitKey(1) == ord("q"):
 			break
+	# Manually deallocate the memory.
+	del capture
+	del device
 
 
 if __name__ == "__main__":
