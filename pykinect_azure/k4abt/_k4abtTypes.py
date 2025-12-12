@@ -1,7 +1,7 @@
 import ctypes
 import numpy as np
 
-from pykinect_azure.k4a._k4atypes import k4a_float3_t, k4a_float2_t
+from pykinect_azure.k4a.k4atypes import k4a_float3_t, k4a_float2_t
 
 # K4A_DECLARE_HANDLE(k4abt_tracker_t);
 class _handle_k4abt_tracker_t(ctypes.Structure):

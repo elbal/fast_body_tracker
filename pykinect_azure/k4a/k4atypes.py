@@ -1,5 +1,22 @@
 import ctypes
+from pykinect_azure.k4a.kasettings import *
 
+k4a_result_t = ctypes.c_int
+k4a_buffer_result_t = ctypes.c_int
+k4a_wait_result_t = ctypes.c_int
+k4a_log_level_t = ctypes.c_int
+k4a_depth_mode_t = ctypes.c_int
+k4a_color_resolution_t = ctypes.c_int
+k4a_image_format_t = ctypes.c_int
+k4a_transformation_interpolation_type_t = ctypes.c_int
+k4a_fps_t = ctypes.c_int
+k4a_color_control_command_t = ctypes.c_int
+k4a_color_control_mode_t = ctypes.c_int
+k4a_wired_sync_mode_t = ctypes.c_int
+k4a_calibration_type_t = ctypes.c_int
+k4a_calibration_model_type_t = ctypes.c_int
+k4a_firmware_build_t = ctypes.c_int
+k4a_firmware_signature_t = ctypes.c_int
 
 # K4A_DECLARE_HANDLE(k4a_device_t);
 class _handle_k4a_device_t(ctypes.Structure):
@@ -28,127 +45,6 @@ class _handle_k4a_transformation_t(ctypes.Structure):
 		("_rsvd", ctypes.c_size_t),
 	]
 k4a_transformation_t = ctypes.POINTER(_handle_k4a_transformation_t)
-
-#class k4a_result_t(CtypeIntEnum):
-k4a_result_t = ctypes.c_int
-K4A_RESULT_SUCCEEDED = 0
-K4A_RESULT_FAILED = 1
-
-#class k4a_buffer_result_t(CtypeIntEnum):
-k4a_buffer_result_t = ctypes.c_int
-K4A_BUFFER_RESULT_SUCCEEDED = 0
-K4A_BUFFER_RESULT_FAILED = 1
-K4A_BUFFER_RESULT_TOO_SMALL = 2
-
-#class k4a_wait_result_t(CtypeIntEnum):
-k4a_wait_result_t = ctypes.c_int
-K4A_WAIT_RESULT_SUCCEEDED = 0
-K4A_WAIT_RESULT_FAILED = 1
-K4A_WAIT_RESULT_TIMEOUT = 2
-
-#class k4a_log_level_t(CtypeIntEnum):
-k4a_log_level_t = ctypes.c_int
-K4A_LOG_LEVEL_CRITICAL = 0
-K4A_LOG_LEVEL_ERROR = 1
-K4A_LOG_LEVEL_WARNING = 2
-K4A_LOG_LEVEL_INFO = 3
-K4A_LOG_LEVEL_TRACE = 4
-K4A_LOG_LEVEL_OFF = 5
-
-#class k4a_depth_mode_t(CtypeIntEnum):
-k4a_depth_mode_t = ctypes.c_int
-K4A_DEPTH_MODE_OFF = 0
-K4A_DEPTH_MODE_NFOV_2X2BINNED = 1
-K4A_DEPTH_MODE_NFOV_UNBINNED = 2
-K4A_DEPTH_MODE_WFOV_2X2BINNED = 3
-K4A_DEPTH_MODE_WFOV_UNBINNED = 4
-K4A_DEPTH_MODE_PASSIVE_IR = 5
-
-#class k4a_color_resolution_t(CtypeIntEnum):
-k4a_color_resolution_t = ctypes.c_int
-K4A_COLOR_RESOLUTION_OFF = 0
-K4A_COLOR_RESOLUTION_720P = 1
-K4A_COLOR_RESOLUTION_1080P = 2
-K4A_COLOR_RESOLUTION_1440P = 3
-K4A_COLOR_RESOLUTION_1536P = 4
-K4A_COLOR_RESOLUTION_2160P = 5
-K4A_COLOR_RESOLUTION_3072P = 6
-
-#class k4a_image_format_t(CtypeIntEnum):
-k4a_image_format_t = ctypes.c_int
-K4A_IMAGE_FORMAT_COLOR_MJPG = 0
-K4A_IMAGE_FORMAT_COLOR_NV12 = 1
-K4A_IMAGE_FORMAT_COLOR_YUY2 = 2
-K4A_IMAGE_FORMAT_COLOR_BGRA32 = 3
-K4A_IMAGE_FORMAT_DEPTH16 = 4
-K4A_IMAGE_FORMAT_IR16 = 5
-K4A_IMAGE_FORMAT_CUSTOM8 = 6
-K4A_IMAGE_FORMAT_CUSTOM16 = 7
-K4A_IMAGE_FORMAT_CUSTOM = 8
-
-#class k4a_transformation_interpolation_type_t(CtypeIntEnum):
-k4a_transformation_interpolation_type_t = ctypes.c_int
-K4A_TRANSFORMATION_INTERPOLATION_TYPE_NEAREST = 0
-K4A_TRANSFORMATION_INTERPOLATION_TYPE_LINEAR = 1
-
-#class k4a_fps_t(CtypeIntEnum):
-k4a_fps_t = ctypes.c_int
-K4A_FRAMES_PER_SECOND_5 = 0
-K4A_FRAMES_PER_SECOND_15 = 1
-K4A_FRAMES_PER_SECOND_30 = 2
-
-#class k4a_color_control_command_t(CtypeIntEnum):
-k4a_color_control_command_t = ctypes.c_int
-K4A_COLOR_CONTROL_EXPOSURE_TIME_ABSOLUTE = 0
-K4A_COLOR_CONTROL_AUTO_EXPOSURE_PRIORITY = 1
-K4A_COLOR_CONTROL_BRIGHTNESS = 2
-K4A_COLOR_CONTROL_CONTRAST = 3
-K4A_COLOR_CONTROL_SATURATION = 4
-K4A_COLOR_CONTROL_SHARPNESS = 5
-K4A_COLOR_CONTROL_WHITEBALANCE = 6
-K4A_COLOR_CONTROL_BACKLIGHT_COMPENSATION = 7
-K4A_COLOR_CONTROL_GAIN = 8
-K4A_COLOR_CONTROL_POWERLINE_FREQUENCY = 9
-
-#class k4a_color_control_mode_t(CtypeIntEnum):
-k4a_color_control_mode_t = ctypes.c_int
-K4A_COLOR_CONTROL_MODE_AUTO = 0
-K4A_COLOR_CONTROL_MODE_MANUAL = 1
-
-	
-#class k4a_wired_sync_mode_t(CtypeIntEnum):
-k4a_wired_sync_mode_t = ctypes.c_int
-K4A_WIRED_SYNC_MODE_STANDALONE = 0
-K4A_WIRED_SYNC_MODE_MASTER = 1
-K4A_WIRED_SYNC_MODE_SUBORDINATE = 2
-
-#class k4a_calibration_type_t(CtypeIntEnum):
-k4a_calibration_type_t = ctypes.c_int
-K4A_CALIBRATION_TYPE_UNKNOWN = -1
-K4A_CALIBRATION_TYPE_DEPTH = 0
-K4A_CALIBRATION_TYPE_COLOR = 1
-K4A_CALIBRATION_TYPE_GYRO = 2
-K4A_CALIBRATION_TYPE_ACCEL = 3
-K4A_CALIBRATION_TYPE_NUM = 4
-
-#class k4a_calibration_model_type_t(CtypeIntEnum):
-k4a_calibration_model_type_t = ctypes.c_int
-K4A_CALIBRATION_LENS_DISTORTION_MODEL_UNKNOWN = 0
-K4A_CALIBRATION_LENS_DISTORTION_MODEL_THETA = 1
-K4A_CALIBRATION_LENS_DISTORTION_MODEL_POLYNOMIAL_3K = 2
-K4A_CALIBRATION_LENS_DISTORTION_MODEL_RATIONAL_6KT = 3
-K4A_CALIBRATION_LENS_DISTORTION_MODEL_BROWN_CONRADY = 4
-
-#class k4a_firmware_build_t(CtypeIntEnum):
-k4a_firmware_build_t = ctypes.c_int
-K4A_FIRMWARE_BUILD_RELEASE = 0
-K4A_FIRMWARE_BUILD_DEBUG = 1
-
-#class k4a_firmware_signature_t(CtypeIntEnum):
-k4a_firmware_signature_t = ctypes.c_int
-K4A_FIRMWARE_SIGNATURE_MSFT = 0
-K4A_FIRMWARE_SIGNATURE_TEST = 1
-K4A_FIRMWARE_SIGNATURE_UNSIGNED = 2
 
 #define K4A_SUCCEEDED(_result_) (_result_ == K4A_RESULT_SUCCEEDED)
 def K4A_SUCCEEDED(result):
@@ -351,7 +247,3 @@ class k4a_imu_sample_t(ctypes.Structure):
 	]
 
 IMU_SAMPLE_SIZE = ctypes.sizeof(k4a_imu_sample_t)
-
-
-K4A_DEVICE_DEFAULT = 0
-K4A_WAIT_INFINITE = -1

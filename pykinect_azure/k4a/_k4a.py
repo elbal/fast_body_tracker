@@ -1,4 +1,4 @@
-from pykinect_azure.k4a._k4atypes import *
+from pykinect_azure.k4a.k4atypes import *
 
 k4a_dll = None
 

@@ -6,7 +6,7 @@ from pykinect_azure.k4abt.body import Body
 from pykinect_azure.k4abt.body2d import Body2d
 from pykinect_azure.k4abt._k4abtTypes import k4abt_body_t, body_colors
 from pykinect_azure.k4a import Image, Capture, Transformation
-from pykinect_azure.k4a._k4atypes import K4A_CALIBRATION_TYPE_DEPTH
+from pykinect_azure.k4a.k4atypes import K4A_CALIBRATION_TYPE_DEPTH
 
 
 class Frame:

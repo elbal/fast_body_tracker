@@ -4,7 +4,7 @@ import sys
 import traceback
 
 from pykinect_azure.k4abt._k4abtTypes import *
-from pykinect_azure.k4a._k4atypes import k4a_calibration_t, k4a_capture_t, k4a_image_t
+from pykinect_azure.k4a.k4atypes import k4a_calibration_t, k4a_capture_t, k4a_image_t
 
 k4abt_dll = None
 
