@@ -12,7 +12,6 @@ pyqt6 = "^6.10.1"
 vispy = "^0.15.2"
 pynput = "^1.8.1"
 
-
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"

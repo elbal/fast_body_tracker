@@ -3,6 +3,7 @@ import numpy as np
 from pykinect_azure.k4abt._k4abtTypes import K4ABT_JOINT_COUNT
 from pykinect_azure.k4abt.joint import Joint
 
+
 class Body:
 	def __init__(self, skeleton_handle):
 
@@ -44,5 +45,3 @@ class Body:
 		message = '\nBody:\n' +''.join(f'{joint.__str__()}' for joint in self.joints)
 
 		return message
-
-

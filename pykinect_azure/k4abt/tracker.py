@@ -4,11 +4,9 @@ from pykinect_azure.k4abt._k4abtTypes import k4abt_tracker_default_configuration
 from pykinect_azure.k4a.device import Device
 from pykinect_azure.k4a.k4atypes import K4A_WAIT_INFINITE
 
+
 class Tracker:
-	_handle = None
-
 	def __init__(self, calibration, model_type, tracker_configuration):
-
 		self.tracker_configuration = tracker_configuration
 		self.calibration = calibration
 		self._handle = self.create(model_type)
@@ -81,5 +79,3 @@ class Tracker:
 			tracker_config.model_path = get_k4abt_lite_model_path()
 
 		return tracker_config
-
-

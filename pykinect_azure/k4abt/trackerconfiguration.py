@@ -50,7 +50,6 @@ class TrackerConfiguration:
         self.model_path = tracker_configuration_handle.model_path
 
     def on_value_change(self):
-        handle = None
         if hasattr(self, "_model_path"):
             handle = _k4abt.k4abt_tracker_configuration_t(self.sensor_orientation,
                                                                 self.tracker_processing_mode,
