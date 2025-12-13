@@ -98,20 +98,3 @@ def _get_k4abt_module_path():
 
 def _get_k4arecord_module_path(module_path):
     return module_path.replace("k4a", "k4arecord")
-
-
-def _get_k4abt_lite_model_path():
-    system = platform.system().lower()
-
-    if system == "linux":
-        raise OSError(f"Unsupported operating system: {system}")
-
-    if system == "windows":
-        base = Path(os.environ.get("PROGRAMFILES", r"C:\Program Files"))
-        full_path = (
-                base / "Azure Kinect Body Tracking SDK" / "sdk"
-                / "windows-desktop" / "amd64" / "release" / "bin"
-                / "dnn_model_2_0_lite_op11.onnx")
-        return str(full_path).encode('utf-8')
-
-    raise OSError(f"Unsupported operating system: {system}")
