@@ -42,7 +42,6 @@ class Device:
 			self.recording = True
 
 	def update(self, timeout_in_ms: int = K4A_WAIT_INFINITE) -> Capture:
-		# Get cameras capture
 		capture_handle = self._get_capture(timeout_in_ms)
 		capture = Capture(capture_handle, self.transformation)
 		if self.recording:
@@ -51,7 +50,6 @@ class Device:
 		return capture
 
 	def update_imu(self, timeout_in_ms: int = K4A_WAIT_INFINITE) -> ImuSample:
-		# Get imu sample
 		imu_sample_handle = self._get_imu_sample(timeout_in_ms)
 		imu_sample = ImuSample(imu_sample_handle)
 

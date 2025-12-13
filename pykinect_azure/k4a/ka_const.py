@@ -1,7 +1,3 @@
-import ctypes
-
-from ._k4atypes import k4a_imu_sample_t
-
 K4A_RESULT_SUCCEEDED = 0
 K4A_RESULT_FAILED = 1
 
@@ -92,5 +88,3 @@ K4A_FIRMWARE_SIGNATURE_UNSIGNED = 2
 
 K4A_DEVICE_DEFAULT = 0
 K4A_WAIT_INFINITE = -1
-
-IMU_SAMPLE_SIZE = ctypes.sizeof(k4a_imu_sample_t)
