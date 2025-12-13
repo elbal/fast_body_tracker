@@ -1,9 +1,9 @@
 import numpy as np
 import cv2
+from time import perf_counter
 from vispy.scene import SceneCanvas
 from vispy.scene.visuals import Markers, Text
 from vispy.scene.cameras import TurntableCamera
-from time import perf_counter
 
 
 class PointCloudVisualizer:

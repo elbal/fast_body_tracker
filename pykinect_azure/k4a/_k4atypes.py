@@ -1,5 +1,4 @@
-import ctypes
-from pykinect_azure.k4a.kasettings import *
+from pykinect_azure.k4a.ka_const import *
 
 k4a_result_t = ctypes.c_int
 k4a_buffer_result_t = ctypes.c_int
@@ -245,5 +244,3 @@ class k4a_imu_sample_t(ctypes.Structure):
 		("gyro_sample", k4a_float3_t),
 		("gyro_timestamp_usec", ctypes.c_uint64),
 	]
-
-IMU_SAMPLE_SIZE = ctypes.sizeof(k4a_imu_sample_t)

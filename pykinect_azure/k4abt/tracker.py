@@ -1,8 +1,9 @@
 from pykinect_azure.k4abt import _k4abt
 from pykinect_azure.k4abt.frame import Frame
-from pykinect_azure.k4abt._k4abtTypes import k4abt_tracker_default_configuration
+from pykinect_azure.k4abt._k4abtTypes import (
+	k4abt_tracker_default_configuration)
 from pykinect_azure.k4a.device import Device
-from pykinect_azure.k4a.k4atypes import K4A_WAIT_INFINITE
+from pykinect_azure.k4a._k4atypes import K4A_WAIT_INFINITE
 
 
 class Tracker:

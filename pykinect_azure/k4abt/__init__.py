@@ -5,5 +5,5 @@ from .joint import Joint
 from .joint2d import Joint2d
 from .tracker import Tracker
 from .trackerconfiguration import (
-	TrackerConfiguration, default_tracker_configuration)
-
+	default_tracker_configuration, TrackerConfiguration)
+from .kabt_const import *

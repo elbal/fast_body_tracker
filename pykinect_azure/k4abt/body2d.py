@@ -4,7 +4,7 @@ import cv2
 from pykinect_azure.k4abt.joint2d import Joint2d
 from pykinect_azure.k4abt._k4abtTypes import K4ABT_JOINT_COUNT, K4ABT_SEGMENT_PAIRS
 from pykinect_azure.k4abt._k4abtTypes import k4abt_skeleton2D_t, k4abt_body2D_t, body_colors
-from pykinect_azure.k4a.k4atypes import K4A_CALIBRATION_TYPE_DEPTH
+from pykinect_azure.k4a._k4atypes import K4A_CALIBRATION_TYPE_DEPTH
 
 
 class Body2d:
