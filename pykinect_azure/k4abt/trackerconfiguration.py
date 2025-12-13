@@ -17,7 +17,7 @@ class TrackerConfiguration:
 
         if hasattr(self, name):
             if name != "_handle":
-                if int(self.__dict__[name]) != value:
+                if self.__dict__[name] != value:
                     self.__dict__[name] = value
                     self.on_value_change()
             else:
@@ -40,6 +40,7 @@ class TrackerConfiguration:
         self.sensor_orientation = _k4abt.K4ABT_SENSOR_ORIENTATION_DEFAULT
         self.tracker_processing_mode = _k4abt.K4ABT_TRACKER_PROCESSING_MODE_GPU
         self.gpu_device_id = 0
+        self.model_path = None
 
         self.on_value_change()
 
@@ -50,7 +51,7 @@ class TrackerConfiguration:
         self.model_path = tracker_configuration_handle.model_path
 
     def on_value_change(self):
-        if hasattr(self, "_model_path"):
+        if hasattr(self, "model_path") and self.model_path is not None:
             handle = _k4abt.k4abt_tracker_configuration_t(self.sensor_orientation,
                                                                 self.tracker_processing_mode,
                                                                 self.gpu_device_id,
