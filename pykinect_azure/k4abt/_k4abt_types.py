@@ -42,7 +42,6 @@ k4abt_tracker_default_configuration.gpu_device_id = 0
 
 
 class _k4abt_joint_t(ctypes.Structure):
-	_pack_ = 1
 	_fields_ = [
 		("position", k4a_float3), ("orientation", k4abt_float4),
 		("confidence_level", ctypes.c_int)]

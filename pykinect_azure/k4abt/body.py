@@ -5,11 +5,10 @@ from pykinect_azure.k4abt._k4abt_types import k4abt_body_t
 from pykinect_azure.k4abt.kabt_const import K4ABT_JOINT_COUNT
 
 JOINT_DTYPE = np.dtype([
-	("position", np.float32, 3),
+    ("position", np.float32, 3),
 	("orientation", np.float32, 4),
-	("confidence", np.int32)
+	("confidence", np.int32, 1)
 	])
-
 
 class Body:
 	def __init__(self, body_handle: k4abt_body_t):
