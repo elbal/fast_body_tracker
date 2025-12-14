@@ -1,7 +1,7 @@
 import ctypes
 
 from pykinect_azure.k4abt.kabt_const import *
-from pykinect_azure.k4a._k4a_types import k4a_float2_t, k4a_float3
+from pykinect_azure.k4a._k4a_types import k4a_float3
 
 k4abt_result_t = ctypes.c_int
 k4abt_float4 = ctypes.c_float * 4
@@ -56,45 +56,3 @@ class k4abt_skeleton_t(ctypes.Structure):
 
 class k4abt_body_t(ctypes.Structure):
 	_fields_ = [("id", ctypes.c_uint32), ("skeleton", k4abt_skeleton_t)]
-
-
-class _k4abt_joint2D_t(ctypes.Structure):
-	_fields_ = [("position", k4a_float2_t), ("confidence_level", ctypes.c_int)]
-
-	def __init__(self, position=(0, 0), confidence_level=0):
-		super().__init__()
-		self.position = k4a_float2_t(position)
-		self.confidence_level = confidence_level
-
-	def __iter__(self):
-		return {
-			"position": self.position.__iter__(),
-			"confidence_level": self.confidence_level}
-
-
-k4abt_joint2D_t = _k4abt_joint2D_t
-
-
-class k4abt_skeleton2D_t(ctypes.Structure):
-	_fields_ = [("joints2D", _k4abt_joint2D_t * K4ABT_JOINT_COUNT)]
-
-	def __init__(
-			self,
-			joints=(_k4abt_joint2D_t() for i in range(K4ABT_JOINT_COUNT))):
-		super().__init__()
-		self.joints2D = (_k4abt_joint2D_t * K4ABT_JOINT_COUNT)(*joints)
-
-	def __iter__(self):
-		return {"joints2D": [joint.__iter__() for joint in self.joints2D]}
-
-
-class k4abt_body2D_t(ctypes.Structure):
-	_fields_ = [("id", ctypes.c_uint32), ("skeleton", k4abt_skeleton2D_t)]
-
-	def __init__(self, id=0, skeleton=k4abt_skeleton2D_t()):
-		super().__init__()
-		self.id = id
-		self.skeleton = skeleton
-
-	def __iter__(self):
-		return {"id": self.id, "skeleton": self.skeleton.__iter__()}

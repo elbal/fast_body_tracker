@@ -18,9 +18,6 @@ class Body:
 			self._handle.skeleton.joints, shape=(K4ABT_JOINT_COUNT,))
 		self.joints_data = joints.view(JOINT_DTYPE)
 
-	def handle(self):
-		return self._handle
-
 	@property
 	def positions(self) -> npt.NDArray[np.float32]:
 		return self.joints_data["position"]
