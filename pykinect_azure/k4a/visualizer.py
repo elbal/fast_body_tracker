@@ -39,18 +39,18 @@ class PointCloudVisualizer:
 		self._update_fps()
 		if points_3d is None or len(points_3d) == 0:
 			return
-		if rgb_image is not None:
-			colors = cv2.cvtColor(rgb_image, cv2.COLOR_BGRA2RGB).reshape(-1, 3)
-			colors = colors.astype(np.float32) / 255.0
-		else:
-			colors = (1, 1, 1)
-
 		points_3d = points_3d * self.flip_vector
 		valid_mask = ~np.all(points_3d == 0, axis=1)
 		points_filtered = points_3d[valid_mask]
-		colors_filtered = colors[valid_mask]
 		if points_filtered.size == 0:
 			return
+
+		if rgb_image is not None:
+			colors = cv2.cvtColor(rgb_image, cv2.COLOR_BGRA2RGB).reshape(-1, 3)
+			colors = colors.astype(np.float32) / 255.0
+			colors_filtered = colors[valid_mask]
+		else:
+			colors_filtered = (1, 1, 1)
 
 		if self.first_valid_frame:
 			min_xyz = points_filtered.min(axis=0)

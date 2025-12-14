@@ -1,44 +1,48 @@
-import cv2
+import threading
+from pynput import keyboard
 
 import pykinect_azure as pykinect
-from utils import Open3dVisualizer
+from pykinect_azure.k4a import PointCloudVisualizer
 
-if __name__ == "__main__":
 
-	# Initialize the library, if the library is not found, add the library path as argument
+def main():
+	# Initialize the library.
+	# If the library is not found, add the library path as argument.
 	pykinect.initialize_libraries()
 
-	# Modify camera configuration
+	# Modify camera configuration.
 	device_config = pykinect.default_configuration
-	device_config.color_resolution = pykinect.K4A_COLOR_RESOLUTION_OFF
-	device_config.depth_mode = pykinect.K4A_DEPTH_MODE_WFOV_2X2BINNED
+	device_config.color_format = pykinect.K4A_IMAGE_FORMAT_COLOR_BGRA32
+	device_config.color_resolution = pykinect.K4A_COLOR_RESOLUTION_720P
+	device_config.depth_mode = pykinect.K4A_DEPTH_MODE_NFOV_2X2BINNED
+	device_config.synchronized_images_only = True
+	# print(device_config)
 
-	# Start device
 	device = pykinect.start_device(config=device_config)
+	visualizer = PointCloudVisualizer()
+	stop_event = threading.Event()
 
-	# Initialize the Open3d visualizer
-	open3dVisualizer = Open3dVisualizer()
+	def on_press(key):
+		# Press q key to stop.
+		try:
+			if getattr(key, "char", None) == "q":
+				stop_event.set()
+				return False
+		except AttributeError:
+			pass
 
-	cv2.namedWindow('Depth Image',cv2.WINDOW_NORMAL)
-	while True:
+	listener = keyboard.Listener(on_press=on_press)
+	listener.start()
 
-		# Get capture
+	while not stop_event.is_set():
 		capture = device.update()
+		points = capture.get_transformed_pointcloud()
 
-		# Get the color depth image from the capture
-		ret_depth, depth_image = capture.get_colored_depth_image()
+		visualizer(points)
+	# Manually deallocate the memory.
+	del capture
+	del device
 
-		# Get the 3D point cloud
-		ret_points, points = capture.get_pointcloud()
 
-		if not ret_depth or not ret_points:
-			continue
-
-		open3dVisualizer(points)	
-
-		# Plot the image
-		cv2.imshow('Depth Image',depth_image)
-		
-		# Press q key to stop
-		if cv2.waitKey(1) == ord('q'):  
-			break
+if __name__ == "__main__":
+	main()
