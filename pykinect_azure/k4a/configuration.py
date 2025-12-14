@@ -19,7 +19,6 @@ class Configuration:
 		return self._handle
 
 	def __setattr__(self, name, value):
-		"""Run when configuration parameters are changed"""
 		if hasattr(self, name):
 			if name != "_handle":
 				if self.__dict__[name] != value:
@@ -31,7 +30,6 @@ class Configuration:
 			self.__dict__[name] = value
 
 	def __str__(self):
-		"""Print the current settings and a short explanation"""
 		message = (
 			"Device configuration: \n"
 			f"\tcolor_format: {self.color_format} "

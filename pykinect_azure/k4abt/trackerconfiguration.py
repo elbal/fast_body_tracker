@@ -1,66 +1,85 @@
+import platform
+from pathlib import Path
+import os
+
 from pykinect_azure.k4abt import _k4abt
 
 
-class TrackerConfiguration:
+class UnknownModelType(Exception):
+    """
+    Exception raised when trying to use an unknown model.
+    """
 
-    def __init__(self, configuration_handle=None):
-        if configuration_handle:
-            self._handle = configuration_handle
-        else:
-            self.create()
+
+class TrackerConfiguration:
+    def __init__(self):
+        self.sensor_orientation = _k4abt.K4ABT_SENSOR_ORIENTATION_DEFAULT
+        self.tracker_processing_mode = _k4abt.K4ABT_TRACKER_PROCESSING_MODE_GPU
+        self.gpu_device_id = 0
+        self.model_type = _k4abt.K4ABT_DEFAULT_MODEL
+
+        self._handle = self._on_value_change()
 
     def handle(self):
         return self._handle
 
     def __setattr__(self, name, value):
-        """Run on change function when configuration parameters are changed"""
-
         if hasattr(self, name):
             if name != "_handle":
                 if self.__dict__[name] != value:
                     self.__dict__[name] = value
-                    self.on_value_change()
+                    self._handle = self._on_value_change()
             else:
                 self.__dict__[name] = value
         else:
             self.__dict__[name] = value
 
     def __str__(self):
-        """Print the current settings and a short explanation"""
         message = (
             "Device configuration: \n"
-            f"\tsensor_orientation: {self.sensor_orientation} \n\t(0: Default, 1: Clockwise90, 2: CounterClockwise90, 3: Flip180)\n\n"
-            f"\ttracker_processing_mode: {self.tracker_processing_mode} \n\t(0:Gpu, 1:Cpu, 2:CUDA, 3:TensorRT, 4:DirectML)\n\n"
+            f"\tsensor_orientation: {self.sensor_orientation} "
+            f"\n\t(0: Default, 1: Clockwise90, 2: CounterClockwise90, "
+            f"3: Flip180)\n\n"
+            f"\ttracker_processing_mode: {self.tracker_processing_mode} "
+            f"\n\t(0:Gpu, 1:Cpu, 2:CUDA, 3:TensorRT, 4:DirectML)\n\n"
             f"\tgpu_device_id: {self.gpu_device_id}\n\n"
-            f"\tmodel_path: {self.model_path if hasattr(self, 'model_path') else 'Default Model'}"
-        )
+            f"\tmodel_path: {
+                self.model_path if hasattr(self, 'model_path')
+                else 'Default Model'}")
+
         return message
 
-    def create(self):
-        self.sensor_orientation = _k4abt.K4ABT_SENSOR_ORIENTATION_DEFAULT
-        self.tracker_processing_mode = _k4abt.K4ABT_TRACKER_PROCESSING_MODE_GPU
-        self.gpu_device_id = 0
-        self.model_path = None
-
-        self.on_value_change()
-
-    def create_from_handle(self, tracker_configuration_handle):
-        self.sensor_orientation = tracker_configuration_handle.sensor_orientation
-        self.tracker_processing_mode = tracker_configuration_handle.tracker_processing_mode
-        self.gpu_device_id = tracker_configuration_handle.gpu_device_id
-        self.model_path = tracker_configuration_handle.model_path
-
-    def on_value_change(self):
-        if hasattr(self, "model_path") and self.model_path is not None:
-            handle = _k4abt.k4abt_tracker_configuration_t(self.sensor_orientation,
-                                                                self.tracker_processing_mode,
-                                                                self.gpu_device_id,
-                                                                self.model_path)
+    def _on_value_change(self):
+        if self.model_type == _k4abt.K4ABT_DEFAULT_MODEL:
+            configuration_handle = _k4abt.k4abt_tracker_configuration_t(
+                self.sensor_orientation, self.tracker_processing_mode,
+                self.gpu_device_id)
+        elif self.model_type == _k4abt.K4ABT_LITE_MODEL:
+            model_path = self._get_k4abt_lite_model_path()
+            configuration_handle = _k4abt.k4abt_tracker_configuration_t(
+                self.sensor_orientation, self.tracker_processing_mode,
+                self.gpu_device_id, model_path)
         else:
-            handle = _k4abt.k4abt_tracker_configuration_t(self.sensor_orientation,
-                                                                self.tracker_processing_mode,
-                                                                self.gpu_device_id)
-        self._handle = handle
+            raise UnknownModelType("Unknown model type.")
+
+        return configuration_handle
+
+    @staticmethod
+    def _get_k4abt_lite_model_path():
+        system = platform.system().lower()
+
+        if system == "linux":
+            raise OSError(f"Unsupported operating system: {system}")
+
+        if system == "windows":
+            base = Path(os.environ.get("PROGRAMFILES", r"C:\Program Files"))
+            full_path = (
+                    base / "Azure Kinect Body Tracking SDK" / "sdk"
+                    / "windows-desktop" / "amd64" / "release" / "bin"
+                    / "dnn_model_2_0_lite_op11.onnx")
+            return str(full_path).encode('utf-8')
+
+        raise OSError(f"Unsupported operating system: {system}")
 
 
 default_tracker_configuration = TrackerConfiguration()
