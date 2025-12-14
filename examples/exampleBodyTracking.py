@@ -15,13 +15,11 @@ if __name__ == "__main__":
 
 	# Start device
 	device = pykinect.start_device(config=device_config)
+	calibration = device.calibration
 
 	# Start body tracker
 	tracker_config = pykinect.default_tracker_configuration
-	tracker_config.sensor_orientation = pykinect.K4ABT_SENSOR_ORIENTATION_DEFAULT
-	tracker_config.tracker_processing_mode = pykinect.K4ABT_TRACKER_PROCESSING_MODE_GPU
-	tracker_config.gpu_device_id = 0
-	bodyTracker = pykinect.start_body_tracker(tracker_configuration=tracker_config)
+	tracker = pykinect.start_body_tracker(calibration=calibration, tracker_configuration=tracker_config)
 
 	cv2.namedWindow('Depth image with skeleton',cv2.WINDOW_NORMAL)
 	while True:
@@ -30,22 +28,19 @@ if __name__ == "__main__":
 		capture = device.update()
 
 		# Get body tracker frame
-		body_frame = bodyTracker.update()
+		frame = tracker.update(capture=capture)
 
 		# Get the color depth image from the capture
-		ret_depth, depth_color_image = capture.get_colored_depth_image()
+		depth_color_image = capture.get_colored_depth_image()
 
 		# Get the colored body segmentation
-		ret_color, body_image_color = body_frame.get_segmentation_image()
+		body_image_color = frame.get_segmentation_image()
 
-		if not ret_depth or not ret_color:
-			continue
-			
 		# Combine both images
 		combined_image = cv2.addWeighted(depth_color_image, 0.6, body_image_color, 0.4, 0)
 
 		# Draw the skeletons
-		combined_image = body_frame.draw_bodies(combined_image)
+		combined_image = frame.draw_bodies(combined_image)
 
 		# Overlay body segmentation on depth image
 		cv2.imshow('Depth image with skeleton',combined_image)

@@ -37,7 +37,9 @@ class Tracker:
 			raise _k4abt.AzureKinectBodyTrackerException(
 				"Body tracker get body frame failed.")
 
-		return Frame(frame_handle, self.transformation)
+		return Frame(
+			frame_handle=frame_handle, calibration=self.calibration,
+			transformation=self.transformation)
 
 	def set_temporal_smoothing(self, smoothing_factor: float):
 		_k4abt.k4abt_tracker_set_temporal_smoothing(

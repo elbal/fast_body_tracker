@@ -6,13 +6,16 @@ from pykinect_azure.k4a._k4atypes import K4A_CALIBRATION_TYPE_DEPTH
 from pykinect_azure.k4abt.body import Body
 from pykinect_azure.k4abt.body2d import Body2d
 from pykinect_azure.k4abt._k4abtTypes import k4abt_body_t, body_colors
-from pykinect_azure.k4a import Image, Capture, Transformation
+from pykinect_azure.k4a import Capture, Calibration, Image, Transformation
 
 
 class Frame:
-	def __init__(self, frame_handle, transformation: Transformation):
+	def __init__(
+			self, frame_handle, calibration: Calibration,
+			transformation: Transformation):
 		if frame_handle:
 			self._handle = frame_handle
+			self.calibration = calibration
 			self.transformation = transformation
 
 	def __del__(self):
@@ -81,8 +84,8 @@ class Frame:
 		return transformed_body_index_map.to_numpy()
 
 	def get_segmentation_image(self):
-		ret, body_index_map = self.get_body_index_map_image()
-		return ret, np.dstack([cv2.LUT(body_index_map, body_colors[:,i]) for i in range(3)])
+		body_index_map = self.get_body_index_map_image()
+		return np.dstack([cv2.LUT(body_index_map, body_colors[:,i]) for i in range(3)])
 
 	def get_transformed_segmentation_image(self):
 		ret, transformed_body_index_map = self.get_transformed_body_index_map_image()
