@@ -2,11 +2,11 @@ import ctypes
 import numpy as np
 import cv2
 
+from pykinect_azure.k4a._k4a_types import K4A_CALIBRATION_TYPE_DEPTH
 from pykinect_azure.k4abt import _k4abt
-from pykinect_azure.k4a._k4atypes import K4A_CALIBRATION_TYPE_DEPTH
 from pykinect_azure.k4abt.body import Body
 from pykinect_azure.k4abt.body2d import Body2d
-from pykinect_azure.k4abt._k4abtTypes import k4abt_body_t, body_colors
+from pykinect_azure.k4abt._k4abt_types import body_colors, k4abt_body_t
 from pykinect_azure.k4a import Capture, Calibration, Image, Transformation
 
 
@@ -51,21 +51,30 @@ class Frame:
 
 	def get_body2d(
 			self, body_idx: int = 0,
-			dest_camera: int = K4A_CALIBRATION_TYPE_DEPTH):
-		body_handle = self.get_body(body_idx).handle()
+			target_camera: int = K4A_CALIBRATION_TYPE_DEPTH) -> Body2d:
+		body_handle = k4abt_body_t()
+		body_handle.id = _k4abt.k4abt_frame_get_body_id(self._handle, body_idx)
+		body_handle.skeleton = self.get_body_skeleton(body_idx)
 
-		return Body2d.create(body_handle, self.calibration, body_idx, dest_camera)
+		return Body2d(body_handle, self.calibration, target_camera)
 
-	def draw_bodies(self, destination_image, dest_camera = K4A_CALIBRATION_TYPE_DEPTH, only_segments = False):
+	def draw_bodies(
+			self, destination_image: Image,
+			dest_camera: int = K4A_CALIBRATION_TYPE_DEPTH,
+			only_segments: bool = False):
 		num_bodies = self.get_num_bodies()
-
 		for body_id in range(num_bodies):
-			destination_image = self.draw_body2d(destination_image, body_id, dest_camera, only_segments)
+			destination_image = self.draw_body2d(
+				destination_image, body_id, dest_camera, only_segments)
 
 		return destination_image
 
-	def draw_body2d(self, destination_image, bodyIdx = 0, dest_camera = K4A_CALIBRATION_TYPE_DEPTH, only_segments = False):
-		return self.get_body2d(bodyIdx, dest_camera).draw(destination_image, only_segments)
+	def draw_body2d(
+			self, destination_image: Image, body_idx: int = 0,
+			dest_camera: int = K4A_CALIBRATION_TYPE_DEPTH,
+			only_segments: bool = False):
+		return self.get_body2d(
+			body_idx, dest_camera).draw(destination_image, only_segments)
 
 	def get_device_timestamp_usec(self):
 		return _k4abt.k4abt_frame_get_device_timestamp_usec(self._handle)

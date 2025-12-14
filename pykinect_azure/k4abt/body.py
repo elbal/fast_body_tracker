@@ -1,7 +1,7 @@
 import numpy as np
 from numpy import typing as npt
 
-from pykinect_azure.k4abt._k4abtTypes import k4abt_body_t
+from pykinect_azure.k4abt._k4abt_types import k4abt_body_t
 from pykinect_azure.k4abt.kabt_const import K4ABT_JOINT_COUNT
 
 JOINT_DTYPE = np.dtype([
@@ -14,9 +14,9 @@ JOINT_DTYPE = np.dtype([
 class Body:
 	def __init__(self, body_handle: k4abt_body_t):
 		self._handle = body_handle
-		self.joints_data = np.frombuffer(
-			self._handle.skeleton.joints, dtype=JOINT_DTYPE,
-			count=K4ABT_JOINT_COUNT)
+		joints = np.ctypeslib.as_array(
+			self._handle.skeleton.joints, shape=(K4ABT_JOINT_COUNT,))
+		self.joints_data = joints.view(JOINT_DTYPE)
 
 	def handle(self):
 		return self._handle

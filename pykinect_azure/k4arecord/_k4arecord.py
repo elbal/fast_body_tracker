@@ -3,7 +3,7 @@ import sys
 import traceback
 
 from ._k4arecordTypes import *
-from ..k4a._k4atypes import *
+from ..k4a._k4a_types import *
 
 record_dll = None
 
