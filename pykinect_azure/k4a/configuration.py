@@ -18,7 +18,7 @@ class Configuration:
 	def handle(self):
 		return self._handle
 
-	def __setattr__(self, name, value):
+	def __setattr__(self, name: str, value: int | bool):
 		if hasattr(self, name):
 			if name != "_handle":
 				if self.__dict__[name] != value:
