@@ -1,3 +1,5 @@
+import ctypes
+
 from pykinect_azure.k4a import Capture, Calibration, Transformation
 from pykinect_azure.k4abt import _k4abt
 from pykinect_azure.k4a._k4atypes import K4A_WAIT_INFINITE
@@ -32,7 +34,7 @@ class Tracker:
 
 		frame_handle = _k4abt.k4abt_frame_t()
 		result_code = _k4abt.k4abt_tracker_pop_result(
-			self._handle, frame_handle, timeout_in_ms)
+			self._handle, ctypes.byref(frame_handle), timeout_in_ms)
 		if result_code != _k4abt.K4ABT_RESULT_SUCCEEDED:
 			raise _k4abt.AzureKinectBodyTrackerException(
 				"Body tracker get body frame failed.")
@@ -48,8 +50,8 @@ class Tracker:
 	def _create_handle(self) -> _k4abt.k4abt_tracker_t:
 		tracker_handle = _k4abt.k4abt_tracker_t()
 		result_code = _k4abt.k4abt_tracker_create(
-			self.calibration.handle(), self.tracker_configuration.handle(),
-			tracker_handle)
+			ctypes.byref(self.calibration.handle()),
+			self.tracker_configuration.handle(), ctypes.byref(tracker_handle))
 		if result_code != _k4abt.K4ABT_RESULT_SUCCEEDED:
 			raise _k4abt.AzureKinectBodyTrackerException(
 				"Body tracker initialization failed.")

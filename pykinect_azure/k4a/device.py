@@ -62,7 +62,7 @@ class Device:
 	@staticmethod
 	def _create_handle(index: int) -> _k4a.k4a_device_t:
 		device_handle = _k4a.k4a_device_t()
-		result_code = _k4a.k4a_device_open(index, device_handle)
+		result_code = _k4a.k4a_device_open(index, ctypes.byref(device_handle))
 		if result_code != _k4a.K4A_RESULT_SUCCEEDED:
 			raise _k4a.AzureKinectSensorException("Open K4A Device failed")
 
@@ -73,7 +73,7 @@ class Device:
 			device_config.depth_mode, device_config.color_resolution)
 		self.transformation = Transformation(self.calibration)
 		result_code = _k4a.k4a_device_start_cameras(
-			self._handle, device_config.handle())
+			self._handle, ctypes.byref(device_config.handle()))
 		if result_code != _k4a.K4A_RESULT_SUCCEEDED:
 			raise _k4a.AzureKinectSensorException("Start K4A cameras failed.")
 
@@ -93,7 +93,7 @@ class Device:
 			timeout_in_ms: int = _k4a.K4A_WAIT_INFINITE) -> _k4a.k4a_capture_t:
 		capture_handle = _k4a.k4a_capture_t()
 		result_code = _k4a.k4a_device_get_capture(
-			self._handle, capture_handle, timeout_in_ms)
+			self._handle, ctypes.byref(capture_handle), timeout_in_ms)
 		if result_code != _k4a.K4A_RESULT_SUCCEEDED:
 			raise _k4a.AzureKinectSensorException("Get capture failed.")
 
@@ -104,7 +104,7 @@ class Device:
 			timeout_in_ms: int = _k4a.K4A_WAIT_INFINITE) -> _k4a.k4a_imu_sample_t:
 		imu_sample_handle = _k4a.k4a_imu_sample_t()
 		result_code = _k4a.k4a_device_get_imu_sample(
-			self._handle, imu_sample_handle, timeout_in_ms)
+			self._handle, ctypes.byref(imu_sample_handle), timeout_in_ms)
 		if result_code != _k4a.K4A_RESULT_SUCCEEDED:
 			raise _k4a.AzureKinectSensorException("Get IMU failed.")
 
@@ -113,12 +113,12 @@ class Device:
 	def _get_serialnum(self) -> str:
 		serial_number_size = ctypes.c_size_t()
 		_ = _k4a.k4a_device_get_serialnum(
-			self._handle, None, serial_number_size)
+			self._handle, None, ctypes.byref(serial_number_size))
 
 		serial_number = ctypes.create_string_buffer(
 			serial_number_size.value)
 		result_code = _k4a.k4a_device_get_serialnum(
-			self._handle, serial_number, serial_number_size)
+			self._handle, serial_number, ctypes.byref(serial_number_size))
 		if result_code != _k4a.K4A_RESULT_SUCCEEDED:
 			raise _k4a.AzureKinectSensorException("Read serial number failed.")
 
@@ -128,7 +128,8 @@ class Device:
 			self, depth_mode: int, color_resolution: int) -> Calibration:
 		calibration_handle = _k4a.k4a_calibration_t()
 		result_code = _k4a.k4a_device_get_calibration(
-			self._handle, depth_mode, color_resolution, calibration_handle)
+			self._handle, depth_mode, color_resolution,
+			ctypes.byref(calibration_handle))
 		if result_code != _k4a.K4A_RESULT_SUCCEEDED:
 			raise _k4a.AzureKinectSensorException("Get calibration failed.")
 
@@ -136,7 +137,8 @@ class Device:
 
 	def _get_version(self) -> _k4a.k4a_hardware_version_t:
 		version = _k4a.k4a_hardware_version_t()
-		result_code = _k4a.k4a_device_get_version(self._handle, version)
+		result_code = _k4a.k4a_device_get_version(
+			self._handle, ctypes.byref(version))
 		if result_code != _k4a.K4A_RESULT_SUCCEEDED:
 			raise _k4a.AzureKinectSensorException("Get version failed.")
 

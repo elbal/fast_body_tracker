@@ -58,8 +58,8 @@ class Calibration:
         target_point3d = _k4a.k4a_float3()
 
         result_code = conversion_fun(
-            self._handle, source_point3d, source_camera, target_camera,
-            target_point3d)
+            ctypes.byref(self._handle), ctypes.byref(source_point3d),
+            source_camera, target_camera, ctypes.byref(target_point3d))
         if result_code != _k4a.K4A_RESULT_SUCCEEDED:
             raise _k4a.AzureKinectSensorException(failure_message)
 
@@ -75,8 +75,9 @@ class Calibration:
         valid = ctypes.c_int()
 
         result_code = conversion_fun(
-            self._handle, source_point2d, source_depth, source_camera,
-            target_camera, target_point3d, valid)
+            ctypes.byref(self._handle), ctypes.byref(source_point2d),
+            source_depth, source_camera, target_camera,
+            ctypes.byref(target_point3d), ctypes.byref(valid))
         if result_code != _k4a.K4A_RESULT_SUCCEEDED:
             raise _k4a.AzureKinectSensorException(failure_message)
 
@@ -92,8 +93,9 @@ class Calibration:
         valid = ctypes.c_int()
 
         result_code = conversion_fun(
-            self._handle, source_point3d, source_camera, target_camera,
-            target_point2d, valid)
+            ctypes.byref(self._handle), ctypes.byref(source_point3d),
+            source_camera, target_camera, ctypes.byref(target_point2d),
+            ctypes.byref(valid))
         if result_code != _k4a.K4A_RESULT_SUCCEEDED:
             raise _k4a.AzureKinectSensorException(failure_message)
 
@@ -109,8 +111,9 @@ class Calibration:
         valid = ctypes.c_int()
 
         result_code = conversion_fun(
-            self._handle, source_point2d, source_depth, source_camera,
-            target_camera, target_point2d, valid)
+            ctypes.byref(self._handle), ctypes.byref(source_point2d),
+            source_depth, source_camera, target_camera,
+            ctypes.byref(target_point2d), ctypes.byref(valid))
         if result_code != _k4a.K4A_RESULT_SUCCEEDED:
             raise _k4a.AzureKinectSensorException(failure_message)
 
@@ -125,7 +128,8 @@ class Calibration:
         valid = ctypes.c_int()
 
         result_code = conversion_fun(
-            self._handle, source_point2d, depth_image, target_point2d, valid)
+            ctypes.byref(self._handle), ctypes.byref(source_point2d),
+            depth_image, ctypes.byref(target_point2d), ctypes.byref(valid))
         if result_code != _k4a.K4A_RESULT_SUCCEEDED:
             raise _k4a.AzureKinectSensorException(failure_message)
 

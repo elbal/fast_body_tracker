@@ -1,5 +1,6 @@
+import ctypes
 import numpy as np
-import cv2 
+import cv2
 
 from pykinect_azure.k4abt import _k4abt
 from pykinect_azure.k4a._k4atypes import K4A_CALIBRATION_TYPE_DEPTH
@@ -28,7 +29,7 @@ class Frame:
 	def get_body_skeleton(self, index=0):
 		skeleton = _k4abt.k4abt_skeleton_t()
 
-		_k4abt.VERIFY(_k4abt.k4abt_frame_get_body_skeleton(self._handle, index, skeleton), "Body tracker get body skeleton failed!")
+		_k4abt.VERIFY(_k4abt.k4abt_frame_get_body_skeleton(self._handle, index, ctypes.byref(skeleton)), "Body tracker get body skeleton failed!")
 
 		return skeleton
 

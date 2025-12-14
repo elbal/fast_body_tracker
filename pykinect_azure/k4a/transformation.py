@@ -23,7 +23,8 @@ class Resolution:
 class Transformation:
 	def __init__(self, calibration: Calibration):
 		self.calibration = calibration
-		self._handle = _k4a.k4a_transformation_create(calibration.handle())
+		self._handle = _k4a.k4a_transformation_create(
+			ctypes.byref(calibration.handle()))
 		self.color_resolution = Resolution(
 			calibration.handle().color_camera_calibration.resolution_width,
 			calibration.handle().color_camera_calibration.resolution_height)
@@ -112,7 +113,7 @@ class Transformation:
 		image_handle = _k4a.k4a_image_t()
 		result_code = _k4a.k4a_image_create(
 			image_format, width_pixels, height_pixels, stride_bytes,
-			image_handle)
+			ctypes.byref(image_handle))
 		if result_code != _k4a.K4A_RESULT_SUCCEEDED:
 			raise _k4a.AzureKinectSensorException("Create image failed.")
 
