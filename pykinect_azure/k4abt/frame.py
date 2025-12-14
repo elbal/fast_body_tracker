@@ -10,12 +10,10 @@ from pykinect_azure.k4a._k4atypes import K4A_CALIBRATION_TYPE_DEPTH
 
 
 class Frame:
-	def __init__(self, frame_handle, calibration):
-
+	def __init__(self, frame_handle, transformation: Transformation):
 		if frame_handle:
 			self._handle = frame_handle
-			self.calibration = calibration
-			self.transformation = Transformation(self.calibration)
+			self.transformation = transformation
 			_k4abt.k4abt_frame_reference(self._handle)
 
 	def __del__(self):
