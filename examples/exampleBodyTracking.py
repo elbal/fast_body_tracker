@@ -1,4 +1,5 @@
 import cv2
+import time
 
 import pykinect_azure as pykinect
 
@@ -22,7 +23,11 @@ if __name__ == "__main__":
 	tracker = pykinect.start_body_tracker(calibration=calibration, tracker_configuration=tracker_config)
 
 	cv2.namedWindow('Depth image with skeleton',cv2.WINDOW_NORMAL)
+	FRAME_WINDOW = 600
+	frame_count = 0
+	start_time = time.perf_counter()
 	while True:
+		frame_count += 1
 
 		# Get capture
 		capture = device.update()
@@ -48,3 +53,11 @@ if __name__ == "__main__":
 		# Press q key to stop
 		if cv2.waitKey(1) == ord('q'):  
 			break
+
+		if frame_count >= FRAME_WINDOW:
+			end_time = time.perf_counter()
+			elapsed_time = end_time - start_time
+			fps = frame_count / elapsed_time
+			print(f"FPS: {fps:.2f}")
+			start_time = time.perf_counter()
+			frame_count = 0

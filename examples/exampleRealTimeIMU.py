@@ -52,10 +52,3 @@ if __name__ == "__main__":
 		plt.pause(0.01)
 		ax1.cla()
 		ax2.cla()
-
-
-	
-
-
-
-

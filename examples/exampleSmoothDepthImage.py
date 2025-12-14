@@ -40,6 +40,10 @@ def main():
 			cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 3, cv2.LINE_AA)
 		cv2.imshow("Smoothed Depth Comparison", comparison_image)
 
+		# Press q key to stop.
+		if cv2.waitKey(1) == ord('q'):  
+			break
+
 		if frame_count >= FRAME_WINDOW:
 			end_time = time.perf_counter()
 			elapsed_time = end_time - start_time
@@ -47,10 +51,6 @@ def main():
 			print(f"FPS: {fps:.2f}")
 			start_time = time.perf_counter()
 			frame_count = 0
-
-		# Press q key to stop.
-		if cv2.waitKey(1) == ord('q'):  
-			break
 	# Manually deallocate the memory.
 	del capture
 	del device

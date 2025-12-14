@@ -26,6 +26,10 @@ def main():
 		depth_image = capture.get_colored_depth_image()
 		cv2.imshow("Depth Image", depth_image)
 
+		# Press q key to stop.
+		if cv2.waitKey(1) == ord("q"):
+			break
+
 		if frame_count >= FRAME_WINDOW:
 			end_time = time.perf_counter()
 			elapsed_time = end_time - start_time
@@ -33,10 +37,6 @@ def main():
 			print(f"FPS: {fps:.2f}")
 			start_time = time.perf_counter()
 			frame_count = 0
-
-		# Press q key to stop.
-		if cv2.waitKey(1) == ord("q"):
-			break
 	# Manually deallocate the memory.
 	del capture
 	del device
