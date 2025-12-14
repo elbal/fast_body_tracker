@@ -18,6 +18,7 @@ k4a_calibration_type_t = ctypes.c_int
 k4a_calibration_model_type_t = ctypes.c_int
 k4a_firmware_build_t = ctypes.c_int
 k4a_firmware_signature_t = ctypes.c_int
+k4a_float3 = ctypes.c_float * 3
 
 # K4A_DECLARE_HANDLE(k4a_device_t);
 class _handle_k4a_device_t(ctypes.Structure):

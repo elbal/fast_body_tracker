@@ -1,9 +1,10 @@
 import ctypes
 
 from pykinect_azure.k4abt.kabt_const import *
-from pykinect_azure.k4a._k4atypes import k4a_float2_t
+from pykinect_azure.k4a._k4atypes import k4a_float2_t, k4a_float3
 
 k4abt_result_t = ctypes.c_int
+k4abt_float4 = ctypes.c_float * 4
 
 
 # K4A_DECLARE_HANDLE(k4abt_tracker_t);
@@ -42,7 +43,7 @@ k4abt_tracker_default_configuration.gpu_device_id = 0
 
 class _k4abt_joint_t(ctypes.Structure):
 	_fields_ = [
-		("position", ctypes.c_float*3), ("orientation", ctypes.c_float*4),
+		("position", k4a_float3), ("orientation", k4abt_float4),
 		("confidence_level", ctypes.c_int)]
 
 k4abt_joint_t = _k4abt_joint_t
@@ -59,7 +60,7 @@ class k4abt_body_t(ctypes.Structure):
 class _k4abt_joint2D_t(ctypes.Structure):
 	_fields_ = [("position", k4a_float2_t), ("confidence_level", ctypes.c_int)]
 
-	def __init__(self, position=(0,0), confidence_level=0):
+	def __init__(self, position=(0, 0), confidence_level=0):
 		super().__init__()
 		self.position = k4a_float2_t(position)
 		self.confidence_level = confidence_level
