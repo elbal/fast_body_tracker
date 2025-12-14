@@ -581,9 +581,9 @@ def k4a_calibration_3d_to_3d(
 	_k4a_calibration_3d_to_3d = k4a_dll.k4a_calibration_3d_to_3d
 	_k4a_calibration_3d_to_3d.restype = k4a_result_t
 	_k4a_calibration_3d_to_3d.argtypes = (
-		ctypes.POINTER(k4a_calibration_t), ctypes.POINTER(k4a_float3_t),
+		ctypes.POINTER(k4a_calibration_t), ctypes.POINTER(k4a_float3),
 		k4a_calibration_type_t, k4a_calibration_type_t,
-		ctypes.POINTER(k4a_float3_t),)
+		ctypes.POINTER(k4a_float3),)
 
 	return _k4a_calibration_3d_to_3d(
 		calibration, source_point3d_mm, source_camera, target_camera,
@@ -607,7 +607,7 @@ def k4a_calibration_2d_to_3d(
 	_k4a_calibration_2d_to_3d.argtypes = (
 		ctypes.POINTER(k4a_calibration_t), ctypes.POINTER(k4a_float2_t),
 		ctypes.c_float, k4a_calibration_type_t, k4a_calibration_type_t,
-		ctypes.POINTER(k4a_float3_t), ctypes.POINTER(ctypes.c_int),)
+		ctypes.POINTER(k4a_float3), ctypes.POINTER(ctypes.c_int),)
 	
 	return _k4a_calibration_2d_to_3d(
 		calibration, source_point2d, source_depth_mm, source_camera,
@@ -628,7 +628,7 @@ def k4a_calibration_3d_to_2d(
 	_k4a_calibration_3d_to_2d = k4a_dll.k4a_calibration_3d_to_2d
 	_k4a_calibration_3d_to_2d.restype = k4a_result_t
 	_k4a_calibration_3d_to_2d.argtypes = (
-		ctypes.POINTER(k4a_calibration_t), ctypes.POINTER(k4a_float3_t),
+		ctypes.POINTER(k4a_calibration_t), ctypes.POINTER(k4a_float3),
 		k4a_calibration_type_t, k4a_calibration_type_t,
 		ctypes.POINTER(k4a_float2_t), ctypes.POINTER(ctypes.c_int),)
 

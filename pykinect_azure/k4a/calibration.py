@@ -50,12 +50,12 @@ class Calibration:
             ], dtype=np.float32)
 
     def convert_3d_to_3d(
-            self, source_point3d: _k4a.k4a_float3_t,
+            self, source_point3d: _k4a.k4a_float3,
             source_camera: _k4a.k4a_calibration_type_t,
-            target_camera: _k4a.k4a_calibration_type_t) -> _k4a.k4a_float3_t:
+            target_camera: _k4a.k4a_calibration_type_t) -> _k4a.k4a_float3:
         conversion_fun = _k4a.k4a_calibration_3d_to_3d
         failure_message = "Failed to convert from 3D to 3D."
-        target_point3d = _k4a.k4a_float3_t()
+        target_point3d = _k4a.k4a_float3()
 
         result_code = conversion_fun(
             self._handle, source_point3d, source_camera, target_camera,
@@ -68,10 +68,10 @@ class Calibration:
     def convert_2d_to_3d(
             self, source_point2d: _k4a.k4a_float2_t, source_depth: float,
             source_camera: _k4a.k4a_calibration_type_t,
-            target_camera: _k4a.k4a_calibration_type_t) -> _k4a.k4a_float3_t:
+            target_camera: _k4a.k4a_calibration_type_t) -> _k4a.k4a_float3:
         conversion_fun = _k4a.k4a_calibration_2d_to_3d
         failure_message = "Failed to convert from 2D to 3D."
-        target_point3d = _k4a.k4a_float3_t()
+        target_point3d = _k4a.k4a_float3()
         valid = ctypes.c_int()
 
         result_code = conversion_fun(
@@ -83,7 +83,7 @@ class Calibration:
         return target_point3d
 
     def convert_3d_to_2d(
-            self, source_point3d: _k4a.k4a_float3_t,
+            self, source_point3d: _k4a.k4a_float3,
             source_camera: _k4a.k4a_calibration_type_t,
             target_camera: _k4a.k4a_calibration_type_t) -> _k4a.k4a_float2_t:
         conversion_fun = _k4a.k4a_calibration_3d_to_2d
