@@ -22,7 +22,7 @@ class Configuration:
 		"""Run when configuration parameters are changed"""
 		if hasattr(self, name):
 			if name != "_handle":
-				if int(self.__dict__[name]) != value:
+				if self.__dict__[name] != value:
 					self.__dict__[name] = value
 					self._handle = self._on_value_change()
 			else:
@@ -59,6 +59,7 @@ class Configuration:
 			f"{self.disable_streaming_indicator} \n\t"
 			f"(True or False). Streaming indicator automatically turns on "
 			f"when the color or depth camera's are in use.\n\n")
+
 		return message
 
 	def _on_value_change(self) -> _k4a.k4a_device_configuration_t:
