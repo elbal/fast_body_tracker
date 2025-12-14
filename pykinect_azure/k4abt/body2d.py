@@ -34,7 +34,9 @@ class Body2d:
 	def confidences(self) -> npt.NDArray[np.int32]:
 		return self.joints_data["confidence"]
 
-	def draw(self, image: Image, only_segments=False) -> Image:
+	def draw(
+			self, image: npt.NDArray[np.uint8],
+			only_segments=False) -> npt.NDArray[np.uint8]:
 		positions = self.positions.astype(np.int32)
 		confidences = self.confidences
 		color = (
