@@ -8,7 +8,7 @@ from pykinect_azure.k4abt._k4abt_types import (
 from pykinect_azure.k4a import Calibration, Image
 
 JOINT2D_DTYPE = np.dtype([
-	("position", np.float32, 2), ("confidence", np.int32, 1)])
+	("position", np.float32, 2), ("confidence", np.int32)])
 
 
 class Body2d:
