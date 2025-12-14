@@ -19,14 +19,6 @@ class Frame:
 		if self._handle:
 			_k4abt.k4abt_frame_release(self._handle)
 
-	def to_json(self):
-		bodies = self.get_bodies()
-
-		if not bodies:
-			return ""
-
-		return [body.json() for body in bodies]
-
 	def get_num_bodies(self) -> int:
 		return _k4abt.k4abt_frame_get_num_bodies(self._handle)
 

@@ -1,30 +1,31 @@
 import numpy as np
+from numpy import typing as npt
 
-from pykinect_azure.k4abt._k4abtTypes import K4ABT_JOINT_COUNT
-from pykinect_azure.k4abt.joint import Joint
+from pykinect_azure.k4abt._k4abtTypes import k4abt_body_t
+from pykinect_azure.k4abt.kabt_const import K4ABT_JOINT_COUNT
+
+JOINT_DTYPE = np.dtype([
+	("position", np.float32, 3),
+	("orientation", np.float32, 4),
+	("confidence", np.int32)
+	])
 
 
 class Body:
-	def __init__(self, skeleton_handle):
-		self._handle = skeleton_handle
-		self.initialize()
+	def __init__(self, body_handle: k4abt_body_t):
+		self._handle = body_handle
+		self.joints_data = np.frombuffer(
+			self._handle.skeleton.joints, dtype=JOINT_DTYPE,
+			count=K4ABT_JOINT_COUNT)
 
-	def json(self):
-		return self._handle.__iter__()
+	@property
+	def positions(self) -> npt.NDArray[np.float32]:
+		return self.joints_data["position"]
 
-	def numpy(self):
-		return np.array([joint.numpy() for joint in self.joints])
+	@property
+	def orientations(self) -> npt.NDArray[np.float32]:
+		return self.joints_data["orientation"]
 
-	def is_valid(self):
-		return self._handle
-
-	def handle(self):
-		return self._handle
-
-	def initialize(self):
-		joints = np.ndarray((K4ABT_JOINT_COUNT,),dtype=np.object_)
-
-		for i in range(K4ABT_JOINT_COUNT):
-			joints[i] = Joint(self._handle.skeleton.joints[i], i)
-			
-		self.joints = joints
+	@property
+	def confidences(self) -> npt.NDArray[np.int32]:
+		return self.joints_data['confidence']
