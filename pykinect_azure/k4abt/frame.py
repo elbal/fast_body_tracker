@@ -14,7 +14,6 @@ class Frame:
 		if frame_handle:
 			self._handle = frame_handle
 			self.transformation = transformation
-			_k4abt.k4abt_frame_reference(self._handle)
 
 	def __del__(self):
 		self.reset()
