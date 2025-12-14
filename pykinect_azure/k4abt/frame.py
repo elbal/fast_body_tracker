@@ -15,7 +15,6 @@ class Frame:
 			self._handle = frame_handle
 			self.calibration = calibration
 			self.transformation = Transformation(self.calibration)
-			_k4abt.k4abt_frame_reference(self._handle)
 
 	def __del__(self):
 		self.reset()
