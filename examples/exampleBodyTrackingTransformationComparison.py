@@ -52,8 +52,10 @@ if __name__ == "__main__":
 		transformed_points_map = transformed_points.reshape((color_image.shape[0], color_image.shape[1], 3))
 
 		for body_id in range(body_frame.get_num_bodies()):
-			color_skeleton_2d = body_frame.get_body2d(body_id, pykinect.K4A_CALIBRATION_TYPE_COLOR).numpy()
-			depth_skeleton_2d = body_frame.get_body2d(body_id, pykinect.K4A_CALIBRATION_TYPE_DEPTH).numpy()
+			color_skeleton_2d = body_frame.get_body2d(body_id,
+													  pykinect.K4A_CALIBRATION_TYPE_COLOR).numpy()
+			depth_skeleton_2d = body_frame.get_body2d(body_id,
+													  pykinect.K4A_CALIBRATION_TYPE_DEPTH).numpy()
 			skeleton_3d = body_frame.get_body(body_id).numpy()
 
 			color_neck_2d = color_skeleton_2d[pykinect.K4ABT_JOINT_NECK,:]

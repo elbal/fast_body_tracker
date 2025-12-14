@@ -15,10 +15,6 @@ class Body2d:
 			self.id = body2d_handle.id
 			self.initialize_skeleton()
 
-	def __del__(self):
-
-		self.destroy()
-
 	def json(self):
 		return self._handle.__iter__()
 
@@ -30,10 +26,6 @@ class Body2d:
 
 	def handle(self):
 		return self._handle
-
-	def destroy(self):
-		if self.is_valid():
-			self._handle = None
 
 	def initialize_skeleton(self):
 		joints = np.ndarray((K4ABT_JOINT_COUNT,),dtype=np.object_)
@@ -64,7 +56,6 @@ class Body2d:
 
 		return image
 
-
 	@staticmethod
 	def create(body_handle, calibration, bodyIdx, dest_camera):
 
@@ -79,13 +70,3 @@ class Body2d:
 		body2d_handle.id = bodyIdx
 
 		return Body2d(body2d_handle)
-
-
-	def __str__(self):
-		"""Print the current settings and a short explanation"""
-		message = f"Body Id: {self.id}\n\n"
-
-		for joint in self.joints:
-			message += str(joint)
-
-		return message

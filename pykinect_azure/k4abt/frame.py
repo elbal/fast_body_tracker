@@ -2,11 +2,11 @@ import numpy as np
 import cv2 
 
 from pykinect_azure.k4abt import _k4abt
+from pykinect_azure.k4a._k4atypes import K4A_CALIBRATION_TYPE_DEPTH
 from pykinect_azure.k4abt.body import Body
 from pykinect_azure.k4abt.body2d import Body2d
 from pykinect_azure.k4abt._k4abtTypes import k4abt_body_t, body_colors
 from pykinect_azure.k4a import Image, Capture, Transformation
-from pykinect_azure.k4a._k4atypes import K4A_CALIBRATION_TYPE_DEPTH
 
 
 class Frame:
@@ -16,10 +16,10 @@ class Frame:
 			self.transformation = transformation
 
 	def __del__(self):
-		self.reset()
+		if self._handle:
+			_k4abt.k4abt_frame_release(self._handle)
 
-	def json(self):
-
+	def to_json(self):
 		bodies = self.get_bodies()
 
 		if not bodies:
@@ -27,22 +27,7 @@ class Frame:
 
 		return [body.json() for body in bodies]
 
-	def is_valid(self):
-		return self._handle
-
-	def handle(self):
-		return self._handle
-
-	def reset(self):
-		if self.is_valid():
-			self.release()
-			self._handle = None
-
-	def release(self):
-		if self.is_valid():
-			_k4abt.k4abt_frame_release(self._handle)
-
-	def get_num_bodies(self):
+	def get_num_bodies(self) -> int:
 		return _k4abt.k4abt_frame_get_num_bodies(self._handle)
 
 	def get_body_skeleton(self, index=0):
@@ -52,35 +37,28 @@ class Frame:
 
 		return skeleton
 
-	def get_body_id(self, index=0):
-		return _k4abt.k4abt_frame_get_body_id(self._handle, index)
-
-	def get_bodies(self):
-
-		bodies = []
-
-		# Get the number of people in the frame
+	def get_bodies(self) -> list[Body]:
 		num_bodies = self.get_num_bodies()
-
-		# Extract the skeleton of each person
+		bodies = []
 		if num_bodies:
-			for bodyIdx in range(num_bodies):
-				bodies.append(self.get_body(bodyIdx))
+			for body_idx in range(num_bodies):
+				bodies.append(self.get_body(body_idx))
 
 		return bodies
 
-	def get_body(self, bodyIdx = 0):
+	def get_body(self, body_idx: int = 0) -> Body:
 		body_handle = k4abt_body_t()
-		body_handle.id = self.get_body_id(bodyIdx);
-		body_handle.skeleton = self.get_body_skeleton(bodyIdx);
+		body_handle.id = _k4abt.k4abt_frame_get_body_id(self._handle, body_idx)
+		body_handle.skeleton = self.get_body_skeleton(body_idx)
 
 		return Body(body_handle)
 
-	def get_body2d(self, bodyIdx = 0, dest_camera = K4A_CALIBRATION_TYPE_DEPTH):
+	def get_body2d(
+			self, body_idx: int = 0,
+			dest_camera: int = K4A_CALIBRATION_TYPE_DEPTH):
+		body_handle = self.get_body(body_idx).handle()
 
-		body_handle = self.get_body(bodyIdx).handle()
-
-		return Body2d.create(body_handle, self.calibration, bodyIdx, dest_camera)
+		return Body2d.create(body_handle, self.calibration, body_idx, dest_camera)
 
 	def draw_bodies(self, destination_image, dest_camera = K4A_CALIBRATION_TYPE_DEPTH, only_segments = False):
 		num_bodies = self.get_num_bodies()

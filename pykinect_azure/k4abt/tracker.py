@@ -1,7 +1,7 @@
 from pykinect_azure.k4a import Capture, Calibration, Transformation
+from pykinect_azure.k4abt import _k4abt
 from pykinect_azure.k4a._k4atypes import K4A_WAIT_INFINITE
 from pykinect_azure.k4abt.trackerconfiguration import TrackerConfiguration
-from pykinect_azure.k4abt import _k4abt
 from pykinect_azure.k4abt.frame import Frame
 
 
