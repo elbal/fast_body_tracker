@@ -70,7 +70,8 @@ class Frame:
 		return self.get_body2d(
 			body_idx, dest_camera).draw(destination_image, only_segments)
 
-	def get_device_timestamp_usec(self) -> int:
+	@property
+	def timestamp(self) -> int:
 		return _k4abt.k4abt_frame_get_device_timestamp_usec(self._handle)
 
 	def get_segmentation_image(self) -> npt.NDArray[np.uint8]:
