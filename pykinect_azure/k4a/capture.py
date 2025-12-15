@@ -22,7 +22,7 @@ class Capture:
 		return self._handle
 
 	def get_color_image(self) -> npt.NDArray[np.uint8]:
-		return self._get_color_object().to_numpy()
+		return self.get_color_image_object().to_numpy()
 
 	def get_transformed_color_image(self) -> npt.NDArray[np.uint8]:
 		return self._get_transformed_color_object().to_numpy()
@@ -74,14 +74,14 @@ class Capture:
 
 		return points
 
-	def _get_color_object(self) -> Image:
+	def get_color_image_object(self) -> Image:
 		image_handle = _k4a.k4a_capture_get_color_image(self._handle)
 
 		return Image(image_handle)
 
 	def _get_transformed_color_object(self) -> Image:
 		depth_image = self._get_depth_object()
-		color_image = self._get_color_object()
+		color_image = self.get_color_image_object()
 
 		return self.camera_transform.color_image_to_depth_camera(
 			depth_image, color_image)
