@@ -2,13 +2,20 @@ import ctypes
 import numpy as np
 from numpy import typing as npt
 import cv2
+import matplotlib.pyplot as plt
 
 from pykinect_azure.k4a._k4a_types import K4A_CALIBRATION_TYPE_DEPTH
 from pykinect_azure.k4abt import _k4abt
 from pykinect_azure.k4abt.body import Body
 from pykinect_azure.k4abt.body2d import Body2d
-from pykinect_azure.k4abt._k4abt_types import body_colors, k4abt_body_t
+from pykinect_azure.k4abt._k4abt_types import k4abt_body_t
 from pykinect_azure.k4a import Capture, Calibration, Image, Transformation
+
+cmap = plt.get_cmap("tab20")
+body_colors = np.zeros((256, 3), dtype=np.uint8)
+for i in range(256):
+	rgba = cmap(i % 20)
+	body_colors[i] = [int(rgba[2]*255), int(rgba[1]*255), int(rgba[0]*255)]
 
 
 class Frame:

@@ -1,15 +1,17 @@
 import numpy as np
 from numpy import typing as npt
 import cv2
+import matplotlib.pyplot as plt
 
 from pykinect_azure.k4a._k4a_types import K4A_CALIBRATION_TYPE_DEPTH
 from pykinect_azure.k4abt._k4abt_types import (
-	body_colors, k4abt_body_t, K4ABT_JOINT_COUNT, K4ABT_SEGMENT_PAIRS)
+	k4abt_body_t, K4ABT_JOINT_COUNT, K4ABT_SEGMENT_PAIRS)
 from pykinect_azure.k4a import Calibration, Image
 
 JOINT2D_DTYPE = np.dtype([
 	("position", np.float32, 2), ("confidence", np.int32)])
 
+cmap = plt.get_cmap("tab20")
 
 class Body2d:
 	def __init__(
@@ -39,10 +41,8 @@ class Body2d:
 			only_segments=False) -> npt.NDArray[np.uint8]:
 		positions = self.positions.astype(np.int32)
 		confidences = self.confidences
-		color = (
-			int(body_colors[self.id][0]),
-			int(body_colors[self.id][1]),
-			int(body_colors[self.id][2]))
+		rgba = cmap(self.id % 20)
+		color = (int(rgba[2]*255), int(rgba[1]*255), int(rgba[0]*255))
 
 		for segment_pair in K4ABT_SEGMENT_PAIRS:
 			idx1, idx2 = segment_pair
