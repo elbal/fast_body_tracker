@@ -36,7 +36,10 @@ def main():
 
 	while not stop_event.is_set():
 		capture = device.update()
-		points = capture.get_transformed_pointcloud()
+		point_cloud = capture._get_pointcloud_object()
+		# Warning, do not delete the object before plotting or the data might
+		# disappear.
+		points = point_cloud.to_numpy()
 
 		visualizer(points)
 	# Manually deallocate the memory.

@@ -4,24 +4,6 @@ import cv2
 
 from pykinect_azure.k4a import _k4a
 
-_IMAGE_FORMATS_HANDLER = {
-	_k4a.K4A_IMAGE_FORMAT_COLOR_MJPG: (
-		np.uint8, None, None, lambda img: cv2.imdecode(img, -1)),
-	_k4a.K4A_IMAGE_FORMAT_COLOR_NV12: (
-		np.uint8, 1.5, 1,
-		lambda img: cv2.cvtColor(img, cv2.COLOR_YUV2BGR_NV12)),
-	_k4a.K4A_IMAGE_FORMAT_COLOR_YUY2: (
-		np.uint8, 1, 2, lambda img: cv2.cvtColor(
-			img.reshape(img.shape[0], -1, 2), cv2.COLOR_YUV2BGR_YUY2)),
-	_k4a.K4A_IMAGE_FORMAT_COLOR_BGRA32: (
-		np.uint8, 1, 4, lambda img: img.reshape(img.shape[0], -1, 4).copy()),
-	_k4a.K4A_IMAGE_FORMAT_DEPTH16: ("<u2", 1, 1, None),
-	_k4a.K4A_IMAGE_FORMAT_IR16: ("<u2", 1, 1, None),
-	_k4a.K4A_IMAGE_FORMAT_CUSTOM8: ("<u1", 1, 1, None),
-	_k4a.K4A_IMAGE_FORMAT_CUSTOM16: ("<u2", 1, 1, None),
-	_k4a.K4A_IMAGE_FORMAT_CUSTOM: (
-		"<i2", 1, 3, lambda img: img.reshape((-1, 3)))}
-
 
 class WrongImageFormat(Exception):
 	pass
@@ -63,24 +45,56 @@ class Image:
 		return _k4a.k4a_image_get_device_timestamp_usec(self._handle)
 
 	def to_numpy(self) -> npt.NDArray[np.uint8 | np.uint16 | np.int16]:
-		if self.format not in _IMAGE_FORMATS_HANDLER:
-			raise WrongImageFormat("The image format is not supported.")
-		dtype, h_scale, w_scale, process_fn = _IMAGE_FORMATS_HANDLER[self.format]
-		buffer_array = np.ctypeslib.as_array(
+		buffer = np.ctypeslib.as_array(
 			_k4a.k4a_image_get_buffer(self._handle), shape=(self.size,))
-		image = np.frombuffer(buffer_array, dtype=dtype)
-		if h_scale is None:
-			return process_fn(image)
 
-		rows = int(self.height * h_scale)
-		itemsize = np.dtype(dtype).itemsize
-		stride_elements = self.stride // itemsize
-		image = image.reshape(rows, stride_elements)
-		image = image[:, :int(self.width * w_scale)]
-		if process_fn:
-			image = process_fn(image)
+		# COLOR MJPG, decode with OpenCV.
+		if self.format == _k4a.K4A_IMAGE_FORMAT_COLOR_MJPG:
+			return cv2.imdecode(buffer, -1)
+
+		# NV12, YUV conversion.
+		elif self.format == _k4a.K4A_IMAGE_FORMAT_COLOR_NV12:
+			yuv = buffer.reshape(int(self.height * 1.5), self.width)
+			return cv2.cvtColor(yuv, cv2.COLOR_YUV2BGR_NV12)
+
+		# YUY2, YUV conversion.
+		elif self.format == _k4a.K4A_IMAGE_FORMAT_COLOR_YUY2:
+			yuv = buffer.reshape(self.height, self.width, 2)
+			return cv2.cvtColor(yuv, cv2.COLOR_YUV2BGR_YUY2)
+
+		# BGRA32.
+		elif self.format == _k4a.K4A_IMAGE_FORMAT_COLOR_BGRA32:
+			stride = self.stride
+			height = self.height
+			width = self.width
+			arr2d = buffer.reshape((height, stride))
+			arr2d = arr2d[:, : width * 4]
+			view3d = np.lib.stride_tricks.as_strided(
+				arr2d, shape=(height, width, 4), strides=(stride, 4, 1))
+			# Ensure contiguity for OpenCV plotting.
+			return np.ascontiguousarray(view3d)
+
+		# DEPTH16, IR16, CUSTOM16.
+		elif self.format in (
+				_k4a.K4A_IMAGE_FORMAT_DEPTH16, _k4a.K4A_IMAGE_FORMAT_IR16,
+				_k4a.K4A_IMAGE_FORMAT_CUSTOM16):
+			arr16 = buffer.view("<u2")
+			stride_elements = self.stride // 2
+			arr16 = arr16.reshape((self.height, stride_elements))
+			arr16 = arr16[:, :self.width]
+			return np.ascontiguousarray(arr16)
+
+		# CUSTOM8.
+		elif self.format == _k4a.K4A_IMAGE_FORMAT_CUSTOM8:
+			stride_elements = self.stride
+			arr8 = buffer.reshape((self.height, stride_elements))
+			arr8 = arr8[:, :self.width]
+			return np.ascontiguousarray(arr8)
+
+		# CUSTOM.
+		elif self.format == _k4a.K4A_IMAGE_FORMAT_CUSTOM:
+			arr = buffer.view("<i2").reshape((-1, 3))
+			return arr
+
 		else:
-			image = image.reshape(self.height, self.width)
-			image = image.copy()
-
-		return image
+			raise WrongImageFormat(f"Unsupported format {self.format}.")

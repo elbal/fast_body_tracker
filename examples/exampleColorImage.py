@@ -24,8 +24,9 @@ def main():
 	while True:
 		frame_count += 1
 		capture = device.update()
-		color_image = capture.get_color_image()
-		cv2.imshow("Color Image", color_image)
+		bgra_image_obj = capture.get_color_image_object()
+		bgra_image = bgra_image_obj.to_numpy()
+		cv2.imshow("Color Image", bgra_image)
 
 		# Press q key to stop.
 		if cv2.waitKey(1) == ord("q"):
