@@ -1,4 +1,7 @@
 import ctypes
+import numpy as np
+from numpy import typing as npt
+import cv2
 from dataclasses import dataclass
 
 from pykinect_azure.k4a import _k4a
@@ -118,3 +121,42 @@ class Transformation:
 			raise _k4a.AzureKinectSensorException("Create image failed.")
 
 		return image_handle
+
+	@staticmethod
+	def _color_depth_image(
+			depth_image: npt.NDArray[np.uint16 | np.int16]) -> npt.NDArray[np.uint8]:
+		depth_color_image = cv2.convertScaleAbs(depth_image, alpha=0.05)
+		depth_color_image = cv2.applyColorMap(
+			depth_color_image, cv2.COLORMAP_TURBO)
+
+		return depth_color_image
+
+	@staticmethod
+	def _smooth_depth_image(
+			depth_image: Image, max_hole_size: int = 10) -> Image:
+		"""
+		Smoothes depth image by filling the holes using inpainting method.
+
+		Parameters
+		----------
+		depth_image: Image:
+			Original depth image.
+		max_hole_size: int
+			Maximum hole size to fill.
+
+		Returns
+		-------
+		Image
+			Smoothed depth image
+		"""
+		mask = np.zeros(depth_image.shape, dtype=np.uint8)
+		mask[depth_image == 0] = 1
+
+		kernel = np.ones((max_hole_size, max_hole_size), np.uint8)
+		erosion = cv2.erode(mask, kernel, iterations=1)
+		mask = mask - erosion
+
+		smoothed_depth_image = cv2.inpaint(
+			depth_image.astype(np.uint16), mask, max_hole_size, cv2.INPAINT_NS)
+
+		return smoothed_depth_image

@@ -34,6 +34,9 @@ class Device:
 			self, configuration: Configuration, record=False,
 			record_filepath="output.mkv"):
 		self.configuration = configuration
+		self.calibration = self._get_calibration(
+			configuration.depth_mode, configuration.color_resolution)
+		self.transformation = Transformation(self.calibration)
 		self._start_cameras(configuration)
 		self._start_imu()
 		if record:
@@ -43,7 +46,7 @@ class Device:
 
 	def update(self, timeout_in_ms: int = K4A_WAIT_INFINITE) -> Capture:
 		capture_handle = self._get_capture(timeout_in_ms)
-		capture = Capture(capture_handle, self.transformation)
+		capture = Capture(capture_handle)
 		if self.recording:
 			self.record.write_capture(capture.handle())
 
@@ -68,12 +71,9 @@ class Device:
 
 		return device_handle
 
-	def _start_cameras(self, device_config: Configuration):
-		self.calibration = self._get_calibration(
-			device_config.depth_mode, device_config.color_resolution)
-		self.transformation = Transformation(self.calibration)
+	def _start_cameras(self, configuration: Configuration):
 		result_code = _k4a.k4a_device_start_cameras(
-			self._handle, ctypes.byref(device_config.handle()))
+			self._handle, ctypes.byref(configuration.handle()))
 		if result_code != _k4a.K4A_RESULT_SUCCEEDED:
 			raise _k4a.AzureKinectSensorException("Start K4A cameras failed.")
 

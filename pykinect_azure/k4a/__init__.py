@@ -4,6 +4,5 @@ from .configuration import Configuration, default_configuration
 from .device import Device
 from .image import Image
 from .imu_sample import ImuSample
-from .visualizer import PointCloudVisualizer
 from .transformation import Transformation
 from .ka_const import *

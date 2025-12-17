@@ -16,7 +16,7 @@ class PointCloudVisualizer:
 			flip=(False, True, False))
 		self.view.camera.set_range(x=[-2, 2], y=[-2, 2], z=[-2, 2])
 
-		self.flip_vector = np.array([1, -1, -1], dtype=np.float32)
+		self.flip_vector = np.array([1, -1, -1], dtype=np.int16)
 		self.scatter = Markers(parent=self.view.scene)
 
 		self.fps_text = Text(
@@ -35,13 +35,13 @@ class PointCloudVisualizer:
 	def __call__(self, points_3d, rgb_image=None):
 		self.update(points_3d, rgb_image)
 
-	def update(self, points_3d, rgb_image=None):
+	def update(self, points, rgb_image=None):
 		self._update_fps()
-		if points_3d is None or len(points_3d) == 0:
+		if points is None or len(points) == 0:
 			return
-		points_3d = points_3d * self.flip_vector
-		valid_mask = ~np.all(points_3d == 0, axis=1)
-		points_filtered = points_3d[valid_mask]
+		points = points * self.flip_vector
+		valid_mask = ~np.all(points == 0, axis=1)
+		points_filtered = points[valid_mask]
 		if points_filtered.size == 0:
 			return
 

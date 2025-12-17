@@ -33,7 +33,7 @@ if __name__ == "__main__":
 		capture = device.update()
 
 		# Get body tracker frame
-		frame = tracker.update(capture=capture)
+		frame = tracker.update()
 
 		# Get the color depth image from the capture
 		depth_color_image = capture.get_colored_depth_image()

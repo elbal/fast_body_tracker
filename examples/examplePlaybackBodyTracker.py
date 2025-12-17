@@ -30,7 +30,7 @@ if __name__ == "__main__":
 			break
 
 		# Get body tracker frame
-		body_frame = bodyTracker.update(capture=capture)
+		body_frame = bodyTracker.update()
 
 		# Get color image
 		ret_color, color_image = capture.get_transformed_color_image()

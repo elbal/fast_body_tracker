@@ -1,5 +1,4 @@
 import cv2
-import time
 
 import pykinect_azure as pykinect
 
@@ -18,28 +17,20 @@ def main():
 
 	device = pykinect.start_device(config=device_config)
 	cv2.namedWindow("Color Image", cv2.WINDOW_NORMAL)
-	FRAME_WINDOW = 600
-	frame_count = 0
-	start_time = time.perf_counter()
+	frc = pykinect.FrameRateCalculator()
+	frc.start()
 	while True:
-		frame_count += 1
 		capture = device.update()
-		bgra_image_obj = capture.get_color_image_object()
-		bgra_image = bgra_image_obj.to_numpy()
-		cv2.imshow("Color Image", bgra_image)
+		image = capture.get_color_image()
+		# Warning, do not delete the object before plotting or the data might
+		# disappear.
+		bgra_data = image.to_numpy()
+		cv2.imshow("Color Image", bgra_data)
 
 		# Press q key to stop.
 		if cv2.waitKey(1) == ord("q"):
 			break
-
-		if frame_count >= FRAME_WINDOW:
-			end_time = time.perf_counter()
-			elapsed_time = end_time - start_time
-			fps = frame_count / elapsed_time
-			print(f"FPS: {fps:.2f}")
-			start_time = time.perf_counter()
-			frame_count = 0
-
+		frc.update()
 	# Manually deallocate the memory.
 	del capture
 	del device
