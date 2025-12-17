@@ -4,7 +4,6 @@ from pykinect_azure import PointCloudVisualizer, KeyboardCloser
 
 def main():
 	# Initialize the library.
-	# If the library is not found, add the library path as argument.
 	pykinect.initialize_libraries()
 
 	device_config = pykinect.default_configuration
@@ -12,16 +11,17 @@ def main():
 	device_config.depth_mode = pykinect.K4A_DEPTH_MODE_WFOV_2X2BINNED
 
 	device = pykinect.start_device(config=device_config)
+	transformation = device.transformation
 	visualizer = PointCloudVisualizer()
 
 	keyboard_closer = KeyboardCloser()
 	keyboard_closer.start()
 	while not keyboard_closer.stop_event.is_set():
 		capture = device.update()
-		image = capture.get_depth_image()
-		point_cloud = device.transformation.depth_image_to_point_cloud(image)
-		# Warning, do not delete the object before plotting or the data might
-		# disappear.
+		depth_image = capture.get_depth_image()
+		point_cloud = transformation.depth_image_to_point_cloud(
+			depth_image, calibration_type=pykinect.K4A_CALIBRATION_TYPE_DEPTH)
+		# Warning, do not delete point_cloud object before plotting.
 		points = point_cloud.to_numpy()
 		visualizer(points)
 	# Manually deallocate the memory.

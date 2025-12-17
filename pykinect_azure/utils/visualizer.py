@@ -1,5 +1,4 @@
 import numpy as np
-import cv2
 from time import perf_counter
 from vispy.scene import SceneCanvas
 from vispy.scene.visuals import Markers, Text
@@ -8,13 +7,15 @@ from vispy.scene.cameras import TurntableCamera
 
 class PointCloudVisualizer:
 	def __init__(self):
+		self.color_lut = np.arange(256, dtype=np.float32) / 255.0
 		self.canvas = SceneCanvas(
 			keys="interactive", show=True, title="Point cloud")
 		self.view = self.canvas.central_widget.add_view()
 		self.view.camera = TurntableCamera(
 			fov=45, distance=3.0, up="-y", elevation=30, azimuth=0,
 			flip=(False, True, False))
-		self.view.camera.set_range(x=[-2, 2], y=[-2, 2], z=[-2, 2])
+		self.view.camera.set_range(
+			x=(-2000, 2000), y=(-2000, 2000), z=(-2000, 2000))
 
 		self.flip_vector = np.array([1, -1, -1], dtype=np.int16)
 		self.scatter = Markers(parent=self.view.scene)
@@ -27,10 +28,7 @@ class PointCloudVisualizer:
 		self._frames = 0
 
 		self.first_valid_frame = True
-		self.initial_center = np.array(
-			[0, 0, 1.5], dtype=np.float32)
-		self.points_buffer = np.zeros(
-			(1000, 3), dtype=np.float32)
+		self.initial_center = np.array([0, 0, 1500], dtype=np.float32)
 
 	def __call__(self, points_3d, rgb_image=None):
 		self.update(points_3d, rgb_image)
@@ -39,30 +37,27 @@ class PointCloudVisualizer:
 		self._update_fps()
 		if points is None or len(points) == 0:
 			return
-		points = points * self.flip_vector
-		valid_mask = ~np.all(points == 0, axis=1)
+		valid_mask = points[:, 2] != 0
 		points_filtered = points[valid_mask]
 		if points_filtered.size == 0:
 			return
+		points_filtered *= self.flip_vector
 
 		if rgb_image is not None:
-			colors = cv2.cvtColor(rgb_image, cv2.COLOR_BGRA2RGB).reshape(-1, 3)
-			colors = colors.astype(np.float32) / 255.0
-			colors_filtered = colors[valid_mask]
+			bgra_flat = rgb_image.reshape(-1, 4)
+			colors_subset = bgra_flat[valid_mask]
+			colors_filtered = self.color_lut[colors_subset[:, [2, 1, 0]]]
 		else:
 			colors_filtered = (1, 1, 1)
 
 		if self.first_valid_frame:
-			min_xyz = points_filtered.min(axis=0)
-			max_xyz = points_filtered.max(axis=0)
-
-			self.initial_center = (max_xyz + min_xyz) / 2
+			self.initial_center = np.median(points_filtered, axis=0)
 			self.view.camera.center = tuple(self.initial_center)
-
-			radius = np.linalg.norm(max_xyz - min_xyz) / 2
-			if radius > 0.5:
-				self.view.camera.distance = radius * 2.5
-
+			q10 = np.percentile(points_filtered, 10, axis=0)
+			q90 = np.percentile(points_filtered, 90, axis=0)
+			robust_radius = np.linalg.norm(q90-q10) / 2
+			if robust_radius > 500:
+				self.view.camera.distance = robust_radius * 2.5
 			self.first_valid_frame = False
 
 		self.scatter.set_data(
