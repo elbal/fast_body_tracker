@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-import time
 
 import pykinect_azure as pykinect
 
@@ -17,31 +16,22 @@ def main():
 	# print(device_config)
 
 	device = pykinect.start_device(config=device_config)
-	cv2.namedWindow("Infrared Image", cv2.WINDOW_NORMAL)
-	FRAME_WINDOW = 600
-	frame_count = 0
-	start_time = time.perf_counter()
+	cv2.namedWindow("Infrared image", cv2.WINDOW_NORMAL)
+	frc = pykinect.FrameRateCalculator()
+	frc.start()
 	while True:
-		frame_count += 1
 		capture = device.update()
-		ir_image = capture.get_ir_image()
-		ir_image = ir_image / 2000.0 * 255.0
-		ir_image = np.clip(ir_image, 0, 255).astype(np.uint8)
-		ir_image = cv2.applyColorMap(ir_image, cv2.COLORMAP_CIVIDIS)
-
-		cv2.imshow("Infrared Image", ir_image)
+		image = capture.get_ir_image()
+		ir_data = image.to_numpy()
+		ir_data = ir_data / 2000.0 * 255.0
+		ir_data = np.clip(ir_data, 0, 255).astype(np.uint8)
+		ir_data = cv2.applyColorMap(ir_data, cv2.COLORMAP_CIVIDIS)
+		cv2.imshow("Infrared image", ir_data)
 
 		# Press q key to stop.
 		if cv2.waitKey(1) == ord("q"):
 			break
-
-		if frame_count >= FRAME_WINDOW:
-			end_time = time.perf_counter()
-			elapsed_time = end_time - start_time
-			fps = frame_count / elapsed_time
-			print(f"FPS: {fps:.2f}")
-			start_time = time.perf_counter()
-			frame_count = 0
+		frc.update()
 	# Manually deallocate the memory.
 	del capture
 	del device

@@ -123,16 +123,19 @@ class Transformation:
 		return image_handle
 
 	@staticmethod
-	def _color_depth_image(
-			depth_image: npt.NDArray[np.uint16 | np.int16]) -> npt.NDArray[np.uint8]:
+	def color_depth_image(
+			depth_image: npt.NDArray[np.uint16 | np.int16]) -> npt.NDArray[
+		np.uint8]:
 		depth_color_image = cv2.convertScaleAbs(depth_image, alpha=0.05)
+		depth_color_image = cv2.bitwise_not(depth_color_image)
 		depth_color_image = cv2.applyColorMap(
-			depth_color_image, cv2.COLORMAP_TURBO)
+			depth_color_image, cv2.COLORMAP_CIVIDIS)
+		depth_color_image[depth_image == 0] = 0
 
 		return depth_color_image
 
 	@staticmethod
-	def _smooth_depth_image(
+	def smooth_depth_image(
 			depth_image: Image, max_hole_size: int = 10) -> Image:
 		"""
 		Smoothes depth image by filling the holes using inpainting method.

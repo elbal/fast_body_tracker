@@ -16,7 +16,7 @@ def main():
 	# print(device_config)
 
 	device = pykinect.start_device(config=device_config)
-	cv2.namedWindow("Color Image", cv2.WINDOW_NORMAL)
+	cv2.namedWindow("Color image", cv2.WINDOW_NORMAL)
 	frc = pykinect.FrameRateCalculator()
 	frc.start()
 	while True:
