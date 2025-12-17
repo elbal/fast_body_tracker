@@ -10,7 +10,7 @@ def main():
 	device_config = pykinect.default_configuration
 	device_config.color_format = pykinect.K4A_IMAGE_FORMAT_COLOR_BGRA32
 	device_config.color_resolution = pykinect.K4A_COLOR_RESOLUTION_720P
-	device_config.depth_mode = pykinect.K4A_DEPTH_MODE_WFOV_2X2BINNED
+	device_config.depth_mode = pykinect.K4A_DEPTH_MODE_NFOV_2X2BINNED
 	device_config.synchronized_images_only = True
 
 	device = pykinect.start_device(config=device_config)
@@ -22,8 +22,6 @@ def main():
 	while not keyboard_closer.stop_event.is_set():
 		capture = device.update()
 		color_image = capture.get_color_image()
-		# Warning, do not delete the color_image before plotting or the data
-		# might disappear.
 		bgra_data = color_image.to_numpy()
 		depth_image = capture.get_depth_image()
 		transformed_depth_image = transformation.depth_image_to_color_camera(
