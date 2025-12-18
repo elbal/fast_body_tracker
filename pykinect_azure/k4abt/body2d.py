@@ -13,6 +13,7 @@ JOINT2D_DTYPE = np.dtype([
 
 cmap = plt.get_cmap("tab20")
 
+
 class Body2d:
 	def __init__(
 			self, body_handle: k4abt_body_t, calibration: Calibration,

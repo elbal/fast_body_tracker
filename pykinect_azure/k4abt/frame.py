@@ -89,7 +89,7 @@ class Frame:
 	def get_transformed_segmentation_image(
 			self, capture: Capture) -> npt.NDArray[np.uint8]:
 		depth_image = capture.get_depth_image()
-		index_map = self.transformation.depth_image_to_color_camera_custom(
+		index_map = self.transformation.depth_and_custom_image_to_color_camera(
 			depth_image, self._get_body_index_map_object())
 		index_map = index_map.to_numpy()
 

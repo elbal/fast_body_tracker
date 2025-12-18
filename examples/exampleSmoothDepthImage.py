@@ -16,7 +16,6 @@ def main():
 	device_config = pykinect.default_configuration
 	device_config.color_resolution = pykinect.K4A_COLOR_RESOLUTION_OFF
 	device_config.depth_mode = pykinect.K4A_DEPTH_MODE_WFOV_2X2BINNED
-	#print(device_config)
 
 	device = pykinect.start_device(config=device_config)
 	cv2.namedWindow("Smoothed Depth Comparison", cv2.WINDOW_NORMAL)

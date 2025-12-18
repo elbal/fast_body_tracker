@@ -53,7 +53,7 @@ class Transformation:
 
 		return transformed_depth_image
 
-	def depth_image_to_color_camera_custom(
+	def depth_and_custom_image_to_color_camera(
 			self, depth_image: Image, custom_image: Image,
 			interpolation=_k4a.K4A_TRANSFORMATION_INTERPOLATION_TYPE_LINEAR) -> Image:
 		transformed_depth_image_handle = self._create_image_handle(
@@ -89,16 +89,27 @@ class Transformation:
 	def depth_image_to_point_cloud(
 			self, depth_image: Image,
 			calibration_type=_k4a.K4A_CALIBRATION_TYPE_DEPTH) -> Image:
-		xyz_image_handle = self._create_image_handle(
+		point_cloud_handle = self._create_image_handle(
 			_k4a.K4A_IMAGE_FORMAT_CUSTOM, depth_image.width,
 			depth_image.height)
-
 		_k4a.k4a_transformation_depth_image_to_point_cloud(
 			self._handle, depth_image.handle(), calibration_type,
-			xyz_image_handle)
-		xyz_image = Image(xyz_image_handle)
+			point_cloud_handle)
+		point_cloud_image = Image(point_cloud_handle)
 
-		return xyz_image
+		return point_cloud_image
+
+	@staticmethod
+	def color_a_depth_image(
+			depth_image: npt.NDArray[np.uint16 | np.int16]) -> npt.NDArray[
+		np.uint8]:
+		depth_color_image = cv2.convertScaleAbs(depth_image, alpha=0.05)
+		depth_color_image = cv2.bitwise_not(depth_color_image)
+		depth_color_image = cv2.applyColorMap(
+			depth_color_image, cv2.COLORMAP_CIVIDIS)
+		depth_color_image[depth_image == 0] = 0
+
+		return depth_color_image
 
 	@staticmethod
 	def _get_custom_bytes_per_pixel(custom_image: Image) -> int:
@@ -123,19 +134,7 @@ class Transformation:
 		return image_handle
 
 	@staticmethod
-	def color_depth_image(
-			depth_image: npt.NDArray[np.uint16 | np.int16]) -> npt.NDArray[
-		np.uint8]:
-		depth_color_image = cv2.convertScaleAbs(depth_image, alpha=0.05)
-		depth_color_image = cv2.bitwise_not(depth_color_image)
-		depth_color_image = cv2.applyColorMap(
-			depth_color_image, cv2.COLORMAP_CIVIDIS)
-		depth_color_image[depth_image == 0] = 0
-
-		return depth_color_image
-
-	@staticmethod
-	def smooth_depth_image(
+	def smooth_a_depth_image(
 			depth_image: Image, max_hole_size: int = 10) -> Image:
 		"""
 		Smoothes depth image by filling the holes using inpainting method.
