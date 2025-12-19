@@ -104,19 +104,13 @@ class Transformation:
 			depth_image: npt.NDArray[np.uint16 | np.int16]) -> npt.NDArray[
 		np.uint8]:
 		depth_color_image = cv2.convertScaleAbs(depth_image, alpha=0.05)
-		depth_color_image = cv2.bitwise_not(depth_color_image)
+		cv2.bitwise_not(depth_color_image, dst=depth_color_image)
 		depth_color_image = cv2.applyColorMap(
 			depth_color_image, cv2.COLORMAP_CIVIDIS)
 		depth_color_image[depth_image == 0] = 0
 
 		return depth_color_image
 
-	@staticmethod
-	def _get_custom_bytes_per_pixel(custom_image: Image) -> int:
-		if custom_image.format == _k4a.K4A_IMAGE_FORMAT_CUSTOM8:
-			return 1
-		else:
-			return 2
 
 	@staticmethod
 	def _create_image_handle(
