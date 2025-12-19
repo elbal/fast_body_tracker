@@ -1,4 +1,5 @@
 import numpy as np
+from numpy import typing as npt
 from time import perf_counter
 from vispy.scene import SceneCanvas
 from vispy.scene.visuals import Markers, Text
@@ -12,7 +13,7 @@ class PointCloudVisualizer:
 			keys="interactive", show=True, title="Point cloud")
 		self.view = self.canvas.central_widget.add_view()
 		self.view.camera = TurntableCamera(
-			fov=45, distance=3.0, up="-y", elevation=30, azimuth=0,
+			fov=45, distance=3000, up="-y", elevation=30, azimuth=0,
 			flip=(False, True, False))
 		self.view.camera.set_range(
 			x=(-2000, 2000), y=(-2000, 2000), z=(-2000, 2000))
@@ -30,10 +31,14 @@ class PointCloudVisualizer:
 		self.first_valid_frame = True
 		self.initial_center = np.array([0, 0, 1500], dtype=np.float32)
 
-	def __call__(self, points_3d, rgb_image=None):
-		self.update(points_3d, rgb_image)
+	def __call__(
+			self, points: npt.NDArray[np.int16],
+			bgra_data: npt.NDArray[np.uint8] =None):
+		self.update(points, bgra_data)
 
-	def update(self, points, rgb_image=None):
+	def update(
+			self, points: npt.NDArray[np.int16],
+			bgra_data: npt.NDArray[np.uint8] = None):
 		self._update_fps()
 		if points is None or len(points) == 0:
 			return
@@ -43,8 +48,8 @@ class PointCloudVisualizer:
 			return
 		points_filtered *= self.flip_vector
 
-		if rgb_image is not None:
-			bgra_flat = rgb_image.reshape(-1, 4)
+		if bgra_data is not None:
+			bgra_flat = bgra_data.reshape(-1, 4)
 			colors_subset = bgra_flat[valid_mask]
 			colors_filtered = self.color_lut[colors_subset[:, [2, 1, 0]]]
 		else:
@@ -72,5 +77,6 @@ class PointCloudVisualizer:
 		if dt >= 1.0:
 			fps = self._frames / dt
 			self.fps_text.text = f"FPS: {fps:.1f}"
+			self.fps_text.pos = (10, self.canvas.size[1] - 10)
 			self._frames = 0
 			self._last_time = now
