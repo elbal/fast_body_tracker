@@ -102,13 +102,10 @@ class Transformation:
 	@staticmethod
 	def color_a_depth_image(
 			depth_image: npt.NDArray[np.uint16 | np.int16]) -> npt.NDArray[
-		np.uint8]:
+				np.uint8]:
 		depth_8bit = cv2.convertScaleAbs(depth_image, alpha=0.05)
-		cv2.bitwise_not(depth_8bit, dst=depth_8bit)
-		depth_color_image = cv2.applyColorMap(depth_8bit, cv2.COLORMAP_TURBO)
-		depth_color_image[depth_image == 0] = 0
 
-		return depth_color_image
+		return cv2.applyColorMap(depth_8bit, cv2.COLORMAP_TURBO)
 
 	@staticmethod
 	def _create_image_handle(
