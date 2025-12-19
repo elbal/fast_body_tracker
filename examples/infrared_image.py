@@ -15,13 +15,12 @@ def main():
 	cv2.namedWindow("Infrared image", cv2.WINDOW_NORMAL)
 	frc = pykinect.FrameRateCalculator()
 	frc.start()
-	ir_scale_factor = 255.0 / 2000.0  # To improve visualization.
+	ir_scale_factor = 255.0 / 500.0  # To improve visualization.
 	while True:
 		capture = device.update()
 		image = capture.get_ir_image()
 		ir_data = image.to_numpy()
 		ir_data = cv2.convertScaleAbs(ir_data, alpha=ir_scale_factor)
-		ir_data = cv2.applyColorMap(ir_data, cv2.COLORMAP_CIVIDIS)
 		cv2.imshow("Infrared image", ir_data)
 
 		# Press q key to stop.
