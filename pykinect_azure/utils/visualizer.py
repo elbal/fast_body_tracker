@@ -37,19 +37,19 @@ class PointCloudVisualizer:
 		self.update(points, bgra_data)
 
 	def update(
-			self, points: npt.NDArray[np.int16],
-			bgra_data: npt.NDArray[np.uint8] = None):
+			self, point_cloud: npt.NDArray[np.int16],
+			bgra_image: npt.NDArray[np.uint8] = None):
 		self._update_fps()
-		if points is None or len(points) == 0:
+		if point_cloud is None or len(point_cloud) == 0:
 			return
-		valid_mask = points[:, 2] != 0
-		points_filtered = points[valid_mask]
+		valid_mask = point_cloud[:, 2] != 0
+		points_filtered = point_cloud[valid_mask]
 		if points_filtered.size == 0:
 			return
 		points_filtered *= self.flip_vector
 
-		if bgra_data is not None:
-			bgra_flat = bgra_data.reshape(-1, 4)
+		if bgra_image is not None:
+			bgra_flat = bgra_image.reshape(-1, 4)
 			colors_subset = bgra_flat[valid_mask]
 			colors_filtered = self.color_lut[colors_subset[:, [2, 1, 0]]]
 		else:

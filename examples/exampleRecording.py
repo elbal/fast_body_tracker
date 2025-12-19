@@ -8,7 +8,7 @@ if __name__ == "__main__":
 	pykinect.initialize_libraries()
 
 	# Modify camera configuration
-	device_config = pykinect.default_configuration
+	device_config = pykinect.Configuration()
 	device_config.color_format = pykinect.K4A_IMAGE_FORMAT_COLOR_BGRA32
 	device_config.color_resolution = pykinect.K4A_COLOR_RESOLUTION_1080P
 	device_config.depth_mode = pykinect.K4A_DEPTH_MODE_WFOV_2X2BINNED

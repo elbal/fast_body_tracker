@@ -39,11 +39,11 @@ class Calibration:
         params = intrinsics.parameters.param
 
         if intrinsics.type == _k4a.K4A_CALIBRATION_LENS_DISTORTION_MODEL_THETA:
-            # WFOV Depth (Fisheye) -> 4 parameters
+            # WFOV depth (Fisheye) -> 4 parameters.
             return np.array(
                 [params.k1, params.k2, params.k3, params.k4],
                 dtype=np.float32)
-        # NFOV Depth (RATIONAL_6KT) -> 8 parameters (standard OpenCV)
+        # NFOV depth (RATIONAL_6KT) -> 8 parameters (standard OpenCV).
         return np.array([
             params.k1, params.k2, params.p1, params.p2,
             params.k3, params.k4, params.k5, params.k6

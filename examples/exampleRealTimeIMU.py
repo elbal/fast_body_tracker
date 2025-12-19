@@ -13,7 +13,7 @@ if __name__ == "__main__":
 	pykinect.initialize_libraries()
 
 	# Modify camera configuration
-	device_config = pykinect.default_configuration
+	device_config = pykinect.Configuration()
 	device_config.depth_mode = pykinect.K4A_DEPTH_MODE_OFF
 	#print(device_config)
 

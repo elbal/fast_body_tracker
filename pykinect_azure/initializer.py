@@ -2,7 +2,7 @@ import platform
 from pathlib import Path
 import os
 
-from pykinect_azure.k4a import _k4a, Device, default_configuration
+from pykinect_azure.k4a import _k4a, Device, Configuration
 from pykinect_azure.k4abt import _k4abt, Tracker, default_tracker_configuration
 from pykinect_azure.k4arecord import _k4arecord
 from pykinect_azure.k4arecord.playback import Playback
@@ -30,7 +30,7 @@ def initialize_libraries(
 
 
 def start_device(
-        device_index=0, config=default_configuration, record=False,
+        device_index=0, config=Configuration(), record=False,
         record_filepath="output.mkv"):
     device = Device(device_index)
     device.start(config, record, record_filepath)

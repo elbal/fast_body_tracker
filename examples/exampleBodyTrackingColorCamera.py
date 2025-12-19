@@ -8,7 +8,7 @@ if __name__ == "__main__":
 	pykinect.initialize_libraries(track_body=True)
 
 	# Modify camera configuration
-	device_config = pykinect.default_configuration
+	device_config = pykinect.Configuration()
 	device_config.color_resolution = pykinect.K4A_COLOR_RESOLUTION_1080P
 	device_config.depth_mode = pykinect.K4A_DEPTH_MODE_WFOV_2X2BINNED
 	#print(device_config)
@@ -34,7 +34,7 @@ if __name__ == "__main__":
 		body_frame = bodyTracker.update()
 
 		# Get the color image
-		ret, color_image = capture.get_color_image()
+		ret, color_image = capture.get_color_image_object()
 
 		if not ret:
 			continue

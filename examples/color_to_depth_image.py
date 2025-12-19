@@ -7,7 +7,7 @@ def main():
 	# If the library is not found, add the library path as argument.
 	pykinect.initialize_libraries()
 
-	device_config = pykinect.default_configuration
+	device_config = pykinect.Configuration()
 	device_config.color_format = pykinect.K4A_IMAGE_FORMAT_COLOR_BGRA32
 	device_config.color_resolution = pykinect.K4A_COLOR_RESOLUTION_1080P
 	device_config.synchronized_images_only = True
@@ -21,19 +21,19 @@ def main():
 	while True:
 		capture = device.update()
 
-		depth_image = capture.get_depth_image()
-		depth_data = depth_image.to_numpy()
-		depth_data = transformation.color_a_depth_image(depth_data)
+		depth_image_object = capture.get_depth_image_object()
+		depth_image = depth_image_object.to_numpy()
+		depth_image = transformation.color_a_depth_image(depth_image)
 
-		color_image = capture.get_color_image()
-		transformed_color_image = transformation.color_image_to_depth_camera(
-			depth_image, color_image)
-		bgra_data = transformed_color_image.to_numpy()
-		gray_view = bgra_data[:, :, 1]
-		bgra_data = cv2.merge([gray_view, gray_view, gray_view])
+		color_image_object = capture.get_color_image_object()
+		transformed_image_object = transformation.color_image_to_depth_camera(
+			depth_image_object, color_image_object)
+		bgra_image = transformed_image_object.to_numpy()
+		gray_view = bgra_image[:, :, 1]
+		bgra_image = cv2.merge([gray_view, gray_view, gray_view])
 
 		combined_image = cv2.addWeighted(
-			bgra_data[:, :, :3], 0.7, depth_data, 0.3, 0)
+			bgra_image[:, :, :3], 0.7, depth_image, 0.3, 0)
 		cv2.imshow("Transformed color image", combined_image)
 
 		# Press q key to stop

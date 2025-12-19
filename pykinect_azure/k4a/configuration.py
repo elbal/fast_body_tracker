@@ -29,7 +29,7 @@ class Configuration:
 		else:
 			self.__dict__[name] = value
 
-	def __str__(self):
+	def __str__(self) -> str:
 		message = (
 			"Device configuration: \n"
 			f"\tcolor_format: {self.color_format} "
@@ -69,6 +69,3 @@ class Configuration:
 			self.disable_streaming_indicator)
 
 		return configuration_handle
-
-
-default_configuration = Configuration()
