@@ -9,6 +9,7 @@ def main():
 
 	device_config = pykinect.default_configuration
 	device_config.color_format = pykinect.K4A_IMAGE_FORMAT_COLOR_BGRA32
+	device_config.color_resolution = pykinect.K4A_COLOR_RESOLUTION_1080P
 	device_config.synchronized_images_only = True
 
 	device = pykinect.start_device(config=device_config)
@@ -28,6 +29,8 @@ def main():
 		transformed_color_image = transformation.color_image_to_depth_camera(
 			depth_image, color_image)
 		bgra_data = transformed_color_image.to_numpy()
+		gray_view = bgra_data[:, :, 1]
+		bgra_data = cv2.merge([gray_view, gray_view, gray_view])
 
 		combined_image = cv2.addWeighted(
 			bgra_data[:, :, :3], 0.7, depth_data, 0.3, 0)
