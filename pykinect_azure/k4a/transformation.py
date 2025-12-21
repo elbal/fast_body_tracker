@@ -35,6 +35,12 @@ class Transformation:
 			calibration.handle().depth_camera_calibration.resolution_width,
 			calibration.handle().depth_camera_calibration.resolution_height)
 
+		depth_image_handle = self._create_image_handle(
+			_k4a.K4A_IMAGE_FORMAT_DEPTH16, self.color_resolution.width,
+			self.color_resolution.height)
+		self._depth_image_object = Image(depth_image_handle)
+		self._invalid_val = ctypes.c_uint32(0)
+
 	def __del__(self):
 		if self._handle:
 			_k4a.k4a_transformation_destroy(self._handle)
@@ -42,68 +48,70 @@ class Transformation:
 	def handle(self) -> _k4a.k4a_transformation_t:
 		return self._handle
 
-	def depth_image_to_color_camera(self, depth_image_object: Image) -> Image:
-		transformed_depth_handle = self._create_image_handle(
-			depth_image_object.format, self.color_resolution.width,
-			self.color_resolution.height)
+	def depth_image_to_color_camera(
+			self, depth_image_object: Image,
+			transformed_image_object: Image | None = None) -> Image:
+		if transformed_image_object is None:
+			transformed_depth_handle = self._create_image_handle(
+				depth_image_object.format, self.color_resolution.width,
+				self.color_resolution.height)
+			transformed_image_object = Image(transformed_depth_handle)
 
 		_k4a.k4a_transformation_depth_image_to_color_camera(
 			self._handle, depth_image_object.handle(),
-			transformed_depth_handle)
+			transformed_image_object.handle())
 
-		return Image(transformed_depth_handle)
+		return transformed_image_object
 
-	def depth_and_custom_image_to_color_camera(
+	def custom_image_to_color_camera(
 			self, depth_image_object: Image, custom_image_object: Image,
+			transformed_image_object: Image | None = None,
 			interpolation: int = _k4a.K4A_TRANSFORMATION_INTERPOLATION_TYPE_LINEAR) -> Image:
-		transformed_depth_handle = self._create_image_handle(
-			_k4a.K4A_IMAGE_FORMAT_DEPTH16, self.color_resolution.width,
-			self.color_resolution.height)
-		transformed_custom_handle = self._create_image_handle(
-			custom_image_object.format, self.color_resolution.width,
-			self.color_resolution.height)
-		invalid_custom_value = ctypes.c_uint32()
+		if transformed_image_object is None:
+			transformed_custom_handle = self._create_image_handle(
+				custom_image_object.format, self.color_resolution.width,
+				self.color_resolution.height)
+			transformed_image_object = Image(transformed_custom_handle)
 
 		_k4a.k4a_transformation_depth_image_to_color_camera_custom(
 			self._handle, depth_image_object.handle(),
-			custom_image_object.handle(), transformed_depth_handle,
-			transformed_custom_handle, interpolation, invalid_custom_value)
-		_ = Image(transformed_depth_handle)
+			custom_image_object.handle(), self._depth_image_object.handle(),
+			transformed_image_object.handle(), interpolation,
+			self._invalid_val)
 
-		return Image(transformed_custom_handle)
+		return transformed_image_object
 
 	def color_image_to_depth_camera(
 			self, depth_image_object: Image,
-			color_image_object: Image) -> Image:
-		transformed_image_handle = self._create_image_handle(
-			_k4a.K4A_IMAGE_FORMAT_COLOR_BGRA32, self.depth_resolution.width,
-			self.depth_resolution.height)
+			color_image_object: Image,
+			transformed_image_object: Image | None = None) -> Image:
+		if transformed_image_object is None:
+			transformed_image_handle = self._create_image_handle(
+				_k4a.K4A_IMAGE_FORMAT_COLOR_BGRA32,
+				self.depth_resolution.width, self.depth_resolution.height)
+			transformed_image_object = Image(transformed_image_handle)
 
 		_k4a.k4a_transformation_color_image_to_depth_camera(
 			self._handle, depth_image_object.handle(),
-			color_image_object.handle(), transformed_image_handle)
+			color_image_object.handle(), transformed_image_object.handle())
 
-		return Image(transformed_image_handle)
+		return transformed_image_object
 
 	def depth_image_to_point_cloud(
 			self, depth_image_object: Image,
-			calibration_type=_k4a.K4A_CALIBRATION_TYPE_DEPTH) -> Image:
-		point_cloud_handle = self._create_image_handle(
-			_k4a.K4A_IMAGE_FORMAT_CUSTOM, depth_image_object.width,
-			depth_image_object.height)
+			point_cloud_object: Image | None = None,
+			calibration_type=_k4a.K4A_CALIBRATION_TYPE_DEPTH,) -> Image:
+		if point_cloud_object is None:
+			point_cloud_handle = self._create_image_handle(
+				_k4a.K4A_IMAGE_FORMAT_CUSTOM, depth_image_object.width,
+				depth_image_object.height)
+			point_cloud_object = Image(point_cloud_handle)
+
 		_k4a.k4a_transformation_depth_image_to_point_cloud(
 			self._handle, depth_image_object.handle(), calibration_type,
-			point_cloud_handle)
+			point_cloud_object.handle())
 
-		return Image(point_cloud_handle)
-
-	@staticmethod
-	def color_a_depth_image(
-			depth_image: npt.NDArray[np.uint16 | np.int16]) -> npt.NDArray[
-				np.uint8]:
-		depth_image = cv2.convertScaleAbs(depth_image, alpha=0.05)
-
-		return cv2.applyColorMap(depth_image, cv2.COLORMAP_TURBO)
+		return point_cloud_object
 
 	@staticmethod
 	def _create_image_handle(
@@ -119,35 +127,3 @@ class Transformation:
 			raise _k4a.AzureKinectSensorException("Create image failed.")
 
 		return image_handle
-
-	@staticmethod
-	def smooth_a_depth_image(
-			depth_image_object: Image, max_hole_size: int = 10) -> Image:
-		"""
-		Smoothes a depth image by filling its holes through an inpainting
-		method.
-
-		Parameters
-		----------
-		depth_image_object: Image:
-			Original depth image object.
-		max_hole_size: int
-			Maximum hole size to fill.
-
-		Returns
-		-------
-		Image
-			Smoothed depth image
-		"""
-		mask = np.zeros(depth_image_object.shape, dtype=np.uint8)
-		mask[depth_image_object == 0] = 1
-
-		kernel = np.ones((max_hole_size, max_hole_size), np.uint8)
-		erosion = cv2.erode(mask, kernel, iterations=1)
-		mask = mask - erosion
-
-		smoothed_image_object = cv2.inpaint(
-			depth_image_object.astype(np.uint16), mask, max_hole_size,
-			cv2.INPAINT_NS)
-
-		return smoothed_image_object

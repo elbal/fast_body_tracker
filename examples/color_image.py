@@ -20,7 +20,7 @@ def main():
 		capture = device.update()
 		image_object = capture.get_color_image_object()
 		bgra_image = image_object.to_numpy()
-		cv2.imshow("Color Image", bgra_image)
+		cv2.imshow("Color image", bgra_image[:, :, :3])
 
 		# Press q key to stop.
 		if cv2.waitKey(1) == ord("q"):

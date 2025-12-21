@@ -16,11 +16,12 @@ def main():
 	visualizer = PointCloudVisualizer()
 	keyboard_closer = KeyboardCloser()
 	keyboard_closer.start()
+	point_cloud_object = None
 	while not keyboard_closer.stop_event.is_set():
 		capture = device.update()
 		depth_image_object = capture.get_depth_image_object()
 		point_cloud_object = transformation.depth_image_to_point_cloud(
-			depth_image_object,
+			depth_image_object, point_cloud_object,
 			calibration_type=pykinect.K4A_CALIBRATION_TYPE_DEPTH)
 		point_cloud = point_cloud_object.to_numpy()
 		visualizer(point_cloud)

@@ -18,18 +18,19 @@ def main():
 	visualizer = PointCloudVisualizer()
 	keyboard_closer = KeyboardCloser()
 	keyboard_closer.start()
+	point_cloud_object = None
+	transformed_image_object = None
 	while not keyboard_closer.stop_event.is_set():
 		capture = device.update()
 
 		depth_image_object = capture.get_depth_image_object()
 		point_cloud_object = transformation.depth_image_to_point_cloud(
-			depth_image_object,
-			calibration_type=pykinect.K4A_CALIBRATION_TYPE_DEPTH)
+			depth_image_object, point_cloud_object)
 		point_cloud = point_cloud_object.to_numpy()
 
 		color_image_object = capture.get_color_image_object()
 		transformed_image_object = transformation.color_image_to_depth_camera(
-			depth_image_object, color_image_object)
+			depth_image_object, color_image_object, transformed_image_object)
 		bgra_image = transformed_image_object.to_numpy()
 
 		visualizer(point_cloud, bgra_image)

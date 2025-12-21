@@ -1,4 +1,5 @@
 import cv2
+import numpy as np
 
 import pykinect_azure as pykinect
 
@@ -15,12 +16,18 @@ def main():
 	cv2.namedWindow("Depth image", cv2.WINDOW_NORMAL)
 	frc = pykinect.FrameRateCalculator()
 	frc.start()
+	depth_8bit_image = np.zeros((512, 512), dtype=np.uint8)
+	colorized_image = np.zeros((512, 512, 3), dtype=np.uint8)
 	while True:
 		capture = device.update()
 		image_object = capture.get_depth_image_object()
 		depth_image = image_object.to_numpy()
-		depth_image = device.transformation.color_a_depth_image(depth_image)
-		cv2.imshow("Depth image", depth_image)
+		cv2.convertScaleAbs(
+			depth_image, alpha=0.08, dst=depth_8bit_image)
+		cv2.applyColorMap(
+			depth_8bit_image, cv2.COLORMAP_TURBO, dst=colorized_image)
+
+		cv2.imshow("Depth image", colorized_image)
 
 		# Press q key to stop.
 		if cv2.waitKey(1) == ord("q"):
