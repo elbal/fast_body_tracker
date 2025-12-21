@@ -1,9 +1,25 @@
+import threading
+import queue
 import pykinect_azure as pykinect
+
 from pykinect_azure import PointCloudVisualizer, KeyboardCloser
 
 
+def capture_thread(device, q, stop_event):
+	while not stop_event.is_set():
+		capture = device.update()
+		counter = 0
+		if q.full():
+			counter += 1
+			print(f"{counter}")
+			try:
+				q.get_nowait()
+			except queue.Empty:
+				pass
+		q.put(capture)
+
+
 def main():
-	# If the library is not found, add the library path as argument.
 	pykinect.initialize_libraries()
 
 	device_config = pykinect.Configuration()
@@ -15,13 +31,20 @@ def main():
 	device = pykinect.start_device(config=device_config)
 	transformation = device.transformation
 
+	q = queue.Queue(maxsize=30)
+	stop_event = threading.Event()
+	t = threading.Thread(target=capture_thread, args=(device, q, stop_event))
+	t.start()
+
 	visualizer = PointCloudVisualizer()
 	keyboard_closer = KeyboardCloser()
 	keyboard_closer.start()
+
 	point_cloud_object = None
 	transformed_image_object = None
+
 	while not keyboard_closer.stop_event.is_set():
-		capture = device.update()
+		capture = q.get()
 
 		depth_image_object = capture.get_depth_image_object()
 		point_cloud_object = transformation.depth_image_to_point_cloud(
@@ -34,7 +57,9 @@ def main():
 		bgra_image = transformed_image_object.to_numpy()
 
 		visualizer(point_cloud, bgra_image)
-	del capture
+
+	stop_event.set()
+	t.join()
 	del device
 
 

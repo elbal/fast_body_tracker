@@ -1,11 +1,22 @@
 import cv2
 import numpy as np
-
+import threading
+import queue
 import pykinect_azure as pykinect
 
 
+def capture_thread(device, q, stop_event):
+	while not stop_event.is_set():
+		capture = device.update()
+		if q.full():
+			try:
+				q.get_nowait()
+			except queue.Empty:
+				pass
+		q.put(capture)
+
+
 def main():
-	# If the library is not found, add the library path as argument.
 	pykinect.initialize_libraries()
 
 	device_config = pykinect.Configuration()
@@ -17,39 +28,48 @@ def main():
 	device = pykinect.start_device(config=device_config)
 	transformation = device.transformation
 
+	q = queue.Queue(maxsize=10)
+	stop_event = threading.Event()
+	t = threading.Thread(target=capture_thread, args=(device, q, stop_event))
+	t.start()
+
 	cv2.namedWindow("Transformed depth image", cv2.WINDOW_NORMAL)
 	frc = pykinect.FrameRateCalculator()
 	frc.start()
+
 	transformed_image_object = None
 	depth_8bit_image = np.zeros((1080, 1920), dtype=np.uint8)
 	colorized_image = np.zeros((1080, 1920, 3), dtype=np.uint8)
 	combined_image = np.zeros((1080, 1920, 3), dtype=np.uint8)
+
 	while True:
-		capture = device.update()
+		capture = q.get()
 
 		color_image_object = capture.get_color_image_object()
 		bgra_image = color_image_object.to_numpy()
 		gray_view = bgra_image[:, :, 1]
-		bgra_image = cv2.merge([gray_view, gray_view, gray_view])
+		bgra_gray_merged = cv2.merge([gray_view, gray_view, gray_view])
 
 		depth_image_object = capture.get_depth_image_object()
 		transformed_image_object = transformation.depth_image_to_color_camera(
 			depth_image_object, transformed_image_object)
+
 		depth_image = transformed_image_object.to_numpy()
-		cv2.convertScaleAbs(
-			depth_image, alpha=0.08, dst=depth_8bit_image)
+		cv2.convertScaleAbs(depth_image, alpha=0.08, dst=depth_8bit_image)
 		cv2.applyColorMap(
-			depth_8bit_image, cv2.COLORMAP_MAGMA, dst=colorized_image)
+			depth_8bit_image, cv2.COLORMAP_CIVIDIS, dst=colorized_image)
 
 		cv2.addWeighted(
-			bgra_image, 0.7, colorized_image, 0.3, 0, dst=combined_image)
+			bgra_gray_merged, 0.7, colorized_image, 0.3, 0, dst=combined_image)
 		cv2.imshow("Transformed depth image", combined_image)
-		
-		# Press q key to stop.
+
 		if cv2.waitKey(1) == ord("q"):
 			break
 		frc.update()
-	del capture
+
+	cv2.destroyAllWindows()
+	stop_event.set()
+	t.join()
 	del device
 
 
