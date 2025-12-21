@@ -1,4 +1,3 @@
-import ctypes
 import sys
 import traceback
 
@@ -67,11 +66,6 @@ def k4a_record_close(recording_handle):
 	_k4a_record_close.argtypes = (k4a_record_t,)
 
 	_k4a_record_close(recording_handle)
-
-
-###########################
-###    Playback         ###
-###########################
 
 def k4a_playback_open(file_path, playback_handle):
 	# K4ARECORD_EXPORT k4a_result_t k4a_playback_open(const char *path, k4a_playback_t *playback_handle);
@@ -409,19 +403,8 @@ def k4a_playback_get_recording_length_usec(playback_handle):
 
 	return _k4a_playback_get_recording_length_usec(playback_handle)
 
-def k4a_playback_get_last_timestamp_usec(playback_handle):	
-	"""
-	K4ARECORD_DEPRECATED_EXPORT uint64_t k4a_playback_get_last_timestamp_usec(k4a_playback_t playback_handle);
-	"""
-	_k4a_playback_get_last_timestamp_usec = record_dll.k4a_playback_get_last_timestamp_usec
-	_k4a_playback_get_last_timestamp_usec.restype = ctypes.c_uint64
-	_k4a_playback_get_last_timestamp_usec.argtypes = (k4a_playback_t,)
-
-	return _k4a_playback_get_last_timestamp_usec(playback_handle)
-
 def VERIFY(result, error):
 	if result != K4A_RESULT_SUCCEEDED:
 		print(error)
 		traceback.print_stack()
 		sys.exit(1)
-
