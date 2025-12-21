@@ -3,7 +3,7 @@ from pathlib import Path
 import os
 
 from pykinect_azure.k4a import _k4a, Device, Configuration
-from pykinect_azure.k4abt import _k4abt, Tracker, default_tracker_configuration
+from pykinect_azure.k4abt import _k4abt, Tracker, TrackerConfiguration
 from pykinect_azure.k4arecord import _k4arecord
 from pykinect_azure.k4arecord.playback import Playback
 
@@ -39,7 +39,7 @@ def start_device(
 
 
 def start_body_tracker(
-        calibration, tracker_configuration=default_tracker_configuration):
+        calibration, tracker_configuration=TrackerConfiguration()):
     return Tracker(calibration, tracker_configuration)
 
 

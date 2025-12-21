@@ -19,7 +19,7 @@ if __name__ == "__main__":
 	calibration = device.calibration
 
 	# Start body tracker
-	tracker_config = pykinect.default_tracker_configuration
+	tracker_config = pykinect.TrackerConfiguration()
 	tracker = pykinect.start_body_tracker(calibration=calibration, tracker_configuration=tracker_config)
 
 	cv2.namedWindow('Depth image with skeleton',cv2.WINDOW_NORMAL)

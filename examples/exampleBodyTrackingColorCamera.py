@@ -18,7 +18,7 @@ if __name__ == "__main__":
 	calibration = device.calibration
 
 	# Start body tracker
-	tracker_config = pykinect.default_tracker_configuration
+	tracker_config = pykinect.TrackerConfiguration()
 	tracker_config.sensor_orientation = pykinect.K4ABT_SENSOR_ORIENTATION_DEFAULT
 	tracker_config.tracker_processing_mode = pykinect.K4ABT_TRACKER_PROCESSING_MODE_GPU
 	tracker_config.gpu_device_id = 0

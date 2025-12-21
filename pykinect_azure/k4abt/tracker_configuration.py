@@ -80,6 +80,3 @@ class TrackerConfiguration:
             return str(full_path).encode('utf-8')
 
         raise OSError(f"Unsupported operating system: {system}")
-
-
-default_tracker_configuration = TrackerConfiguration()
