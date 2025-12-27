@@ -24,11 +24,14 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: Microsoft :: Windows",
     "Operating System :: POSIX :: Linux",
-    "Topic :: Scientific/Engineering :: Image Processing",
+    "Topic :: Scientific/Engineering :: Image Recognition",
+    "Topic :: Scientific/Engineering :: Human Machine Interfaces",
+    "Topic :: Scientific/Engineering :: Visualization",
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["pykinect_azure"]
+include = ["pykinect_azure"]
+source-dir = "src"
 
 [tool.hatch.build.targets.sdist]
 exclude = ["/tests", "/examples"]
