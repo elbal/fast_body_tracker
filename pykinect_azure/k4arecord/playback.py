@@ -86,7 +86,9 @@ class Playback:
 
 	def get_next_imu_sample(self):
 		imu_sample_struct = _k4a.k4a_imu_sample_t()
-		_k4a.VERIFY(_k4arecord.k4a_playback_get_next_imu_sample(self._handle, imu_sample_struct),"Get next imu sample failed!")
+		_k4a.verify(_k4arecord.k4a_playback_get_next_imu_sample(self._handle,
+																imu_sample_struct),
+					"Get next imu sample failed!")
 			
 		# Convert the structure into a dictionary
 		_imu_sample = ImuSample(imu_sample_struct)
@@ -95,7 +97,10 @@ class Playback:
 
 	def get_previous_imu_sample(self):
 		imu_sample_struct = _k4a.k4a_imu_sample_t()
-		_k4a.VERIFY(_k4arecord.k4a_playback_get_previous_imu_sample(self._handle, imu_sample_struct),"Get previous imu sample failed!")
+		_k4a.verify(
+			_k4arecord.k4a_playback_get_previous_imu_sample(self._handle,
+															imu_sample_struct),
+			"Get previous imu sample failed!")
 			
 		# Convert the structure into a dictionary
 		_imu_sample = ImuSample(imu_sample_struct)
@@ -103,17 +108,25 @@ class Playback:
 		return _imu_sample
 
 	def seek_timestamp(self, offset = 0, origin = _k4arecord.K4A_PLAYBACK_SEEK_BEGIN):
-		_k4a.VERIFY(_k4arecord.k4a_playback_seek_timestamp(self._handle, offset, origin),"Seek recording failed!")
+		_k4a.verify(
+			_k4arecord.k4a_playback_seek_timestamp(self._handle, offset,
+												   origin),
+			"Seek recording failed!")
 			
 	def get_recording_length(self):
 		return int(_k4arecord.k4a_playback_get_recording_length_usec(self._handle))
 
 	def set_color_conversion(self, format = _k4a.K4A_IMAGE_FORMAT_DEPTH16):
-		_k4a.VERIFY(_k4arecord.k4a_playback_set_color_conversion(self._handle, format),"Seek color conversio failed!")
+		_k4a.verify(
+			_k4arecord.k4a_playback_set_color_conversion(self._handle, format),
+			"Seek color conversio failed!")
 
 	def get_next_data_block(self, track):
 		block_handle = _k4arecord.k4a_playback_data_block_t()
-		_k4a.VERIFY(_k4arecord.k4a_playback_get_next_data_block(self._handle, track, block_handle),"Get next data block failed!")
+		_k4a.verify(
+			_k4arecord.k4a_playback_get_next_data_block(self._handle, track,
+														block_handle),
+			"Get next data block failed!")
 			
 		if self.is_datablock_initialized():
 			self._datablock._handle = block_handle
@@ -124,7 +137,11 @@ class Playback:
 
 	def get_previous_data_block(self, track):
 		block_handle = _k4arecord.k4a_playback_data_block_t()
-		_k4a.VERIFY(_k4arecord.k4a_playback_get_previous_data_block(self._handle, track, block_handle),"Get previous data block failed!")
+		_k4a.verify(
+			_k4arecord.k4a_playback_get_previous_data_block(self._handle,
+															track,
+															block_handle),
+			"Get previous data block failed!")
 			
 		if self.is_datablock_initialized():
 			self._datablock._handle = block_handle

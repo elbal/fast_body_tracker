@@ -1,7 +1,4 @@
 import ctypes
-import numpy as np
-from numpy import typing as npt
-import cv2
 from dataclasses import dataclass
 
 from pykinect_azure.k4a import _k4a

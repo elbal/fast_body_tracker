@@ -21,125 +21,100 @@ k4a_firmware_signature_t = ctypes.c_int
 k4a_float3 = ctypes.c_float * 3
 k4a_float2 = ctypes.c_float * 2
 
-# K4A_DECLARE_HANDLE(k4a_device_t);
+
 class _handle_k4a_device_t(ctypes.Structure):
-	 _fields_= [
-		("_rsvd", ctypes.c_size_t),
-	]
+	_fields_ = [("_rsvd", ctypes.c_size_t),]
+
+
 k4a_device_t = ctypes.POINTER(_handle_k4a_device_t)
 
-# K4A_DECLARE_HANDLE(k4a_capture_t);
+
 class _handle_k4a_capture_t(ctypes.Structure):
-	 _fields_= [
-		("_rsvd", ctypes.c_size_t),
-	]
+	_fields_ = [("_rsvd", ctypes.c_size_t),]
+
+
 k4a_capture_t = ctypes.POINTER(_handle_k4a_capture_t)
 
-# K4A_DECLARE_HANDLE(k4a_image_t);
+
 class _handle_k4a_image_t(ctypes.Structure):
-	 _fields_= [
-		("_rsvd", ctypes.c_size_t),
-	]
+	_fields_ = [("_rsvd", ctypes.c_size_t),]
+
+
 k4a_image_t = ctypes.POINTER(_handle_k4a_image_t)
 
-# K4A_DECLARE_HANDLE(k4a_transformation_t);
+
 class _handle_k4a_transformation_t(ctypes.Structure):
-	 _fields_= [
-		("_rsvd", ctypes.c_size_t),
-	]
+	_fields_ = [("_rsvd", ctypes.c_size_t),]
+
+
 k4a_transformation_t = ctypes.POINTER(_handle_k4a_transformation_t)
 
-#define K4A_SUCCEEDED(_result_) (_result_ == K4A_RESULT_SUCCEEDED)
+
 def K4A_SUCCEEDED(result):
 	return result == K4A_RESULT_SUCCEEDED
 
 
-#define K4A_FAILED(_result_) (!K4A_SUCCEEDED(_result_))
 def K4A_FAILED(result):
 	return not K4A_SUCCEEDED(result)
 
 
-"""
-typedef void(k4a_logging_message_cb_t)(void *context,
-										k4a_log_level_t level,
-										const char *file,
-										const int line,
-										const char *message);
-
-typedef void(k4a_memory_destroy_cb_t)(void *buffer, void *context);
-
-typedef uint8_t *(k4a_memory_allocate_cb_t)(int size, void **context);
-"""
-
 class _k4a_device_configuration_t(ctypes.Structure):
-	_fields_= [
-		("color_format", ctypes.c_int),
-		("color_resolution", ctypes.c_int),
-		("depth_mode", ctypes.c_int),
-		("camera_fps", ctypes.c_int),
+	_fields_ = [
+		("color_format", ctypes.c_int), ("color_resolution", ctypes.c_int),
+		("depth_mode", ctypes.c_int), ("camera_fps", ctypes.c_int),
 		("synchronized_images_only", ctypes.c_bool),
 		("depth_delay_off_color_usec", ctypes.c_int32),
 		("wired_sync_mode", ctypes.c_int),
 		("subordinate_delay_off_master_usec", ctypes.c_uint32),
 		("disable_streaming_indicator", ctypes.c_bool),
-	]
+		]
+
 
 k4a_device_configuration_t = _k4a_device_configuration_t
 
 
 class _k4a_calibration_extrinsics_t(ctypes.Structure):
-	_fields_= [
-		("rotation", ctypes.c_float * 9),
-		("translation", ctypes.c_float * 3),
-	]
+	_fields_ = [
+		("rotation", ctypes.c_float * 9), ("translation", ctypes.c_float * 3),]
+
+
 k4a_calibration_extrinsics_t = _k4a_calibration_extrinsics_t
 
 
 class _param(ctypes.Structure):
 	_fields_ = [
-		("cx", ctypes.c_float),
-		("cy", ctypes.c_float),
-		("fx", ctypes.c_float),
-		("fy", ctypes.c_float),
-		("k1", ctypes.c_float),
-		("k2", ctypes.c_float),
-		("k3", ctypes.c_float),
-		("k4", ctypes.c_float),
-		("k5", ctypes.c_float),
-		("k6", ctypes.c_float),
-		("codx", ctypes.c_float),
-		("cody", ctypes.c_float),
-		("p2", ctypes.c_float),
-		("p1", ctypes.c_float),
-		("metric_radius", ctypes.c_float),
-	]
+		("cx", ctypes.c_float), ("cy", ctypes.c_float), ("fx", ctypes.c_float),
+		("fy", ctypes.c_float), ("k1", ctypes.c_float), ("k2", ctypes.c_float),
+		("k3", ctypes.c_float), ("k4", ctypes.c_float), ("k5", ctypes.c_float),
+		("k6", ctypes.c_float), ("codx", ctypes.c_float),
+		("cody", ctypes.c_float), ("p2", ctypes.c_float),
+		("p1", ctypes.c_float), ("metric_radius", ctypes.c_float),
+		]
 
 
 class k4a_calibration_intrinsic_parameters_t(ctypes.Union):
-	_fields_= [
-		("param", _param),
-		("v", ctypes.c_float * 15),
-	]
+	_fields_ = [("param", _param), ("v", ctypes.c_float * 15),]
 
 
 class _k4a_calibration_intrinsics_t(ctypes.Structure):
-	_fields_= [
-		("type", ctypes.c_int),
-		("parameter_count", ctypes.c_uint),
+	_fields_ = [
+		("type", ctypes.c_int), ("parameter_count", ctypes.c_uint),
 		("parameters", k4a_calibration_intrinsic_parameters_t),
-	]
+		]
 
 
 k4a_calibration_intrinsics_t = _k4a_calibration_intrinsics_t
 
 class _k4a_calibration_camera_t(ctypes.Structure):
-	_fields_= [
+	_fields_ = [
 		("extrinsics", k4a_calibration_extrinsics_t),
 		("intrinsics", k4a_calibration_intrinsics_t),
 		("resolution_width", ctypes.c_int),
 		("resolution_height", ctypes.c_int),
 		("metric_radius", ctypes.c_float),
-	]
+		]
+
+
 k4a_calibration_camera_t = _k4a_calibration_camera_t
 
 
@@ -147,40 +122,39 @@ class _k4a_calibration_t(ctypes.Structure):
 	_fields_ = [
 		("depth_camera_calibration", k4a_calibration_camera_t),
 		("color_camera_calibration", k4a_calibration_camera_t),
-		("extrinsics", (k4a_calibration_extrinsics_t * K4A_CALIBRATION_TYPE_NUM) * K4A_CALIBRATION_TYPE_NUM),
-		("depth_mode", ctypes.c_int),
-		("color_resolution", ctypes.c_int),
-	]
+		("extrinsics", (
+				k4a_calibration_extrinsics_t * K4A_CALIBRATION_TYPE_NUM
+				* K4A_CALIBRATION_TYPE_NUM)),
+		("depth_mode", ctypes.c_int), ("color_resolution", ctypes.c_int),
+		]
+
+
 k4a_calibration_t = _k4a_calibration_t
 
 
 class _k4a_version_t(ctypes.Structure):
 	_fields_ = [
-		("major", ctypes.c_uint32),
-		("minor", ctypes.c_uint32),
+		("major", ctypes.c_uint32), ("minor", ctypes.c_uint32),
 		("iteration", ctypes.c_uint32),
-	]
+		]
+
+
 k4a_version_t = _k4a_version_t
 
 
 class _k4a_hardware_version_t(ctypes.Structure):
-	_fields_= [
-		("rgb", k4a_version_t),
-		("depth", k4a_version_t),
-		("audio", k4a_version_t),
-		("depth_sensor", k4a_version_t),
-		("firmware_build", ctypes.c_int),
-		("firmware_signature", ctypes.c_int),
-	]
+	_fields_ = [
+		("rgb", k4a_version_t), ("depth", k4a_version_t),
+		("audio", k4a_version_t), ("depth_sensor", k4a_version_t),
+		("firmware_build", ctypes.c_int), ("firmware_signature", ctypes.c_int),
+		]
 
 
 k4a_hardware_version_t = _k4a_hardware_version_t
 
+
 class _xy(ctypes.Structure):
-	_fields_= [
-		("x", ctypes.c_float),
-		("y", ctypes.c_float),
-	]
+	_fields_ = [("x", ctypes.c_float), ("y", ctypes.c_float),]
 
 	def __iter__(self):
 		return {'x':self.x, 'y':self.y}
@@ -190,10 +164,7 @@ class _xy(ctypes.Structure):
 
 
 class k4a_float2_t(ctypes.Union):
-	_fields_= [
-		("xy", _xy),
-		("v", ctypes.c_float * 2)
-	]
+	_fields_ = [("xy", _xy), ("v", ctypes.c_float * 2)]
 
 	def __init__(self, v=(0,0)):
 		super().__init__()
@@ -207,12 +178,10 @@ class k4a_float2_t(ctypes.Union):
 	def __str__(self):
 		return self.xy.__str__()
 
+
 class _xyz(ctypes.Structure):
-	_fields_= [
-		("x", ctypes.c_float),
-		("y", ctypes.c_float),
-		("z", ctypes.c_float),
-	]
+	_fields_ = [
+		("x", ctypes.c_float), ("y", ctypes.c_float), ("z", ctypes.c_float),]
 
 	def __iter__(self):
 		return {'x':self.x, 'y':self.y, 'z':self.z}
@@ -222,10 +191,7 @@ class _xyz(ctypes.Structure):
 
 
 class k4a_float3_t(ctypes.Union):
-	_fields_ = [
-		("xyz", _xyz),
-		("v", ctypes.c_float * 3)
-	]
+	_fields_ = [("xyz", _xyz), ("v", ctypes.c_float * 3)]
 
 	def __init__(self, v=(0,0,0)):
 		super().__init__()
