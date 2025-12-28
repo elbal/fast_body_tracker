@@ -1,5 +1,3 @@
-from pykinect_azure.k4a import _k4a
-
 class RecordConfiguration:
 
 	def __init__(self, configuration_handle=None):
@@ -11,15 +9,12 @@ class RecordConfiguration:
 		return self._handle
 
 	def __getattr__(self, name):
-		"""Pass the handle parameter, when asked"""
-
 		if name == "_handle":
 			return self.__dict__[name]
 		else:
 			return self._handle.__dict__[name]
 
 	def __str__(self):
-		"""Print the current settings and a short explanation"""
 		message = (
 			"Record configuration: \n"
 			f"\tcolor_format: {self._handle.color_format} \n\t(0:JPG, 1:NV12, 2:YUY2, 3:BGRA32)\n\n"

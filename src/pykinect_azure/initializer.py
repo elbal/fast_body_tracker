@@ -2,10 +2,10 @@ import platform
 from pathlib import Path
 import os
 
-from pykinect_azure.k4a import _k4a, Device, Configuration
-from pykinect_azure.k4abt import _k4abt, Tracker, TrackerConfiguration
-from pykinect_azure.k4arecord import _k4arecord
-from pykinect_azure.k4arecord.playback import Playback
+from .k4a import _k4a, Device, Configuration
+from .k4abt import _k4abt, Tracker, TrackerConfiguration
+from .k4arecord import _k4arecord
+from .k4arecord.playback import Playback
 
 
 class SDKNotImplemented(Exception):

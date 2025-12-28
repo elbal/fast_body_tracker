@@ -1,4 +1,5 @@
-from pykinect_azure.k4arecord import _k4arecord
+import _k4arecord
+
 
 class Record:
 
@@ -39,5 +40,3 @@ class Record:
 			self.write_header()
 			self.header_written = True
 		_k4arecord.VERIFY(_k4arecord.k4a_record_write_capture(self.record_handle, capture_handle),"Failed to write capture!")
-
-

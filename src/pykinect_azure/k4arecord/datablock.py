@@ -1,5 +1,5 @@
-from pykinect_azure.k4arecord import _k4arecord
-from pykinect_azure.k4a import _k4a
+import _k4arecord
+
 
 class Datablock:
 
