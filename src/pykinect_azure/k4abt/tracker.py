@@ -2,9 +2,9 @@ import ctypes
 
 from ..k4a import Capture, Calibration, Transformation
 from ..k4a._k4a_types import K4A_WAIT_INFINITE
-import _k4abt
-from tracker_configuration import TrackerConfiguration
-from frame import Frame
+from . import _k4abt
+from .tracker_configuration import TrackerConfiguration
+from .frame import Frame
 
 
 class Tracker:

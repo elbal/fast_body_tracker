@@ -2,9 +2,9 @@ from ..k4a import _k4a
 from ..k4a.capture import Capture
 from ..k4a.calibration import Calibration
 from ..k4a.imu_sample import ImuSample
-import _k4arecord
-from datablock import Datablock
-from record_configuration import RecordConfiguration
+from . import _k4arecord
+from .datablock import Datablock
+from .record_configuration import RecordConfiguration
 
 
 class Playback:

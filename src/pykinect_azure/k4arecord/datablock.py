@@ -1,4 +1,4 @@
-import _k4arecord
+from . import _k4arecord
 
 
 class Datablock:

@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 from ..k4a._k4a_types import K4A_CALIBRATION_TYPE_DEPTH
 from ..k4a import Calibration
-from _k4abt_types import k4abt_body_t, K4ABT_JOINT_COUNT, K4ABT_SEGMENT_PAIRS
+from ._k4abt_types import k4abt_body_t, K4ABT_JOINT_COUNT, K4ABT_SEGMENT_PAIRS
 
 JOINT2D_DTYPE = np.dtype([
 	("position", np.float32, 2), ("confidence", np.int32)])

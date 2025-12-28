@@ -1,9 +1,9 @@
 import ctypes
 from dataclasses import dataclass
 
-import _k4a
-from image import Image
-from calibration import Calibration
+from . import _k4a
+from .image import Image
+from .calibration import Calibration
 
 _STRIDE_BYTES_PER_PIXEL = {
 	_k4a.K4A_IMAGE_FORMAT_COLOR_BGRA32: 4,

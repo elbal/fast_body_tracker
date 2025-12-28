@@ -2,7 +2,7 @@ import platform
 from pathlib import Path
 import os
 
-import _k4abt
+from . import _k4abt
 
 
 class UnknownModelType(Exception):

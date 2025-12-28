@@ -6,10 +6,10 @@ import matplotlib.pyplot as plt
 
 from ..k4a._k4a_types import K4A_CALIBRATION_TYPE_DEPTH
 from ..k4a import Capture, Calibration, Image, Transformation
-import _k4abt
-from body import Body
-from body2d import Body2d
-from _k4abt_types import k4abt_body_t
+from . import _k4abt
+from .body import Body
+from .body2d import Body2d
+from ._k4abt_types import k4abt_body_t
 
 cmap = plt.get_cmap("tab20")
 body_colors = np.zeros((256, 3), dtype=np.uint8)

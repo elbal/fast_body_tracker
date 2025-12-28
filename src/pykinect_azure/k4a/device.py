@@ -1,12 +1,12 @@
 import ctypes
 
-import _k4a
-from _k4a_types import K4A_WAIT_INFINITE
-from capture import Capture
-from imu_sample import ImuSample
-from calibration import Calibration
-from transformation import Transformation
-from configuration import Configuration
+from . import _k4a
+from ._k4a_types import K4A_WAIT_INFINITE
+from .capture import Capture
+from .imu_sample import ImuSample
+from .calibration import Calibration
+from .transformation import Transformation
+from .configuration import Configuration
 from ..k4arecord.record import Record
 
 

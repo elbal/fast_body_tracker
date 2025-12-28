@@ -1,5 +1,5 @@
-import _k4a
-from image import Image
+from . import _k4a
+from .image import Image
 
 
 class Capture:

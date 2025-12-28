@@ -1,7 +1,7 @@
 import ctypes
 
 from ..k4a._k4a_types import k4a_float3
-from kabt_const import *
+from .kabt_const import *
 
 k4abt_result_t = ctypes.c_int
 k4abt_float4 = ctypes.c_float * 4

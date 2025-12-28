@@ -2,7 +2,7 @@ import numpy as np
 from numpy import typing as npt
 import cv2
 
-import _k4a
+from . import _k4a
 
 
 class WrongImageFormat(Exception):

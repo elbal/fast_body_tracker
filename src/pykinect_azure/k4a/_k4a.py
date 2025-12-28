@@ -1,4 +1,4 @@
-from _k4a_types import *
+from ._k4a_types import *
 
 k4a_dll = None
 

@@ -2,7 +2,7 @@ import ctypes
 import numpy as np
 from numpy import typing as npt
 
-import _k4a
+from . import _k4a
 
 
 class Calibration:

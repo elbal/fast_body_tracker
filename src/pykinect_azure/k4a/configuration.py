@@ -1,4 +1,4 @@
-import _k4a
+from . import _k4a
 
 
 class Configuration:
