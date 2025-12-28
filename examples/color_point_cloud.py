@@ -32,17 +32,16 @@ def main():
 	transformation = device.transformation
 
 	q = queue.Queue(maxsize=30)
-	stop_event = threading.Event()
-	t = threading.Thread(target=capture_thread, args=(device, q, stop_event))
-	t.start()
-
-	visualizer = PointCloudVisualizer()
 	keyboard_closer = KeyboardCloser()
 	keyboard_closer.start()
+	t = threading.Thread(
+		target=capture_thread, args=(device, q, keyboard_closer.stop_event))
+	t.start()
 
 	point_cloud_object = None
 	transformed_image_object = None
 
+	visualizer = PointCloudVisualizer()
 	while not keyboard_closer.stop_event.is_set():
 		capture = q.get()
 
@@ -58,7 +57,6 @@ def main():
 
 		visualizer(point_cloud, bgra_image)
 
-	stop_event.set()
 	t.join()
 	del device
 
