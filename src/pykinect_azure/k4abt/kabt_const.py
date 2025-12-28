@@ -1,5 +1,3 @@
-import numpy as np
-
 K4ABT_RESULT_SUCCEEDED = 0
 K4ABT_RESULT_FAILED = 1
 

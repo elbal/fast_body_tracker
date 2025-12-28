@@ -1,13 +1,12 @@
 import ctypes
 
-from pykinect_azure.k4abt.kabt_const import *
-from pykinect_azure.k4a._k4a_types import k4a_float3
+from ..k4a._k4a_types import k4a_float3
+from kabt_const import *
 
 k4abt_result_t = ctypes.c_int
 k4abt_float4 = ctypes.c_float * 4
 
 
-# K4A_DECLARE_HANDLE(k4abt_tracker_t);
 class _handle_k4abt_tracker_t(ctypes.Structure):
 	_fields_ = [("_rsvd", ctypes.c_size_t)]
 
@@ -15,7 +14,6 @@ class _handle_k4abt_tracker_t(ctypes.Structure):
 k4abt_tracker_t = ctypes.POINTER(_handle_k4abt_tracker_t)
 
 
-# K4A_DECLARE_HANDLE(k4abt_frame_t);
 class _handle_k4abt_frame_t(ctypes.Structure):
 	_fields_ = [("_rsvd", ctypes.c_size_t)]
 
@@ -26,8 +24,7 @@ k4abt_frame_t = ctypes.POINTER(_handle_k4abt_frame_t)
 class _k4abt_tracker_configuration_t(ctypes.Structure):
 	_fields_ = [
 		("sensor_orientation", ctypes.c_int),
-		("processing_mode", ctypes.c_int),
-		("gpu_device_id", ctypes.c_int32),
+		("processing_mode", ctypes.c_int), ("gpu_device_id", ctypes.c_int32),
 		("model_path", ctypes.c_char_p)
 		]
 
@@ -45,6 +42,7 @@ class _k4abt_joint_t(ctypes.Structure):
 	_fields_ = [
 		("position", k4a_float3), ("orientation", k4abt_float4),
 		("confidence_level", ctypes.c_int)]
+
 
 k4abt_joint_t = _k4abt_joint_t
 

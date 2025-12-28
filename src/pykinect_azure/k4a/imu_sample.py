@@ -1,6 +1,6 @@
 import numpy as np
 
-from pykinect_azure.k4a import _k4a
+import _k4a
 
 
 class ImuSample:

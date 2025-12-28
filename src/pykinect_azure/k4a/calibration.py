@@ -2,7 +2,7 @@ import ctypes
 import numpy as np
 from numpy import typing as npt
 
-from pykinect_azure.k4a import _k4a
+import _k4a
 
 
 class Calibration:

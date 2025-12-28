@@ -6,11 +6,10 @@ build-backend = "hatchling.build"
 name = "pykinect_azure"
 version = "0.1.0"
 description = "Azure Kinect SDK wrapper"
-requires-python = ">=3.9"
-authors = [
-    { name = "Ibai Gorordo" }
-]
-license = { text = "MIT" }
+requires-python = ">=3.10"
+authors = [{ name = "Ibai Gorordo" }]
+license = "MIT"
+
 dependencies = [
     "opencv-python>=4.5.5",
     "numpy>=1.22.2",
@@ -19,6 +18,7 @@ dependencies = [
     "matplotlib>=3.10.8",
     "pynput>=1.8.1",
 ]
+
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
@@ -29,9 +29,13 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Visualization",
 ]
 
+[tool.uv]
+managed = true
+package = true
+
 [tool.hatch.build.targets.wheel]
-include = ["pykinect_azure"]
-source-dir = "src"
+packages = ["src/pykinect_azure"]
+exclude = ["pykinect_azure/tests/**"]
 
 [tool.hatch.build.targets.sdist]
-exclude = ["/tests", "/examples"]
+exclude = ["/tests", "/examples", "/doc", "/.venv"]

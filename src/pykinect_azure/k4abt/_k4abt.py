@@ -1,8 +1,8 @@
 import platform
 import sys
 
-from ._k4abt_types import *
 from ..k4a._k4a_types import k4a_calibration_t, k4a_capture_t, k4a_image_t
+from ._k4abt_types import *
 
 k4abt_dll = None
 

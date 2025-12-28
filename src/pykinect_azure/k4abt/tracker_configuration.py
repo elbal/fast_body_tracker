@@ -2,7 +2,7 @@ import platform
 from pathlib import Path
 import os
 
-from pykinect_azure.k4abt import _k4abt
+import _k4abt
 
 
 class UnknownModelType(Exception):

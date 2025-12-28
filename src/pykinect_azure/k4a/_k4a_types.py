@@ -1,6 +1,6 @@
 import ctypes
 
-from pykinect_azure.k4a.k4a_const import *
+from k4a_const import *
 
 k4a_result_t = ctypes.c_int
 k4a_buffer_result_t = ctypes.c_int

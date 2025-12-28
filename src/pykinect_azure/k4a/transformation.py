@@ -1,9 +1,9 @@
 import ctypes
 from dataclasses import dataclass
 
-from pykinect_azure.k4a import _k4a
-from pykinect_azure.k4a.image import Image
-from pykinect_azure.k4a.calibration import Calibration
+import _k4a
+from image import Image
+from calibration import Calibration
 
 _STRIDE_BYTES_PER_PIXEL = {
 	_k4a.K4A_IMAGE_FORMAT_COLOR_BGRA32: 4,

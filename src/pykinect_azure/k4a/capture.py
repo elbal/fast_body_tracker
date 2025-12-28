@@ -1,5 +1,5 @@
-from pykinect_azure.k4a import _k4a
-from pykinect_azure.k4a.image import Image
+import _k4a
+from image import Image
 
 
 class Capture:

@@ -3,10 +3,9 @@ from numpy import typing as npt
 import cv2
 import matplotlib.pyplot as plt
 
-from pykinect_azure.k4a._k4a_types import K4A_CALIBRATION_TYPE_DEPTH
-from pykinect_azure.k4abt._k4abt_types import (
-	k4abt_body_t, K4ABT_JOINT_COUNT, K4ABT_SEGMENT_PAIRS)
-from pykinect_azure.k4a import Calibration, Image
+from ..k4a._k4a_types import K4A_CALIBRATION_TYPE_DEPTH
+from ..k4a import Calibration
+from _k4abt_types import k4abt_body_t, K4ABT_JOINT_COUNT, K4ABT_SEGMENT_PAIRS
 
 JOINT2D_DTYPE = np.dtype([
 	("position", np.float32, 2), ("confidence", np.int32)])
