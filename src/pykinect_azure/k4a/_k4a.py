@@ -136,10 +136,10 @@ class K4aLib:
 
 		cls._bind("k4a_calibration_get_from_raw", k4a_result_t, (ctypes.POINTER(ctypes.c_char), ctypes.c_size_t, k4a_depth_mode_t, k4a_color_resolution_t, ctypes.POINTER(k4a_calibration_t)))
 		cls._bind("k4a_calibration_3d_to_3d", k4a_result_t, (ctypes.POINTER(k4a_calibration_t), ctypes.POINTER(k4a_float3), k4a_calibration_type_t, k4a_calibration_type_t, ctypes.POINTER(k4a_float3)))
-		cls._bind("k4a_calibration_2d_to_3d", k4a_result_t, (ctypes.POINTER(k4a_calibration_t), ctypes.POINTER(k4a_float2_t), ctypes.c_float, k4a_calibration_type_t, k4a_calibration_type_t, ctypes.POINTER(k4a_float3), ctypes.POINTER(ctypes.c_int)))
-		cls._bind("k4a_calibration_3d_to_2d", k4a_result_t, (ctypes.POINTER(k4a_calibration_t), ctypes.POINTER(k4a_float3), k4a_calibration_type_t, k4a_calibration_type_t, ctypes.POINTER(k4a_float2_t), ctypes.POINTER(ctypes.c_int)))
-		cls._bind("k4a_calibration_2d_to_2d", k4a_result_t, (ctypes.POINTER(k4a_calibration_t), ctypes.POINTER(k4a_float2_t), ctypes.c_float, k4a_calibration_type_t, k4a_calibration_type_t, ctypes.POINTER(k4a_float2_t), ctypes.POINTER(ctypes.c_int)))
-		cls._bind("k4a_calibration_color_2d_to_depth_2d", k4a_result_t, (ctypes.POINTER(k4a_calibration_t), ctypes.POINTER(k4a_float2_t), k4a_image_t, ctypes.POINTER(k4a_float2_t), ctypes.POINTER(ctypes.c_int)))
+		cls._bind("k4a_calibration_2d_to_3d", k4a_result_t, (ctypes.POINTER(k4a_calibration_t), ctypes.POINTER(k4a_float2), ctypes.c_float, k4a_calibration_type_t, k4a_calibration_type_t, ctypes.POINTER(k4a_float3), ctypes.POINTER(ctypes.c_int)))
+		cls._bind("k4a_calibration_3d_to_2d", k4a_result_t, (ctypes.POINTER(k4a_calibration_t), ctypes.POINTER(k4a_float3), k4a_calibration_type_t, k4a_calibration_type_t, ctypes.POINTER(k4a_float2), ctypes.POINTER(ctypes.c_int)))
+		cls._bind("k4a_calibration_2d_to_2d", k4a_result_t, (ctypes.POINTER(k4a_calibration_t), ctypes.POINTER(k4a_float2), ctypes.c_float, k4a_calibration_type_t, k4a_calibration_type_t, ctypes.POINTER(k4a_float2), ctypes.POINTER(ctypes.c_int)))
+		cls._bind("k4a_calibration_color_2d_to_depth_2d", k4a_result_t, (ctypes.POINTER(k4a_calibration_t), ctypes.POINTER(k4a_float2), k4a_image_t, ctypes.POINTER(k4a_float2), ctypes.POINTER(ctypes.c_int)))
 
 		cls._bind("k4a_transformation_create", k4a_transformation_t, (ctypes.POINTER(k4a_calibration_t),))
 		cls._bind("k4a_transformation_destroy", None, (k4a_transformation_t,))
