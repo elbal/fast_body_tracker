@@ -2,7 +2,7 @@ import numpy as np
 from numpy import typing as npt
 
 from ._k4abt_types import k4abt_body_t
-from .kabt_const import K4ABT_JOINT_COUNT
+from . import kabt_const
 
 JOINT_DTYPE = np.dtype([
 	("position", np.float32, 3), ("orientation", np.float32, 4),
@@ -14,7 +14,8 @@ class Body:
 	def __init__(self, body_handle: k4abt_body_t):
 		self._handle = body_handle
 		joints = np.ctypeslib.as_array(
-			self._handle.skeleton.joints, shape=(K4ABT_JOINT_COUNT,))
+			self._handle.skeleton.joints,
+			shape=(kabt_const.K4ABT_JOINT_COUNT,))
 		self.joints_data = joints.view(JOINT_DTYPE)
 
 	@property

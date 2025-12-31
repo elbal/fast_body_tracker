@@ -1,4 +1,5 @@
 from ..k4a import _k4a
+from ..k4a import k4a_const
 from ..k4a.capture import Capture
 from ..k4a.calibration import Calibration
 from ..k4a.imu_sample import ImuSample
@@ -116,7 +117,7 @@ class Playback:
 	def get_recording_length(self):
 		return int(_k4arecord.k4a_playback_get_recording_length_usec(self._handle))
 
-	def set_color_conversion(self, format = _k4a.K4A_IMAGE_FORMAT_DEPTH16):
+	def set_color_conversion(self, format = k4a_const.K4A_IMAGE_FORMAT_DEPTH16):
 		_k4a.verify(
 			_k4arecord.k4a_playback_set_color_conversion(self._handle, format),
 			"Seek color conversio failed!")

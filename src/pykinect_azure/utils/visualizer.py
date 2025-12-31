@@ -2,7 +2,6 @@ import numpy as np
 from numpy import typing as npt
 from time import perf_counter
 from vispy import scene
-from vispy.scene import SceneCanvas
 from vispy.scene.visuals import Markers, Text, Line, GridLines
 from vispy.scene.cameras import TurntableCamera
 
@@ -10,7 +9,7 @@ from vispy.scene.cameras import TurntableCamera
 class PointCloudVisualizer:
 	def __init__(self):
 		self.color_lut = np.arange(256, dtype=np.float32) / 255.0
-		self.canvas = SceneCanvas(
+		self.canvas = scene.SceneCanvas(
 			keys="interactive", show=True, title="Point cloud")
 		self.view = self.canvas.central_widget.add_view()
 		self.view.camera = TurntableCamera(

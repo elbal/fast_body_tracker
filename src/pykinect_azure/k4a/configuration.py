@@ -1,15 +1,16 @@
-from . import _k4a
+from ._k4a_types import k4a_device_configuration_t
+from . import k4a_const
 
 
 class Configuration:
 	def __init__(self):
-		self.color_format = _k4a.K4A_IMAGE_FORMAT_COLOR_MJPG
-		self.color_resolution = _k4a.K4A_COLOR_RESOLUTION_720P
-		self.depth_mode = _k4a.K4A_DEPTH_MODE_WFOV_2X2BINNED
-		self.camera_fps = _k4a.K4A_FRAMES_PER_SECOND_30
+		self.color_format = k4a_const.K4A_IMAGE_FORMAT_COLOR_MJPG
+		self.color_resolution = k4a_const.K4A_COLOR_RESOLUTION_720P
+		self.depth_mode = k4a_const.K4A_DEPTH_MODE_WFOV_2X2BINNED
+		self.camera_fps = k4a_const.K4A_FRAMES_PER_SECOND_30
 		self.synchronized_images_only = False
 		self.depth_delay_off_color_usec = 0
-		self.wired_sync_mode = _k4a.K4A_WIRED_SYNC_MODE_STANDALONE
+		self.wired_sync_mode = k4a_const.K4A_WIRED_SYNC_MODE_STANDALONE
 		self.subordinate_delay_off_master_usec = 0
 		self.disable_streaming_indicator = False
 
@@ -60,8 +61,8 @@ class Configuration:
 
 		return message
 
-	def _on_value_change(self) -> _k4a.k4a_device_configuration_t:
-		configuration_handle = _k4a.k4a_device_configuration_t(
+	def _on_value_change(self) -> k4a_device_configuration_t:
+		configuration_handle = k4a_device_configuration_t(
 			self.color_format, self.color_resolution, self.depth_mode,
 			self.camera_fps, self.synchronized_images_only,
 			self.depth_delay_off_color_usec, self.wired_sync_mode,

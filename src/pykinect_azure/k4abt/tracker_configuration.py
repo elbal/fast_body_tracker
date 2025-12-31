@@ -2,7 +2,8 @@ import platform
 from pathlib import Path
 import os
 
-from . import _k4abt
+from ._k4abt_types import k4abt_tracker_configuration_t
+from . import kabt_const
 
 
 class UnknownModelType(Exception):
@@ -13,10 +14,11 @@ class UnknownModelType(Exception):
 
 class TrackerConfiguration:
     def __init__(self):
-        self.sensor_orientation = _k4abt.K4ABT_SENSOR_ORIENTATION_DEFAULT
-        self.tracker_processing_mode = _k4abt.K4ABT_TRACKER_PROCESSING_MODE_GPU
+        self.sensor_orientation = kabt_const.K4ABT_SENSOR_ORIENTATION_DEFAULT
+        self.tracker_processing_mode = (
+            kabt_const.K4ABT_TRACKER_PROCESSING_MODE_GPU)
         self.gpu_device_id = 0
-        self.model_type = _k4abt.K4ABT_DEFAULT_MODEL
+        self.model_type = kabt_const.K4ABT_DEFAULT_MODEL
 
         self._handle = self._on_value_change()
 
@@ -50,13 +52,13 @@ class TrackerConfiguration:
         return message
 
     def _on_value_change(self):
-        if self.model_type == _k4abt.K4ABT_DEFAULT_MODEL:
-            configuration_handle = _k4abt.k4abt_tracker_configuration_t(
+        if self.model_type == kabt_const.K4ABT_DEFAULT_MODEL:
+            configuration_handle = k4abt_tracker_configuration_t(
                 self.sensor_orientation, self.tracker_processing_mode,
                 self.gpu_device_id)
-        elif self.model_type == _k4abt.K4ABT_LITE_MODEL:
+        elif self.model_type == kabt_const.K4ABT_LITE_MODEL:
             model_path = self._get_k4abt_lite_model_path()
-            configuration_handle = _k4abt.k4abt_tracker_configuration_t(
+            configuration_handle = k4abt_tracker_configuration_t(
                 self.sensor_orientation, self.tracker_processing_mode,
                 self.gpu_device_id, model_path)
         else:

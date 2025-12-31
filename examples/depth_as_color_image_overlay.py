@@ -28,7 +28,7 @@ def main():
 	device = pykinect.start_device(config=device_config)
 	transformation = device.transformation
 
-	q = queue.Queue(maxsize=10)
+	q = queue.Queue(maxsize=100)
 	stop_event = threading.Event()
 	t = threading.Thread(target=capture_thread, args=(device, q, stop_event))
 	t.start()

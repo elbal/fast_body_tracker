@@ -4,12 +4,13 @@ from numpy import typing as npt
 import cv2
 import matplotlib.pyplot as plt
 
-from ..k4a._k4a_types import K4A_CALIBRATION_TYPE_DEPTH
+from ..k4a import k4a_const
 from ..k4a import Capture, Calibration, Image, Transformation
+from ._k4abt_types import k4abt_body_t, k4abt_frame_t, k4abt_skeleton_t
 from . import _k4abt
+from . import kabt_const
 from .body import Body
 from .body2d import Body2d
-from ._k4abt_types import k4abt_body_t
 
 cmap = plt.get_cmap("tab20")
 body_colors = np.zeros((256, 3), dtype=np.uint8)
@@ -20,7 +21,7 @@ for i in range(256):
 
 class Frame:
 	def __init__(
-			self, frame_handle: _k4abt.k4abt_frame_t, calibration: Calibration,
+			self, frame_handle: k4abt_frame_t, calibration: Calibration,
 			transformation: Transformation):
 		if frame_handle:
 			self._handle = frame_handle
@@ -52,7 +53,7 @@ class Frame:
 
 	def get_body2d(
 			self, body_idx: int = 0,
-			target_camera: int = K4A_CALIBRATION_TYPE_DEPTH) -> Body2d:
+			target_camera: int = k4a_const.K4A_CALIBRATION_TYPE_DEPTH) -> Body2d:
 		body_handle = k4abt_body_t()
 		body_handle.id = _k4abt.k4abt_frame_get_body_id(self._handle, body_idx)
 		body_handle.skeleton = self._get_body_skeleton(body_idx)
@@ -61,7 +62,7 @@ class Frame:
 
 	def draw_bodies(
 			self, destination_image: npt.NDArray[np.uint8],
-			dest_camera: int = K4A_CALIBRATION_TYPE_DEPTH,
+			dest_camera: int = k4a_const.K4A_CALIBRATION_TYPE_DEPTH,
 			only_segments: bool = False) -> npt.NDArray[np.uint8]:
 		num_bodies = self.get_num_bodies()
 		for body_id in range(num_bodies):
@@ -72,7 +73,7 @@ class Frame:
 
 	def draw_body2d(
 			self, destination_image: npt.NDArray[np.uint8], body_idx: int = 0,
-			dest_camera: int = K4A_CALIBRATION_TYPE_DEPTH,
+			dest_camera: int = k4a_const.K4A_CALIBRATION_TYPE_DEPTH,
 			only_segments: bool = False) -> npt.NDArray[np.uint8]:
 		return self.get_body2d(
 			body_idx, dest_camera).draw(destination_image, only_segments)
@@ -84,7 +85,7 @@ class Frame:
 	def get_segmentation_image(self) -> npt.NDArray[np.uint8]:
 		body_index_map = self._get_body_index_map_object().to_numpy()
 		return np.dstack(
-			[cv2.LUT(body_index_map, body_colors[:, i]) for i in range(3)])
+			[cv2.LUT(body_index_map, body_colors[:, j]) for j in range(3)])
 
 	def get_transformed_segmentation_image(
 			self, capture: Capture) -> npt.NDArray[np.uint8]:
@@ -94,13 +95,13 @@ class Frame:
 		index_map = index_map.to_numpy()
 
 		return np.dstack(
-			[cv2.LUT(index_map, body_colors[:, i]) for i in range(3)])
+			[cv2.LUT(index_map, body_colors[:, j]) for j in range(3)])
 
-	def _get_body_skeleton(self, index=0) -> _k4abt.k4abt_skeleton_t:
-		skeleton = _k4abt.k4abt_skeleton_t()
+	def _get_body_skeleton(self, index=0) -> k4abt_skeleton_t:
+		skeleton = k4abt_skeleton_t()
 		result_code = _k4abt.k4abt_frame_get_body_skeleton(
 			self._handle, index, ctypes.byref(skeleton))
-		if result_code != _k4abt.K4ABT_RESULT_SUCCEEDED:
+		if result_code != kabt_const.K4ABT_RESULT_SUCCEEDED:
 			raise _k4abt.AzureKinectBodyTrackerException(
 				"Body tracker get body skeleton failed.")
 

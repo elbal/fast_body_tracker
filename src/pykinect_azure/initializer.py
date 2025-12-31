@@ -2,7 +2,9 @@ import platform
 from pathlib import Path
 import os
 
-from .k4a import _k4a, Device, Configuration
+from .k4a._k4a import K4aLib
+from .k4a.device import Device
+from .k4a.configuration import Configuration
 from .k4abt import _k4abt, Tracker, TrackerConfiguration
 from .k4arecord import _k4arecord
 from .k4arecord.playback import Playback
@@ -18,7 +20,7 @@ def initialize_libraries(
         module_k4a_path=None, module_k4abt_path=None, track_body=False):
     if module_k4a_path is None:
         module_k4a_path = _get_k4a_module_path()
-    _k4a.setup_library(module_k4a_path)
+    K4aLib.setup(module_k4a_path)
 
     if track_body:
         if module_k4abt_path is None:

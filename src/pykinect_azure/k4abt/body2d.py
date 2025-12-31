@@ -3,9 +3,11 @@ from numpy import typing as npt
 import cv2
 import matplotlib.pyplot as plt
 
-from ..k4a._k4a_types import K4A_CALIBRATION_TYPE_DEPTH
+from ..k4a import k4a_const
 from ..k4a import Calibration
-from ._k4abt_types import k4abt_body_t, K4ABT_JOINT_COUNT, K4ABT_SEGMENT_PAIRS
+from ._k4abt_types import k4abt_body_t
+from . import kabt_const
+
 
 JOINT2D_DTYPE = np.dtype([
 	("position", np.float32, 2), ("confidence", np.int32)])
@@ -16,14 +18,15 @@ cmap = plt.get_cmap("tab20")
 class Body2d:
 	def __init__(
 			self, body_handle: k4abt_body_t, calibration: Calibration,
-			target_camera: int = K4A_CALIBRATION_TYPE_DEPTH):
+			target_camera: int = k4a_const.K4A_CALIBRATION_TYPE_DEPTH):
 		self.id = body_handle.id
-		self.joints_data = np.zeros(K4ABT_JOINT_COUNT, dtype=JOINT2D_DTYPE)
-		for i in range(K4ABT_JOINT_COUNT):
+		self.joints_data = np.zeros(
+			kabt_const.K4ABT_JOINT_COUNT, dtype=JOINT2D_DTYPE)
+		for i in range(kabt_const.K4ABT_JOINT_COUNT):
 			joint = body_handle.skeleton.joints[i]
 			position_2d_handle = calibration.convert_3d_to_2d(
 				source_point3d=joint.position,
-				source_camera=K4A_CALIBRATION_TYPE_DEPTH,
+				source_camera=k4a_const.K4A_CALIBRATION_TYPE_DEPTH,
 				target_camera=target_camera)
 			self.joints_data["position"][i] = position_2d_handle.v[:]
 			self.joints_data["confidence"][i] = joint.confidence_level
@@ -44,7 +47,7 @@ class Body2d:
 		rgba = cmap(self.id % 20)
 		color = (int(rgba[2]*255), int(rgba[1]*255), int(rgba[0]*255))
 
-		for segment_pair in K4ABT_SEGMENT_PAIRS:
+		for segment_pair in kabt_const.K4ABT_SEGMENT_PAIRS:
 			idx1, idx2 = segment_pair
 			point1 = tuple(positions[idx1])
 			point2 = tuple(positions[idx2])
