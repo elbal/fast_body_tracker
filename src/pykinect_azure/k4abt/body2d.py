@@ -28,7 +28,7 @@ class Body2d:
 				source_point3d=joint.position,
 				source_camera=k4a_const.K4A_CALIBRATION_TYPE_DEPTH,
 				target_camera=target_camera)
-			self.joints_data["position"][i] = position_2d_handle.v[:]
+			self.joints_data["position"][i] = position_2d_handle[:]
 			self.joints_data["confidence"][i] = joint.confidence_level
 
 	@property

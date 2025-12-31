@@ -3,7 +3,7 @@ import ctypes
 from ..k4a import k4a_const
 from ..k4a import Capture, Calibration, Transformation
 from . import _k4abt
-from ._k4abt_types import k4abt_tracker_t
+from ._k4abt_types import k4abt_frame_t, k4abt_tracker_t
 from . import kabt_const
 from .tracker_configuration import TrackerConfiguration
 from .frame import Frame
@@ -34,7 +34,7 @@ class Tracker:
 			raise _k4abt.AzureKinectBodyTrackerException(
 				"Body tracker capture enqueue failed.")
 
-		frame_handle = _k4abt.k4abt_frame_t()
+		frame_handle = k4abt_frame_t()
 		result_code = _k4abt.k4abt_tracker_pop_result(
 			self._handle, ctypes.byref(frame_handle), timeout_in_ms)
 		if result_code != kabt_const.K4ABT_RESULT_SUCCEEDED:

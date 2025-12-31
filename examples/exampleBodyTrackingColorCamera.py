@@ -31,13 +31,11 @@ if __name__ == "__main__":
 		capture = device.update()
 
 		# Get body tracker frame
-		body_frame = bodyTracker.update()
+		body_frame = bodyTracker.update(capture=capture)
 
 		# Get the color image
-		ret, color_image = capture.get_color_image_object()
+		color_image = capture.get_color_image_object()
 
-		if not ret:
-			continue
 
 		# Draw the skeletons into the color image
 		color_skeleton = body_frame.draw_bodies(color_image, pykinect.K4A_CALIBRATION_TYPE_COLOR)

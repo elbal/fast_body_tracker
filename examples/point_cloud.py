@@ -25,7 +25,7 @@ def main():
     device = pykinect.start_device(config=device_config)
     transformation = device.transformation
 
-    q = queue.Queue(maxsize=10)
+    q = queue.Queue(maxsize=30)
     keyboard_closer = KeyboardCloser()
     keyboard_closer.start()
     t = threading.Thread(

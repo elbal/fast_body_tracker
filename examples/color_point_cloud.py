@@ -8,10 +8,7 @@ from pykinect_azure import PointCloudVisualizer, KeyboardCloser
 def capture_thread(device, q, stop_event):
 	while not stop_event.is_set():
 		capture = device.update()
-		counter = 0
 		if q.full():
-			counter += 1
-			print(f"{counter}")
 			try:
 				q.get_nowait()
 			except queue.Empty:
