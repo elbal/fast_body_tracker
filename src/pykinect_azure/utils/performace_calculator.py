@@ -3,7 +3,7 @@ import time
 
 class FrameRateCalculator:
     def __init__(self):
-        self.frame_window = 600
+        self.frame_window = 30 * 10
         self.frame_count = 0
         self.start_time = None
 
@@ -19,3 +19,15 @@ class FrameRateCalculator:
             print(f"FPS: {fps:.2f}")
             self.start_time = time.perf_counter()
             self.frame_count = 0
+
+
+class DroppedFramesAlert:
+    def __init__(self):
+        self.frame_window = 30
+        self.dropped_frame_count = 0
+
+    def update(self):
+        self.dropped_frame_count += 1
+        if self.dropped_frame_count >= self.frame_window:
+            print("Dropping frames.")
+            self.dropped_frame_count = 0

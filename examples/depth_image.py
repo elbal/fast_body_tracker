@@ -7,9 +7,11 @@ import pykinect_azure as pykinect
 
 
 def capture_thread(device, q, stop_event):
+	dfa = pykinect.DroppedFramesAlert()
 	while not stop_event.is_set():
 		capture = device.update()
 		if q.full():
+			dfa.update()
 			try:
 				q.get_nowait()
 			except queue.Empty:
@@ -25,19 +27,18 @@ def main():
 	device_config.depth_mode = pykinect.K4A_DEPTH_MODE_WFOV_2X2BINNED
 
 	device = pykinect.start_device(config=device_config)
-
 	q = queue.Queue(maxsize=10)
 	stop_event = threading.Event()
 	t = threading.Thread(target=capture_thread, args=(device, q, stop_event))
-	t.start()
 
 	cv2.namedWindow("Depth image", cv2.WINDOW_NORMAL)
-	frc = pykinect.FrameRateCalculator()
-	frc.start()
-
 	depth_8bit_image = np.zeros((512, 512), dtype=np.uint8)
 	colorized_image = np.zeros((512, 512, 3), dtype=np.uint8)
 
+	frc = pykinect.FrameRateCalculator()
+
+	t.start()
+	frc.start()
 	while True:
 		capture = q.get()
 		image_object = capture.get_depth_image_object()

@@ -6,9 +6,11 @@ import pykinect_azure as pykinect
 
 
 def capture_thread(device, q, stop_event):
+	dfa = pykinect.DroppedFramesAlert()
 	while not stop_event.is_set():
 		capture = device.update()
 		if q.full():
+			dfa.update()
 			try:
 				q.get_nowait()
 			except queue.Empty:
@@ -26,20 +28,19 @@ def main():
 
 	device = pykinect.start_device(config=device_config)
 	transformation = device.transformation
-
 	q = queue.Queue(maxsize=10)
 	stop_event = threading.Event()
 	t = threading.Thread(target=capture_thread, args=(device, q, stop_event))
-	t.start()
 
 	cv2.namedWindow("Transformed color image", cv2.WINDOW_NORMAL)
-	frc = pykinect.FrameRateCalculator()
-	frc.start()
-
 	depth_8bit_image = np.zeros((512, 512), dtype=np.uint8)
 	colorized_image = np.zeros((512, 512, 3), dtype=np.uint8)
 	combined_image = np.zeros((512, 512, 3), dtype=np.uint8)
 
+	frc = pykinect.FrameRateCalculator()
+
+	t.start()
+	frc.start()
 	while True:
 		capture = q.get()
 
