@@ -39,7 +39,7 @@ def main():
         samples = [q.get()]
         while not q.empty():
             samples.append(q.get_nowait())
-        visualizer(samples)
+        visualizer.update(samples)
 
     t.join()
     del device
