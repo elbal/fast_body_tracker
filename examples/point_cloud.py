@@ -44,7 +44,7 @@ def main():
             calibration_type=pykinect.K4A_CALIBRATION_TYPE_DEPTH)
 
         point_cloud = point_cloud_object.to_numpy()
-        visualizer(point_cloud)
+        visualizer.update(point_cloud)
 
     t.join()
     del device

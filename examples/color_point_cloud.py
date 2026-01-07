@@ -53,7 +53,7 @@ def main():
 			depth_image_object, color_image_object, transformed_image_object)
 		bgra_image = transformed_image_object.to_numpy()
 
-		visualizer(point_cloud, bgra_image)
+		visualizer.update(point_cloud, bgra_image)
 
 	t.join()
 	del device
