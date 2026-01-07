@@ -63,9 +63,9 @@ def _get_k4a_module_path():
         arch_folder = "amd64" if machine == "amd64" else "x86"
         for version in ["v1.4.2", "v1.4.1"]:
             dll_path = (
-                base / f"Azure Kinect SDK {version}" / "sdk"
-                / "windows-desktop" / arch_folder / "release" / "bin"
-                / "k4a.dll")
+                    base / f"Azure Kinect SDK {version}" / "sdk"
+                    / "windows-desktop" / arch_folder / "release" / "bin"
+                    / "k4a.dll")
             if dll_path.exists():
                 return str(dll_path)
         raise FileNotFoundError(

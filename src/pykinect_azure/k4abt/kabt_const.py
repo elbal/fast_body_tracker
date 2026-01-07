@@ -60,19 +60,19 @@ K4ABT_JOINT_EAR_RIGHT = 31
 K4ABT_JOINT_COUNT = 32
 
 K4ABT_JOINT_NAMES = [
-	"pelvis", "spine - navel", "spine - chest", "neck", "left clavicle",
-	"left shoulder", "left elbow", "left wrist", "left hand", "left handtip",
-	"left thumb", "right clavicle", "right shoulder", "right elbow",
-	"right wrist", "right hand", "right handtip", "right thumb", "left hip",
-	"left knee", "left ankle", "left foot", "right hip", "right knee",
-	"right ankle", "right foot", "head", "nose", "left eye", "left ear",
-	"right eye", "right ear"
-	]
+    "pelvis", "spine - navel", "spine - chest", "neck", "left clavicle",
+    "left shoulder", "left elbow", "left wrist", "left hand", "left handtip",
+    "left thumb", "right clavicle", "right shoulder", "right elbow",
+    "right wrist", "right hand", "right handtip", "right thumb", "left hip",
+    "left knee", "left ankle", "left foot", "right hip", "right knee",
+    "right ankle", "right foot", "head", "nose", "left eye", "left ear",
+    "right eye", "right ear"
+]
 
 K4ABT_SEGMENT_PAIRS = [
-	[1, 0],  [2, 1], [3, 2], [4, 2], [5, 4], [6, 5], [7, 6], [8, 7], [9, 8],
-	[10, 7], [11, 2], [12, 11], [13, 12], [14, 13], [15, 14], [16, 15],
-	[17, 14], [18, 0], [19, 18], [20, 19], [21, 20], [22, 0], [23, 22],
-	[24, 23], [25, 24], [26, 3], [27, 26],[28, 26], [29, 26], [30, 26],
-	[31, 26]
-	]
+    [1, 0], [2, 1], [3, 2], [4, 2], [5, 4], [6, 5], [7, 6], [8, 7], [9, 8],
+    [10, 7], [11, 2], [12, 11], [13, 12], [14, 13], [15, 14], [16, 15],
+    [17, 14], [18, 0], [19, 18], [20, 19], [21, 20], [22, 0], [23, 22],
+    [24, 23], [25, 24], [26, 3], [27, 26], [28, 26], [29, 26], [30, 26],
+    [31, 26]
+]

@@ -26,12 +26,12 @@ class Calibration:
                 [color_params.fx, 0, color_params.cx],
                 [0, color_params.fy, color_params.cy],
                 [0, 0, 1]
-                ]),
+            ]),
             k4a_const.K4A_CALIBRATION_TYPE_DEPTH: np.array([
                 [depth_params.fx, 0, depth_params.cx],
                 [0, depth_params.fy, depth_params.cy],
                 [0, 0, 1]
-                ])}
+            ])}
 
         return parameters_handler[camera]
 
@@ -51,7 +51,7 @@ class Calibration:
         return np.array([
             params.k1, params.k2, params.p1, params.p2,
             params.k3, params.k4, params.k5, params.k6
-            ], dtype=np.float32)
+        ], dtype=np.float32)
 
     def convert_3d_to_3d(
             self, source_point3d: k4a_float3,

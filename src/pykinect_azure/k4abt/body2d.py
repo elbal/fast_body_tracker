@@ -8,63 +8,62 @@ from ..k4a import Calibration
 from ._k4abt_types import k4abt_body_t
 from . import kabt_const
 
-
 JOINT2D_DTYPE = np.dtype([
-	("position", np.float32, 2), ("confidence", np.int32)])
+    ("position", np.float32, 2), ("confidence", np.int32)])
 
 cmap = plt.get_cmap("tab20")
 
 
 class Body2d:
-	def __init__(
-			self, body_handle: k4abt_body_t, calibration: Calibration,
-			target_camera: int = k4a_const.K4A_CALIBRATION_TYPE_DEPTH):
-		self.id = body_handle.id
-		self.joints_data = np.zeros(
-			kabt_const.K4ABT_JOINT_COUNT, dtype=JOINT2D_DTYPE)
-		for i in range(kabt_const.K4ABT_JOINT_COUNT):
-			joint = body_handle.skeleton.joints[i]
-			position_2d_handle = calibration.convert_3d_to_2d(
-				source_point3d=joint.position,
-				source_camera=k4a_const.K4A_CALIBRATION_TYPE_DEPTH,
-				target_camera=target_camera)
-			self.joints_data["position"][i] = position_2d_handle[:]
-			self.joints_data["confidence"][i] = joint.confidence_level
+    def __init__(
+            self, body_handle: k4abt_body_t, calibration: Calibration,
+            target_camera: int = k4a_const.K4A_CALIBRATION_TYPE_DEPTH):
+        self.id = body_handle.id
+        self.joints_data = np.zeros(
+            kabt_const.K4ABT_JOINT_COUNT, dtype=JOINT2D_DTYPE)
+        for i in range(kabt_const.K4ABT_JOINT_COUNT):
+            joint = body_handle.skeleton.joints[i]
+            position_2d_handle = calibration.convert_3d_to_2d(
+                source_point3d=joint.position,
+                source_camera=k4a_const.K4A_CALIBRATION_TYPE_DEPTH,
+                target_camera=target_camera)
+            self.joints_data["position"][i] = position_2d_handle[:]
+            self.joints_data["confidence"][i] = joint.confidence_level
 
-	@property
-	def positions(self) -> npt.NDArray[np.float32]:
-		return self.joints_data["position"]
+    @property
+    def positions(self) -> npt.NDArray[np.float32]:
+        return self.joints_data["position"]
 
-	@property
-	def confidences(self) -> npt.NDArray[np.int32]:
-		return self.joints_data["confidence"]
+    @property
+    def confidences(self) -> npt.NDArray[np.int32]:
+        return self.joints_data["confidence"]
 
-	def draw(
-			self, image: npt.NDArray[np.uint8],
-			only_segments=False) -> npt.NDArray[np.uint8]:
-		positions = self.positions.astype(np.int32)
-		confidences = self.confidences
-		rgba = cmap(self.id % 20)
-		color = (int(rgba[2]*255), int(rgba[1]*255), int(rgba[0]*255))
+    def draw(
+            self, image: npt.NDArray[np.uint8],
+            only_segments=False) -> npt.NDArray[np.uint8]:
+        positions = self.positions.astype(np.int32)
+        confidences = self.confidences
+        rgba = cmap(self.id % 20)
+        color = (int(rgba[2] * 255), int(rgba[1] * 255), int(rgba[0] * 255))
 
-		for segment_pair in kabt_const.K4ABT_SEGMENT_PAIRS:
-			idx1, idx2 = segment_pair
-			point1 = tuple(positions[idx1])
-			point2 = tuple(positions[idx2])
-			if (
-					(point1[0] == 0 and point1[1] == 0)
-					or (point2[0] == 0 and point2[1] == 0)
-					or confidences[idx1] == 0
-					or confidences[idx2] == 0):
-				continue
-			image = cv2.line(image, point1, point2, color, 2)
-		if only_segments:
-			return image
+        for segment_pair in kabt_const.K4ABT_SEGMENT_PAIRS:
+            idx1, idx2 = segment_pair
+            point1 = tuple(positions[idx1])
+            point2 = tuple(positions[idx2])
+            if (
+                    (point1[0] == 0 and point1[1] == 0)
+                    or (point2[0] == 0 and point2[1] == 0)
+                    or confidences[idx1] == 0
+                    or confidences[idx2] == 0):
+                continue
+            image = cv2.line(image, point1, point2, color, 2)
+        if only_segments:
+            return image
 
-		for i in range(len(positions)):
-			point = tuple(positions[i])
-			if (point[0] == 0 and point[1] == 0) or confidences[i] == 0:
-				continue
-			image = cv2.circle(image, point, 3, color, 3)
+        for i in range(len(positions)):
+            point = tuple(positions[i])
+            if (point[0] == 0 and point[1] == 0) or confidences[i] == 0:
+                continue
+            image = cv2.circle(image, point, 3, color, 3)
 
-		return image
+        return image

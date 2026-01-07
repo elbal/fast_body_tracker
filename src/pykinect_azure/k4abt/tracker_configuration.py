@@ -46,8 +46,8 @@ class TrackerConfiguration:
             f"\n\t(0:Gpu, 1:Cpu, 2:CUDA, 3:TensorRT, 4:DirectML)\n\n"
             f"\tgpu_device_id: {self.gpu_device_id}\n\n"
             f"\tmodel_path: {
-                self.model_path if hasattr(self, 'model_path')
-                else 'Default Model'}")
+            self.model_path if hasattr(self, 'model_path')
+            else 'Default Model'}")
 
         return message
 
