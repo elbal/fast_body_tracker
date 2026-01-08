@@ -24,6 +24,8 @@ class PointCloudVisualizer:
         self._center_camera_flag = True
 
     def update(self, point_cloud, bgra_image=None):
+        self._fps_text.pos = (10, self.canvas.size[1] - 10)
+
         valid_mask = point_cloud[:, 2] != 0
         points = point_cloud[valid_mask]
 
