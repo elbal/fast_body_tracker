@@ -30,32 +30,32 @@ class k4a_float2(ctypes.Array):
     _length_ = 2
 
 
-class _handle_k4a_device_t(ctypes.Structure):
+class _k4a_device_t(ctypes.Structure):
     _fields_ = [("_rsvd", ctypes.c_size_t)]
 
 
-k4a_device_t = ctypes.POINTER(_handle_k4a_device_t)
+k4a_device_t = ctypes.POINTER(_k4a_device_t)
 
 
-class _handle_k4a_capture_t(ctypes.Structure):
+class _k4a_capture_t(ctypes.Structure):
     _fields_ = [("_rsvd", ctypes.c_size_t)]
 
 
-k4a_capture_t = ctypes.POINTER(_handle_k4a_capture_t)
+k4a_capture_t = ctypes.POINTER(_k4a_capture_t)
 
 
-class _handle_k4a_image_t(ctypes.Structure):
+class _k4a_image_t(ctypes.Structure):
     _fields_ = [("_rsvd", ctypes.c_size_t)]
 
 
-k4a_image_t = ctypes.POINTER(_handle_k4a_image_t)
+k4a_image_t = ctypes.POINTER(_k4a_image_t)
 
 
-class _handle_k4a_transformation_t(ctypes.Structure):
+class _k4a_transformation_t(ctypes.Structure):
     _fields_ = [("_rsvd", ctypes.c_size_t)]
 
 
-k4a_transformation_t = ctypes.POINTER(_handle_k4a_transformation_t)
+k4a_transformation_t = ctypes.POINTER(_k4a_transformation_t)
 
 
 class k4a_device_configuration_t(ctypes.Structure):
@@ -78,7 +78,7 @@ class k4a_calibration_extrinsics_t(ctypes.Structure):
         ("translation", ctypes.c_float * 3), ]
 
 
-class _param(ctypes.Structure):
+class k4a_param(ctypes.Structure):
     _fields_ = [
         ("cx", ctypes.c_float), ("cy", ctypes.c_float),
         ("fx", ctypes.c_float), ("fy", ctypes.c_float),
@@ -92,7 +92,7 @@ class _param(ctypes.Structure):
 
 
 class k4a_calibration_intrinsic_parameters_t(ctypes.Union):
-    _fields_ = [("param", _param), ("v", ctypes.c_float * 15)]
+    _fields_ = [("param", k4a_param), ("v", ctypes.c_float * 15)]
 
 
 class k4a_calibration_intrinsics_t(ctypes.Structure):
