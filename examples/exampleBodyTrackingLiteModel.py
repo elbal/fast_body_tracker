@@ -38,7 +38,7 @@ if __name__ == "__main__":
         ret_color, depth_color_image = capture.get_colored_depth_image()
 
         # Get the colored body segmentation
-        ret_depth, body_image_color = body_frame.get_segmentation_image()
+        ret_depth, body_image_color = body_frame.get_segmentation_image_object()
 
         if not ret_color or not ret_depth:
             continue

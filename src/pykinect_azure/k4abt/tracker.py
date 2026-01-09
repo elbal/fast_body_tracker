@@ -22,9 +22,6 @@ class Tracker:
         if self._handle:
             _k4abt.k4abt_tracker_destroy(self._handle)
 
-    def handle(self):
-        return self._handle
-
     def update(
             self, capture: Capture,
             timeout_in_ms: int = k4a_const.K4A_WAIT_INFINITE) -> Frame:
@@ -41,9 +38,7 @@ class Tracker:
             raise _k4abt.AzureKinectBodyTrackerException(
                 "Body tracker get body frame failed.")
 
-        return Frame(
-            frame_handle=frame_handle, calibration=self.calibration,
-            transformation=self.transformation)
+        return Frame(frame_handle=frame_handle)
 
     def set_temporal_smoothing(self, smoothing_factor: float):
         _k4abt.k4abt_tracker_set_temporal_smoothing(

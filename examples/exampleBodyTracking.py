@@ -40,7 +40,7 @@ if __name__ == "__main__":
         depth_color_image = capture.get_colored_depth_image()
 
         # Get the colored body segmentation
-        body_image_color = frame.get_segmentation_image()
+        body_image_color = frame.get_segmentation_image_object()
 
         # Combine both images
         combined_image = cv2.addWeighted(depth_color_image, 0.6,

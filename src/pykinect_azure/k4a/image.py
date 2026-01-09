@@ -70,7 +70,7 @@ class Image:
             height = self.height
             width = self.width
             arr2d = buffer.reshape((height, stride))
-            arr2d = arr2d[:, : width * 4]
+            arr2d = arr2d[:, :width * 4]
             view3d = np.lib.stride_tricks.as_strided(
                 arr2d, shape=(height, width, 4), strides=(stride, 4, 1))
             # Ensure contiguity for OpenCV plotting.
