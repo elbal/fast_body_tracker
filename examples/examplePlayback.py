@@ -1,16 +1,16 @@
 import cv2
 
-import fast_body_tracker as pykinect
+import fast_body_tracker as fbt
 
 if __name__ == "__main__":
 
     video_filename = "output.mkv"
 
     # Initialize the library, if the library is not found, add the library path as argument
-    pykinect.initialize_libraries()
+    fbt.initialize_libraries()
 
     # Start playback
-    playback = pykinect.start_playback(video_filename)
+    playback = fbt.start_playback(video_filename)
 
     playback_config = playback.get_record_configuration()
     # print(playback_config)

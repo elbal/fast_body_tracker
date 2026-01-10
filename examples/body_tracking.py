@@ -3,11 +3,11 @@ import queue
 import threading
 import numpy as np
 
-import fast_body_tracker as pykinect
+import fast_body_tracker as fbt
 
 
 def tracking_thread(device, body_tracker, q, stop_event):
-    dfa = pykinect.DroppedFramesAlert()
+    dfa = fbt.DroppedFramesAlert()
     while not stop_event.is_set():
         capture = device.update()
         frame = body_tracker.update(capture=capture)
@@ -21,14 +21,14 @@ def tracking_thread(device, body_tracker, q, stop_event):
 
 
 def main():
-    pykinect.initialize_libraries(track_body=True)
+    fbt.initialize_libraries(track_body=True)
 
-    device_config = pykinect.Configuration()
-    device_config.color_resolution = pykinect.K4A_COLOR_RESOLUTION_OFF
-    device_config.depth_mode = pykinect.K4A_DEPTH_MODE_WFOV_2X2BINNED
+    device_config = fbt.Configuration()
+    device_config.color_resolution = fbt.K4A_COLOR_RESOLUTION_OFF
+    device_config.depth_mode = fbt.K4A_DEPTH_MODE_WFOV_2X2BINNED
 
-    device = pykinect.start_device(config=device_config)
-    body_tracker = pykinect.start_body_tracker(calibration=device.calibration)
+    device = fbt.start_device(config=device_config)
+    body_tracker = fbt.start_body_tracker(calibration=device.calibration)
 
     q = queue.Queue(maxsize=10)
     stop_event = threading.Event()
@@ -36,7 +36,7 @@ def main():
         target=tracking_thread, args=(device, body_tracker, q, stop_event))
 
     cv2.namedWindow("Depth image with skeleton", cv2.WINDOW_NORMAL)
-    frc = pykinect.FrameRateCalculator()
+    frc = fbt.FrameRateCalculator()
 
     depth_8bit_image = np.zeros((512, 512), dtype=np.uint8)
     depth_colorized_image = np.zeros((512, 512, 3), dtype=np.uint8)
@@ -56,7 +56,7 @@ def main():
         for body in bodies:
             positions_2d = body.get_2d_positions(
                 calibration=device.calibration)
-            pykinect.draw_body(depth_colorized_image, positions_2d, body.id)
+            fbt.draw_body(depth_colorized_image, positions_2d, body.id)
 
         cv2.imshow("Depth image with skeleton", depth_colorized_image)
 

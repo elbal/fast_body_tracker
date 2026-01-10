@@ -1,16 +1,17 @@
+"""
 import cv2
 
-import fast_body_tracker as pykinect
+import fast_body_tracker as fbt
 
 if __name__ == "__main__":
 
     video_filename = "output.mkv"
 
     # Initialize the library, if the library is not found, add the library path as argument
-    pykinect.initialize_libraries(track_body=True)
+    fbt.initialize_libraries(track_body=True)
 
     # Start playback
-    playback = pykinect.start_playback(video_filename)
+    playback = fbt.start_playback(video_filename)
 
     playback_config = playback.get_record_configuration()
     # print(playback_config)
@@ -18,7 +19,7 @@ if __name__ == "__main__":
     playback_calibration = playback._get_calibration(,
 
         # Start body tracker
-    bodyTracker = pykinect.start_body_tracker(calibration=playback_calibration)
+    bodyTracker = fbt.start_body_tracker(calibration=playback_calibration)
 
     cv2.namedWindow('Depth image with skeleton', cv2.WINDOW_NORMAL)
     while True:
@@ -59,3 +60,4 @@ if __name__ == "__main__":
         # Press q key to stop
         if cv2.waitKey(1) == ord('q'):
             break
+"""

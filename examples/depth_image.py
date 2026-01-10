@@ -3,11 +3,11 @@ import numpy as np
 import threading
 import queue
 
-import fast_body_tracker as pykinect
+import fast_body_tracker as fbt
 
 
 def capture_thread(device, q, stop_event):
-    dfa = pykinect.DroppedFramesAlert()
+    dfa = fbt.DroppedFramesAlert()
     while not stop_event.is_set():
         capture = device.update()
         if q.full():
@@ -20,13 +20,13 @@ def capture_thread(device, q, stop_event):
 
 
 def main():
-    pykinect.initialize_libraries()
+    fbt.initialize_libraries()
 
-    device_config = pykinect.Configuration()
-    device_config.color_resolution = pykinect.K4A_COLOR_RESOLUTION_OFF
-    device_config.depth_mode = pykinect.K4A_DEPTH_MODE_WFOV_2X2BINNED
+    device_config = fbt.Configuration()
+    device_config.color_resolution = fbt.K4A_COLOR_RESOLUTION_OFF
+    device_config.depth_mode = fbt.K4A_DEPTH_MODE_WFOV_2X2BINNED
 
-    device = pykinect.start_device(config=device_config)
+    device = fbt.start_device(config=device_config)
     q = queue.Queue(maxsize=10)
     stop_event = threading.Event()
     t = threading.Thread(target=capture_thread, args=(device, q, stop_event))
@@ -35,7 +35,7 @@ def main():
     depth_8bit_image = np.zeros((512, 512), dtype=np.uint8)
     colorized_image = np.zeros((512, 512, 3), dtype=np.uint8)
 
-    frc = pykinect.FrameRateCalculator()
+    frc = fbt.FrameRateCalculator()
 
     t.start()
     frc.start()

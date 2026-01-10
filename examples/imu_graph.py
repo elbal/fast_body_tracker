@@ -1,13 +1,13 @@
 import threading
 import queue
 
-import fast_body_tracker as pykinect
+import fast_body_tracker as fbt
 from fast_body_tracker import IMUVisualizer, KeyboardCloser
 
 
 def capture_thread(device, q, stop_event):
     while not stop_event.is_set():
-        dfa = pykinect.DroppedFramesAlert()
+        dfa = fbt.DroppedFramesAlert()
         imu_sample = device.update_imu()
         if q.full():
             dfa.update()
@@ -19,13 +19,13 @@ def capture_thread(device, q, stop_event):
 
 
 def main():
-    pykinect.initialize_libraries()
+    fbt.initialize_libraries()
 
-    device_config = pykinect.Configuration()
-    device_config.color_resolution = pykinect.K4A_COLOR_RESOLUTION_720P
-    device_config.depth_mode = pykinect.K4A_DEPTH_MODE_OFF
+    device_config = fbt.Configuration()
+    device_config.color_resolution = fbt.K4A_COLOR_RESOLUTION_720P
+    device_config.depth_mode = fbt.K4A_DEPTH_MODE_OFF
 
-    device = pykinect.start_device(config=device_config)
+    device = fbt.start_device(config=device_config)
     q = queue.Queue(maxsize=200)
     keyboard_closer = KeyboardCloser()
     keyboard_closer.start()

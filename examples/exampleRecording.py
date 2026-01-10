@@ -1,23 +1,24 @@
+"""
 import cv2
 
-import fast_body_tracker as pykinect
+import fast_body_tracker as fbt
 
 if __name__ == "__main__":
 
     # Initialize the library, if the library is not found, add the library path as argument
-    pykinect.initialize_libraries()
+    fbt.initialize_libraries()
 
     # Modify camera configuration
-    device_config = pykinect.Configuration()
-    device_config.color_format = pykinect.K4A_IMAGE_FORMAT_COLOR_BGRA32
-    device_config.color_resolution = pykinect.K4A_COLOR_RESOLUTION_1080P
-    device_config.depth_mode = pykinect.K4A_DEPTH_MODE_WFOV_2X2BINNED
+    device_config = fbt.Configuration()
+    device_config.color_format = fbt.K4A_IMAGE_FORMAT_COLOR_BGRA32
+    device_config.color_resolution = fbt.K4A_COLOR_RESOLUTION_1080P
+    device_config.depth_mode = fbt.K4A_DEPTH_MODE_WFOV_2X2BINNED
     # print(device_config)
 
     # Start device
     video_filename = "output.mkv"
-    device = pykinect.start_device(config=device_config, record=True,
-                                   record_filepath=video_filename)
+    device = fbt.start_device(config=device_config, record=True,
+                              record_filepath=video_filename)
 
     cv2.namedWindow('Depth Image', cv2.WINDOW_NORMAL)
     while True:
@@ -37,3 +38,4 @@ if __name__ == "__main__":
         # Press q key to stop
         if cv2.waitKey(1) == ord('q'):
             break
+"""
