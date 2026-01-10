@@ -1,5 +1,4 @@
 import cv2
-import numpy as np
 import queue
 import threading
 
@@ -24,7 +23,8 @@ def main():
     pykinect.initialize_libraries(track_body=True)
 
     device_config = pykinect.Configuration()
-    device_config.color_resolution = pykinect.K4A_COLOR_RESOLUTION_OFF
+    device_config.color_format = pykinect.K4A_IMAGE_FORMAT_COLOR_BGRA32
+    device_config.color_resolution = pykinect.K4A_COLOR_RESOLUTION_1080P
     device_config.depth_mode = pykinect.K4A_DEPTH_MODE_WFOV_2X2BINNED
 
     device = pykinect.start_device(config=device_config)
@@ -35,31 +35,25 @@ def main():
     t = threading.Thread(
         target=tracking_thread, args=(device, body_tracker, q, stop_event))
 
-    cv2.namedWindow("Segmented depth image", cv2.WINDOW_NORMAL)
+    cv2.namedWindow("Color image with skeleton", cv2.WINDOW_NORMAL)
     frc = pykinect.FrameRateCalculator()
-
-    depth_8bit_image = np.zeros((512, 512), dtype=np.uint8)
-    depth_colorized_image = np.zeros((512, 512, 3), dtype=np.uint8)
-    combined_image = np.zeros((512, 512, 3), dtype=np.uint8)
 
     t.start()
     frc.start()
     while True:
         capture, frame = q.get()
 
-        image_object = capture.get_depth_image_object()
-        depth_image = image_object.to_numpy()
-        cv2.convertScaleAbs(depth_image, alpha=0.08, dst=depth_8bit_image)
-        cv2.applyColorMap(
-            depth_8bit_image, cv2.COLORMAP_CIVIDIS, dst=depth_colorized_image)
+        color_image_object = capture.get_color_image_object()
+        color_image = color_image_object.to_numpy()
 
-        seg_image_object = frame.get_segmentation_image_object()
-        rgb_seg_image = pykinect.colorize_segmentation_image(seg_image_object)
+        bodies = frame.get_bodies()
+        for body in bodies:
+            positions_2d = body.get_2d_positions(
+                calibration=device.calibration,
+                target_camera=pykinect.K4A_CALIBRATION_TYPE_COLOR)
+            pykinect.draw_body(color_image, positions_2d, body.id)
 
-        combined_image = cv2.addWeighted(
-            rgb_seg_image, 0.6, depth_colorized_image, 0.4, 0,
-            dst=combined_image)
-        cv2.imshow("Segmented depth image", combined_image)
+        cv2.imshow("Color image with skeleton", color_image)
 
         if cv2.waitKey(1) == ord("q"):
             break

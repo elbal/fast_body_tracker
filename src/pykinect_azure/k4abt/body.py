@@ -1,3 +1,4 @@
+import ctypes
 import numpy as np
 from numpy import typing as npt
 import cv2
@@ -5,7 +6,7 @@ import matplotlib.pyplot as plt
 
 from ..k4a import k4a_const
 from ..k4a import Calibration
-from ._k4abt_types import k4abt_body_t
+from ._k4abt_types import k4abt_body_t, k4a_float3
 from . import kabt_const
 
 JOINT_DTYPE = np.dtype([
@@ -44,7 +45,8 @@ class Body:
                 npt.NDArray[np.float32]):
         positions_2d = [
             calibration.convert_3d_to_2d(
-                position, k4a_const.K4A_CALIBRATION_TYPE_DEPTH, target_camera)
+                position.ctypes.data_as(ctypes.POINTER(k4a_float3)).contents,
+                k4a_const.K4A_CALIBRATION_TYPE_DEPTH, target_camera)
             for position in self.positions]
         return np.array(positions_2d, dtype=np.float32)
 

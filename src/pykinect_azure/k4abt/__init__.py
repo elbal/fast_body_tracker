@@ -1,4 +1,4 @@
-from .body import Body
+from .body import Body, draw_body
 from .frame import (
     Frame, colorize_segmentation_image, transform_segmentation_image)
 from .tracker import Tracker

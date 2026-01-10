@@ -1,7 +1,7 @@
 import cv2
-import numpy as np
 import queue
 import threading
+import numpy as np
 
 import pykinect_azure as pykinect
 
@@ -35,12 +35,11 @@ def main():
     t = threading.Thread(
         target=tracking_thread, args=(device, body_tracker, q, stop_event))
 
-    cv2.namedWindow("Segmented depth image", cv2.WINDOW_NORMAL)
+    cv2.namedWindow("Depth image with skeleton", cv2.WINDOW_NORMAL)
     frc = pykinect.FrameRateCalculator()
 
     depth_8bit_image = np.zeros((512, 512), dtype=np.uint8)
     depth_colorized_image = np.zeros((512, 512, 3), dtype=np.uint8)
-    combined_image = np.zeros((512, 512, 3), dtype=np.uint8)
 
     t.start()
     frc.start()
@@ -53,13 +52,13 @@ def main():
         cv2.applyColorMap(
             depth_8bit_image, cv2.COLORMAP_CIVIDIS, dst=depth_colorized_image)
 
-        seg_image_object = frame.get_segmentation_image_object()
-        rgb_seg_image = pykinect.colorize_segmentation_image(seg_image_object)
+        bodies = frame.get_bodies()
+        for body in bodies:
+            positions_2d = body.get_2d_positions(
+                calibration=device.calibration)
+            pykinect.draw_body(depth_colorized_image, positions_2d, body.id)
 
-        combined_image = cv2.addWeighted(
-            rgb_seg_image, 0.6, depth_colorized_image, 0.4, 0,
-            dst=combined_image)
-        cv2.imshow("Segmented depth image", combined_image)
+        cv2.imshow("Depth image with skeleton", depth_colorized_image)
 
         if cv2.waitKey(1) == ord("q"):
             break
