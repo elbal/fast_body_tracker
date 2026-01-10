@@ -1,8 +1,8 @@
 import threading
 import queue
 
-import pykinect_azure as pykinect
-from pykinect_azure import IMUVisualizer, KeyboardCloser
+import fast_body_tracker as pykinect
+from fast_body_tracker import IMUVisualizer, KeyboardCloser
 
 
 def capture_thread(device, q, stop_event):

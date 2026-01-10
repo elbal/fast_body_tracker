@@ -1,11 +1,13 @@
-# This CITATION.cff file was generated with cffinit.
-# Visit https://bit.ly/cffinit to generate yours today!
-
 cff-version: 1.2.0
-title: pyKinectAzure
-message: You can cite this repository using the info below
+title: fast_body_tracker
+message: "If you use this software, please cite it as below."
 type: software
 authors:
   - given-names: Ibai
     family-names: Gorordo Fernandez
     orcid: 'https://orcid.org/0000-0003-3219-1879'
+  - given-names: Elia
+    family-names: Balugani
+    orcid: 'https://orcid.org/0000-0002-8377-0902'
+repository-code: 'https://github.com/elbal/fast_body_tracker'
+license: MIT

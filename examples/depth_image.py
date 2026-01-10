@@ -3,7 +3,7 @@ import numpy as np
 import threading
 import queue
 
-import pykinect_azure as pykinect
+import fast_body_tracker as pykinect
 
 
 def capture_thread(device, q, stop_event):

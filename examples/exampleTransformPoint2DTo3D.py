@@ -1,7 +1,7 @@
 import cv2
 
-import pykinect_azure as pykinect
-from pykinect_azure import K4A_CALIBRATION_TYPE_COLOR, \
+import fast_body_tracker as pykinect
+from fast_body_tracker import K4A_CALIBRATION_TYPE_COLOR, \
     K4A_CALIBRATION_TYPE_DEPTH, k4a_float2_t
 
 if __name__ == "__main__":

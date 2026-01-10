@@ -4,7 +4,7 @@ import numpy as np
 rng = np.random.default_rng()
 
 sys.path.insert(1, '../')
-import pykinect_azure as pykinect
+import fast_body_tracker as pykinect
 
 
 def rand_int(size):

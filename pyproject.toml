@@ -3,11 +3,11 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "pykinect_azure"
+name = "fast_body_tracker"
 version = "0.1.0"
-description = "Azure Kinect SDK wrapper"
+description = "Fast depth camera body tracker"
 requires-python = ">=3.10"
-authors = [{ name = "Ibai Gorordo" }]
+authors = [{name = "Ibai Gorordo" }, {name = "Elia Balugani" }]
 license = "MIT"
 
 dependencies = [
@@ -34,8 +34,8 @@ managed = true
 package = true
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/pykinect_azure"]
-exclude = ["pykinect_azure/tests/**"]
+packages = ["src/fast_body_tracker"]
+exclude = ["fast_body_tracker/tests/**"]
 
 [tool.hatch.build.targets.sdist]
 exclude = ["/tests", "/examples", "/doc", "/.venv"]

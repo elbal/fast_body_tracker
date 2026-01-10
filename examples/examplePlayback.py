@@ -1,6 +1,6 @@
 import cv2
 
-import pykinect_azure as pykinect
+import fast_body_tracker as pykinect
 
 if __name__ == "__main__":
 

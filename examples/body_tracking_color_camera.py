@@ -2,7 +2,7 @@ import cv2
 import queue
 import threading
 
-import pykinect_azure as pykinect
+import fast_body_tracker as pykinect
 
 
 def tracking_thread(device, body_tracker, q, stop_event):
