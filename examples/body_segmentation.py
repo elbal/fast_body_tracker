@@ -6,20 +6,6 @@ import threading
 import fast_body_tracker as fbt
 
 
-def tracking_thread(device, body_tracker, q, stop_event):
-    dfa = fbt.DroppedFramesAlert()
-    while not stop_event.is_set():
-        capture = device.update()
-        frame = body_tracker.update(capture=capture)
-        if q.full():
-            dfa.update()
-            try:
-                q.get_nowait()
-            except queue.Empty:
-                pass
-        q.put((capture, frame))
-
-
 def main():
     fbt.initialize_libraries(track_body=True)
 
@@ -28,12 +14,12 @@ def main():
     device_config.depth_mode = fbt.K4A_DEPTH_MODE_WFOV_2X2BINNED
 
     device = fbt.start_device(config=device_config)
-    body_tracker = fbt.start_body_tracker(calibration=device.calibration)
+    tracker = fbt.start_body_tracker(calibration=device.calibration)
 
     q = queue.Queue(maxsize=10)
     stop_event = threading.Event()
     t = threading.Thread(
-        target=tracking_thread, args=(device, body_tracker, q, stop_event))
+        target=fbt.capture_thread, args=(device, tracker, q, stop_event))
 
     cv2.namedWindow("Segmented depth image", cv2.WINDOW_NORMAL)
     frc = fbt.FrameRateCalculator()
@@ -46,6 +32,8 @@ def main():
     frc.start()
     while True:
         capture, frame = q.get()
+        if capture is None:
+            break
 
         image_object = capture.get_depth_image_object()
         depth_image = image_object.to_numpy()
@@ -62,12 +50,11 @@ def main():
         cv2.imshow("Segmented depth image", combined_image)
 
         if cv2.waitKey(1) == ord("q"):
-            break
+            stop_event.set()
         frc.update()
     cv2.destroyAllWindows()
-    stop_event.set()
     t.join()
-    del body_tracker
+    del tracker
     del device
 
 
