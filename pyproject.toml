@@ -37,7 +37,7 @@ package = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/fast_body_tracker"]
-exclude = ["tests/**",  "notebooks/**", "examples/**"]
+exclude = ["/examples", "/notebooks", "/scripts"]
 
 [tool.hatch.build.targets.sdist]
-exclude = ["/tests"]
+exclude = ["/scripts"]
