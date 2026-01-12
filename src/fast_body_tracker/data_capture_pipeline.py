@@ -195,12 +195,14 @@ def video_saver_thread(
     for i in range(n_devices):
         filename = video_dir / f"device_{i}.mkv"
         container = av.open(str(filename), mode="w")
-        stream = container.add_stream("hevc_nvenc", rate=fps)
+
+        stream = container.add_stream("av1_nvenc", rate=fps)
         stream.width = width
         stream.height = height
         stream.pix_fmt = "yuv420p"
+
         stream.options = {
-            "preset": "p4", "tune": "ll", "rc": "vbr", "cq": "24", "gpu": "0"}
+            "preset": "p4", "tune": "ll", "rc": "vbr", "cq": "28", "gpu": "0"}
         containers[i] = container
         streams[i] = stream
 
@@ -211,8 +213,8 @@ def video_saver_thread(
             finished_workers += 1
             continue
 
-        bgr_image, device_id = item
-        frame = av.VideoFrame.from_ndarray(bgr_image, format="bgr24")
+        image, device_id = item
+        frame = av.VideoFrame.from_ndarray(image, format="bgr24")
 
         stream = streams[device_id]
         container = containers[device_id]
