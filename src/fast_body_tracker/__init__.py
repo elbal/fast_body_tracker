@@ -3,6 +3,7 @@ from .initializer import (
 from .data_capture_pipeline import (
     capture_thread, computation_thread, joints_saver_thread,
     video_saver_thread, visualization_main_tread)
+from .calibration import *
 from .utils import *
 from .k4a import *
 from .k4abt import *

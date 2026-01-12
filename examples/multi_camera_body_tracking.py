@@ -88,4 +88,4 @@ def main(n_devices: int = 1):
 
 
 if __name__ == "__main__":
-    main(2)
+    main(3)

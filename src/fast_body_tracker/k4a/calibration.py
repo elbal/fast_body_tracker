@@ -1,6 +1,7 @@
 import ctypes
 import numpy as np
 from numpy import typing as npt
+from typing import Tuple
 
 from ._k4a_types import (
     k4a_calibration_t, k4a_calibration_type_t, k4a_image_t, k4a_float2,
@@ -51,7 +52,15 @@ class Calibration:
         return np.array([
             params.k1, params.k2, params.p1, params.p2,
             params.k3, params.k4, params.k5, params.k6
-        ], dtype=np.float32)
+            ], dtype=np.float32)
+
+    def get_extrinsics(self, input_camera: int, output_camera: int) -> Tuple[
+            npt.NDArray[np.float32], npt.NDArray[np.float32]]:
+        extrinsics = self._handle.extrinsics[input_camera][output_camera]
+        rotation_matrix = np.array(extrinsics.rotation).reshape(3, 3)
+        translation_vector_mm = np.array(extrinsics.translation)
+
+        return rotation_matrix, translation_vector_mm
 
     def convert_3d_to_3d(
             self, source_point3d: k4a_float3,
