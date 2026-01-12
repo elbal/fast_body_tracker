@@ -57,14 +57,14 @@ def computation_thread(
 
         color_image_object = capture.get_color_image_object()
         ts = color_image_object.timestamp
-        color_image = color_image_object.to_numpy()
+        bgra_image = color_image_object.to_numpy()
 
         if frame.get_num_bodies() > 0:
             body = frame.get_body()
             positions_2d = body.get_2d_positions(
                 calibration=calibration,
                 target_camera=K4A_CALIBRATION_TYPE_COLOR)
-            draw_body(color_image, positions_2d, body.id)
+            draw_body(bgra_image, positions_2d, body.id)
             if joints_queue.full():
                 dfa.update()
                 try:
@@ -73,13 +73,14 @@ def computation_thread(
                     pass
             joints_queue.put((body, ts, frame_idx, device_id))
 
+        bgr_image = cv2.cvtColor(bgra_image, cv2.COLOR_BGRA2BGR)
         if video_queue.full():
             dfa.update()
             try:
                 video_queue.get_nowait()
             except queue.Empty:
                 pass
-        video_queue.put((color_image, device_id))
+        video_queue.put((bgr_image, device_id))
 
         if visualization_queue.full():
             dfa.update()
@@ -87,7 +88,7 @@ def computation_thread(
                 visualization_queue.get_nowait()
             except queue.Empty:
                 pass
-        visualization_queue.put((color_image, device_id))
+        visualization_queue.put((bgr_image, device_id))
 
         frame_idx += 1
     joints_queue.put(None)
@@ -210,8 +211,7 @@ def video_saver_thread(
             finished_workers += 1
             continue
 
-        bgra_image, device_id = item
-        bgr_image = cv2.cvtColor(bgra_image, cv2.COLOR_BGRA2BGR)
+        bgr_image, device_id = item
         frame = av.VideoFrame.from_ndarray(bgr_image, format="bgr24")
 
         stream = streams[device_id]
@@ -253,9 +253,9 @@ def visualization_main_tread(
         item = visualization_queue.get()
         if item is None:
             break
-        image, device_id = item
+        bgr_image, device_id = item
 
-        cv2.imshow(f"Color images with skeleton {device_id}", image)
+        cv2.imshow(f"Color images with skeleton {device_id}", bgr_image)
         if cv2.waitKey(1) == ord("q"):
             stop_event.set()
     cv2.destroyAllWindows()
