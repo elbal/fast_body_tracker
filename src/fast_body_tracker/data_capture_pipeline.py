@@ -88,6 +88,8 @@ def computation_thread(
             except queue.Empty:
                 pass
         visualization_queue.put((color_image, device_id))
+
+        frame_idx += 1
     joints_queue.put(None)
     video_queue.put(None)
     visualization_queue.put(None)
