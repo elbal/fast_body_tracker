@@ -34,15 +34,14 @@ def main(n_devices: int = 1):
     devices = []
     trackers = []
 
-    stop_event = threading.Event()
     capture_queues = []
     capture_threads = []
+    stop_event = threading.Event()
 
-    visualization_queue = queue.Queue(maxsize=10)
     computation_threads = []
-
     joints_queue = queue.Queue(maxsize=10)
     video_queue = queue.Queue(maxsize=10)
+    visualization_queue = queue.Queue(maxsize=10)
 
     for i in range(n_devices):
         device, tracker = device_initialization(device_index=i)
