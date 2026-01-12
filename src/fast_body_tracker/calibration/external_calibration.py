@@ -2,19 +2,18 @@ import numpy as np
 from numpy import typing as npt
 import cv2
 import cv2.aruco as aruco
-from typing import Iterable, Optional
+from typing import Iterable
 
-from fast_body_tracker import K4A_CALIBRATION_TYPE_DEPTH
 from ..initializer import initialize_libraries, start_device
 from ..k4a.k4a_const import (
     K4A_COLOR_RESOLUTION_2160P, K4A_CALIBRATION_TYPE_COLOR,
-    K4A_DEPTH_MODE_WFOV_2X2BINNED)
+    K4A_CALIBRATION_TYPE_DEPTH, K4A_DEPTH_MODE_WFOV_2X2BINNED)
 from ..k4a.configuration import Configuration
 
 
 def external_calibration(
-        devices_idx: Iterable[int], n_samples: int = 60) -> dict[
-            int, dict[str, npt.NDArray[np.float64]] | None]:
+        devices_idx: Iterable[int],
+        n_samples: int = 60) -> dict[int, npt.NDArray[np.float32]]:
     aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_5X5_1000)
     board = aruco.CharucoBoard((3, 3), 94.0, 94.0 * 0.76, aruco_dict)
     detector = aruco.CharucoDetector(board)
@@ -39,8 +38,6 @@ def external_calibration(
         rvecs, tvecs = [], []
         window_name = f"{idx}"
         cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
-        cv2.resizeWindow(window_name, 1280, 720)
-
         while len(rvecs) < n_samples:
             bgra_image = device.update().get_color_image_object().to_numpy()
             gray = cv2.cvtColor(bgra_image, cv2.COLOR_BGRA2GRAY)
@@ -76,7 +73,7 @@ def external_calibration(
             }
 
     reference_data = devices_data[0]
-    final_params = {0: None}  # Device 0 is the reference one.
+    transformation_matrices = dict()
 
     for i in [idx for idx in devices_idx if idx != 0]:
         device_data = devices_data[i]
@@ -103,8 +100,9 @@ def external_calibration(
                         + sec2main_rgba_trans))
                 + reference_data["bgra2depth_trans"])
 
-        final_params[i] = {
-            "sec2main_depth_rot": sec2main_depth_rot,
-            "sec2main_depth_trans": sec2main_depth_trans}
+        transformation_matrix = np.eye(4, dtype=np.float32)
+        transformation_matrix[:3, :3] = sec2main_depth_rot
+        transformation_matrix[:3, 3] = sec2main_depth_trans
+        transformation_matrices[i] = transformation_matrix
 
-    return final_params
+    return transformation_matrices

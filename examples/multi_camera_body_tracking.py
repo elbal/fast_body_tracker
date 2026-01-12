@@ -1,4 +1,6 @@
 import queue
+import numpy as np
+from numpy import typing as npt
 import threading
 import pathlib
 from datetime import datetime
@@ -28,7 +30,9 @@ def device_initialization(
     return device, tracker
 
 
-def main(n_devices: int = 1):
+def main(
+        trans_matrices: dict[int, npt.NDArray[np.float32]],
+        n_devices: int = 1):
     fbt.initialize_libraries(track_body=True)
 
     devices = []
@@ -53,18 +57,26 @@ def main(n_devices: int = 1):
             target=fbt.capture_thread,
             args=(devices[i], trackers[i], capture_queues[i], stop_event)))
 
-        computation_threads.append(threading.Thread(
-            target=fbt.computation_thread,
-            args=(
-                i, devices[i].calibration, capture_queues[i], joints_queue,
-                video_queue, visualization_queue)))
+        if i == 0:
+            computation_threads.append(threading.Thread(
+                target=fbt.computation_thread,
+                args=(
+                    i, devices[i].calibration, capture_queues[i], joints_queue,
+                    video_queue, visualization_queue, None, None)))
+        else:
+            computation_threads.append(threading.Thread(
+                target=fbt.computation_thread,
+                args=(
+                    i, devices[i].calibration, capture_queues[i], joints_queue,
+                    video_queue, visualization_queue,
+                    trans_matrices[i][:3, :3], trans_matrices[i][:3, 3])))
 
     base_dir = pathlib.Path("../data/")
     timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M")
     file_dir = base_dir / timestamp
     file_dir.mkdir(parents=True, exist_ok=True)
     joints_saver_thread = threading.Thread(
-        target=fbt.joints_saver_thread,
+        target=fbt.body_saver_thread,
         args=(n_devices, joints_queue, file_dir))
     video_saver_thread = threading.Thread(
         target=fbt.video_saver_thread, args=(n_devices, video_queue, file_dir))
@@ -88,4 +100,6 @@ def main(n_devices: int = 1):
 
 
 if __name__ == "__main__":
-    main(3)
+    with np.load("../data/transformation_matrices.npz") as data:
+        transformation_matrices = {int(k): v for k, v in data.items()}
+    main(transformation_matrices, 3)
