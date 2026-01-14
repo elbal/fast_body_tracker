@@ -62,8 +62,9 @@ def computation_thread(
         ts = color_image_object.timestamp
         bgra_image = color_image_object.to_numpy()
 
-        if frame.get_num_bodies() > 0:
-            body = frame.get_body()
+        n_bodies = frame.get_num_bodies()
+        for body_idx in range(n_bodies):
+            body = frame.get_body(body_idx)
             positions_2d = body.get_2d_positions(
                 calibration=calibration,
                 target_camera=K4A_CALIBRATION_TYPE_COLOR)
@@ -77,7 +78,7 @@ def computation_thread(
             if ext_rot is not None:
                 body.positions[:] = body.positions @ ext_rot.T
                 body.positions += (ext_trans * 1000.0)
-            joints_queue.put((body, ts, frame_idx, device_id))
+            joints_queue.put((body, ts, frame_idx, device_id, body_idx))
 
         bgr_image = cv2.cvtColor(bgra_image, cv2.COLOR_BGRA2BGR)
         if video_queue.full():
@@ -107,15 +108,16 @@ def body_saver_thread(
         flush_size: int = 600):
     n_joints = len(K4ABT_JOINT_NAMES)
     h5file = h5py.File(file_dir / "body.h5", "w")
+    n_bodies = 2##########################################################################
 
     buffers = {
-        i: {
+        (i, j): {
             "ts": np.empty(flush_size, dtype=np.int64),
             "positions": np.empty((flush_size, n_joints, 3), dtype=np.float32),
             "confidences": np.empty((flush_size, n_joints), dtype=np.uint8),
             "frame_idx": np.empty(flush_size, dtype=np.int64),
             "idx": 0
-            } for i in range(n_devices)
+            } for i in range(n_devices) for j in range(n_bodies)
         }
 
     joint_names = np.array(
@@ -126,25 +128,27 @@ def body_saver_thread(
 
     device_groups = {}
     for i in range(n_devices):
-        grp = h5file.create_group(f"device_{i}")
-        grp.attrs["device_idx"] = i
-        grp.create_dataset(
-            "ts", shape=(0,), maxshape=(None,), dtype="i8",
-            chunks=(flush_size,))
-        grp.create_dataset(
-            "positions", shape=(0, n_joints, 3), maxshape=(None, n_joints, 3),
-            dtype="f4", chunks=(flush_size, n_joints, 3))
-        grp.create_dataset(
-            "confidences", shape=(0, n_joints), maxshape=(None, n_joints),
-            dtype="u1", chunks=(flush_size, n_joints))
-        grp.create_dataset(
-            "frame_idx", shape=(0,), maxshape=(None,), dtype="i8",
-            chunks=(flush_size,))
-        device_groups[i] = grp
+        for j in range(n_bodies):
+            grp = h5file.create_group(f"device_{i}_body{j}")
+            grp.attrs["device_id"] = i
+            grp.attrs["body_idx"] = j
+            grp.create_dataset(
+                "ts", shape=(0,), maxshape=(None,), dtype="i8",
+                chunks=(flush_size,))
+            grp.create_dataset(
+                "positions", shape=(0, n_joints, 3), maxshape=(None, n_joints, 3),
+                dtype="f4", chunks=(flush_size, n_joints, 3))
+            grp.create_dataset(
+                "confidences", shape=(0, n_joints), maxshape=(None, n_joints),
+                dtype="u1", chunks=(flush_size, n_joints))
+            grp.create_dataset(
+                "frame_idx", shape=(0,), maxshape=(None,), dtype="i8",
+                chunks=(flush_size,))
+            device_groups[(i, j)] = grp
 
-    def flush_device_buffer(device_id: int):
-        grp = device_groups[device_id]
-        buffer = buffers[device_id]
+    def flush_device_buffer(device_id: int, body_idx: int):
+        grp = device_groups[(device_id, body_idx)]
+        buffer = buffers[(device_id, body_idx)]
         idx = buffer["idx"]
 
         d_ts = grp["ts"]
@@ -175,8 +179,10 @@ def body_saver_thread(
             finished_workers += 1
             continue
 
-        body, ts, frame_idx, device_id = item
-        buffer = buffers[device_id]
+        body, ts, frame_idx, device_id, body_idx = item
+        if body_idx > n_bodies:
+            continue
+        buffer = buffers[(device_id, body_idx)]
         idx = buffer["idx"]
 
         buffer["ts"][idx] = ts
@@ -186,10 +192,11 @@ def body_saver_thread(
         buffer["idx"] += 1
 
         if buffer["idx"] >= flush_size:
-            flush_device_buffer(device_id)
+            flush_device_buffer(device_id, body_idx)
     for i in range(n_devices):
-        if buffers[i]["idx"] > 0:
-            flush_device_buffer(i)
+        for j in range(n_bodies):
+            if buffers[(i, j)]["idx"] > 0:
+                flush_device_buffer(i, j)
     h5file.close()
 
 
