@@ -45,9 +45,8 @@ def capture_thread(
 
 def computation_thread(
         device_id: int, calibration: Calibration,
-        capture_queue: queue.Queue,
-        joints_queue: queue.Queue, video_queue: queue.Queue,
-        visualization_queue: queue.Queue,
+        capture_queue: queue.Queue, joints_queue: queue.Queue,
+        video_queue: queue.Queue, visualization_queue: queue.Queue,
         ext_rot: npt.NDArray[np.float64] | None = None,
         ext_trans: npt.NDArray[np.float64] | None = None):
     dfa = DroppedFramesAlert()
@@ -76,11 +75,9 @@ def computation_thread(
                 except queue.Empty:
                     pass
             if ext_rot is not None:
-                positions = body.positions @ ext_rot.T + ext_trans*1000.0
-            else:
-                positions = body.positions
-            joints_queue.put((
-                positions, body.confidences, ts, frame_idx, device_id))
+                body.positions[:] = body.positions @ ext_rot.T
+                body.positions += (ext_trans * 1000.0)
+            joints_queue.put((body, ts, frame_idx, device_id))
 
         bgr_image = cv2.cvtColor(bgra_image, cv2.COLOR_BGRA2BGR)
         if video_queue.full():
@@ -178,13 +175,13 @@ def body_saver_thread(
             finished_workers += 1
             continue
 
-        positions, confidences, ts, frame_idx, device_id = item
+        body, ts, frame_idx, device_id = item
         buffer = buffers[device_id]
         idx = buffer["idx"]
 
         buffer["ts"][idx] = ts
-        buffer["positions"][idx, :, :] = positions
-        buffer["confidences"][idx, :] = confidences
+        buffer["positions"][idx, :, :] = body.positions
+        buffer["confidences"][idx, :] = body.confidences
         buffer["frame_idx"][idx] = frame_idx
         buffer["idx"] += 1
 
