@@ -46,6 +46,10 @@ class Image:
     def timestamp(self) -> int:
         return _k4a.K4aLib.k4a_image_get_device_timestamp_usec(self._handle)
 
+    @property
+    def system_timestamp(self) -> int:
+        return _k4a.K4aLib.k4a_image_get_system_timestamp_nsec(self._handle)
+
     def to_numpy(self) -> npt.NDArray[np.uint8 | np.uint16 | np.int16]:
         buffer = np.ctypeslib.as_array(
             _k4a.K4aLib.k4a_image_get_buffer(self._handle), shape=(self.size,))

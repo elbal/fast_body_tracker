@@ -48,7 +48,15 @@ def main(
     visualization_queue = queue.Queue(maxsize=10)
 
     for i in range(n_devices):
-        device, tracker = device_initialization(device_index=i)
+        if i == 0:
+            if n_devices == 1:
+                device_mode = "standalone"
+            else:
+                device_mode = "main"
+        else:
+            device_mode = "secondary"
+        device, tracker = device_initialization(
+            device_index=i, device_mode=device_mode)
         devices.append(device)
         trackers.append(tracker)
 
