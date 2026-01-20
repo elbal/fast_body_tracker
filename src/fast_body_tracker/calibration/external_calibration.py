@@ -12,7 +12,7 @@ from ..k4a.configuration import Configuration
 
 
 def external_calibration(
-        devices_idx: Iterable[int],
+        n_devices: int = 1,
         n_samples: int = 60) -> dict[int, npt.NDArray[np.float32]]:
     aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_5X5_1000)
     board = aruco.CharucoBoard((3, 3), 94.0, 94.0 * 0.76, aruco_dict)
@@ -21,7 +21,7 @@ def external_calibration(
     initialize_libraries()
     devices_data = {}
 
-    for idx in devices_idx:
+    for idx in range(n_devices):
         configuration = Configuration()
         configuration.color_resolution = K4A_COLOR_RESOLUTION_2160P
         configuration.depth_mode = K4A_DEPTH_MODE_WFOV_2X2BINNED
@@ -73,9 +73,9 @@ def external_calibration(
             }
 
     reference_data = devices_data[0]
-    transformation_matrices = dict()
+    trans_matrices = dict()
 
-    for i in [idx for idx in devices_idx if idx != 0]:
+    for i in [idx for idx in range(n_devices) if idx != 0]:
         device_data = devices_data[i]
         # Secondary RGBA -> main RGBA.
         sec2main_rgba_rot = (
@@ -100,9 +100,9 @@ def external_calibration(
                         + sec2main_rgba_trans))
                 + reference_data["bgra2depth_trans"])
 
-        transformation_matrix = np.eye(4, dtype=np.float32)
-        transformation_matrix[:3, :3] = sec2main_depth_rot
-        transformation_matrix[:3, 3] = sec2main_depth_trans
-        transformation_matrices[i] = transformation_matrix
+        trans_matrix = np.eye(4, dtype=np.float32)
+        trans_matrix[:3, :3] = sec2main_depth_rot
+        trans_matrix[:3, 3] = sec2main_depth_trans
+        trans_matrices[i] = trans_matrix
 
-    return transformation_matrices
+    return trans_matrices

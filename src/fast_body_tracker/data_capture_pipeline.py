@@ -8,10 +8,16 @@ import pathlib
 import h5py
 import tkinter as tk
 
+from .initializer import initialize_libraries, start_device, start_body_tracker
 from .utils.performace_calculator import (
     DroppedFramesAlert, FrameRateCalculator)
-from .k4a.k4a_const import K4A_CALIBRATION_TYPE_COLOR
+from .k4a.k4a_const import (
+    K4A_CALIBRATION_TYPE_COLOR, K4A_WIRED_SYNC_MODE_STANDALONE,
+    K4A_WIRED_SYNC_MODE_MASTER, K4A_WIRED_SYNC_MODE_SUBORDINATE,
+    K4A_IMAGE_FORMAT_COLOR_BGRA32, K4A_COLOR_RESOLUTION_1080P,
+    K4A_DEPTH_MODE_WFOV_2X2BINNED)
 from .k4a.calibration import Calibration
+from .k4a.configuration import Configuration
 from .k4a.device import Device
 from .k4abt.kabt_const import K4ABT_JOINT_NAMES, K4ABT_SEGMENT_PAIRS
 from .k4abt.body import draw_body
@@ -262,7 +268,7 @@ def body_saver_thread(
 
 
 def video_saver_thread(
-        n_devices: int, video_queue: queue.Queue, video_dir: pathlib.Path,
+        video_queue: queue.Queue, video_dir: pathlib.Path, n_devices: int,
         fps: int = 30, width: int = 1920, height: int = 1080):
     containers = {}
     streams = {}
@@ -303,8 +309,8 @@ def video_saver_thread(
 
 
 def visualization_main_tread(
-        n_devices: int, visualization_queue: queue.Queue,
-        stop_event: threading.Event, width: int = 1920, height: int = 1080):
+        visualization_queue: queue.Queue, stop_event: threading.Event,
+        n_devices: int, width: int = 1920, height: int = 1080):
     window_bar_height = 20
     taskbar_height = 30
     from_border = 5
@@ -335,3 +341,102 @@ def visualization_main_tread(
         if cv2.waitKey(1) == ord("q"):
             stop_event.set()
     cv2.destroyAllWindows()
+
+def _default_device_initialization(
+        device_index: int = 0,
+        device_mode: str = "standalone") -> tuple[Device, Tracker]:
+    modes = {
+        "standalone": K4A_WIRED_SYNC_MODE_STANDALONE,
+        "main": K4A_WIRED_SYNC_MODE_MASTER,
+        "secondary": K4A_WIRED_SYNC_MODE_SUBORDINATE}
+
+    device_config = Configuration()
+    device_config.color_format = K4A_IMAGE_FORMAT_COLOR_BGRA32
+    device_config.color_resolution = K4A_COLOR_RESOLUTION_1080P
+    device_config.depth_mode = K4A_DEPTH_MODE_WFOV_2X2BINNED
+    device_config.synchronized_images_only = True
+    device_config.wired_sync_mode = modes[device_mode]
+
+    device = start_device(device_index=device_index, config=device_config)
+    tracker = start_body_tracker(calibration=device.calibration)
+
+    return device, tracker
+
+def default_pipeline(
+        base_dir: pathlib.Path | str,
+        trans_matrices: dict[int, npt.NDArray[np.float32]] | None = None,
+        sync: bool = False, n_bodies: int = 1):
+    if trans_matrices is None:
+        n_devices = 1
+    else:
+        n_devices = len(trans_matrices) + 1
+
+    devices = []
+    trackers = []
+
+    capture_queues = []
+    capture_threads = []
+    stop_event = threading.Event()
+
+    computation_threads = []
+    joints_queue = queue.Queue(maxsize=10)
+    video_queue = queue.Queue(maxsize=10)
+    visualization_queue = queue.Queue(maxsize=10)
+
+    initialize_libraries(track_body=True)
+    for i in range(n_devices - 1, -1, -1):  # Start the secondary first.
+        if sync and n_devices != 1:
+            if i == 0:
+                device_mode = "main"
+            else:
+                device_mode = "secondary"
+        else:
+            device_mode = "standalone"
+        device, tracker = _default_device_initialization(
+            device_index=i, device_mode=device_mode)
+        devices.append(device)
+        trackers.append(tracker)
+
+        capture_queues.append(queue.Queue(maxsize=10))
+        capture_threads.append(threading.Thread(
+            target=capture_thread,
+            args=(devices[i], trackers[i], capture_queues[i], stop_event)))
+
+        if i == 0:
+            rot_matrix = None
+            trans_vector = None
+        else:
+            rot_matrix = trans_matrices[i][:3, :3]
+            trans_vector = trans_matrices[i][:3, 3]
+        computation_threads.append(threading.Thread(
+            target=computation_thread,
+            args=(
+                i, devices[i].calibration, capture_queues[i], joints_queue,
+                video_queue, visualization_queue, rot_matrix, trans_vector)))
+
+    base_dir = pathlib.Path(base_dir)
+    timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M")
+    file_dir = base_dir / timestamp
+    file_dir.mkdir(parents=True, exist_ok=True)
+    joints_saver_thread = threading.Thread(
+        target=body_saver_thread,
+        args=(joints_queue, file_dir, n_devices, n_bodies))
+    video_saver_thread = threading.Thread(
+        target=video_saver_thread, args=(video_queue, file_dir, n_devices))
+
+    video_saver_thread.start()
+    joints_saver_thread.start()
+    for t in computation_threads:
+        t.start()
+    for t in capture_threads:
+        t.start()
+    visualization_main_tread(visualization_queue, stop_event, n_devices)
+
+    video_saver_thread.join()
+    joints_saver_thread.join()
+    for t in capture_threads:
+        t.join()
+    for t in computation_threads:
+        t.join()
+    del trackers
+    del devices
