@@ -2,7 +2,6 @@ import numpy as np
 from numpy import typing as npt
 import cv2
 import cv2.aruco as aruco
-from typing import Iterable
 
 from ..initializer import initialize_libraries, start_device
 from ..k4a.k4a_const import (

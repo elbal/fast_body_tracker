@@ -7,6 +7,7 @@ import av
 import pathlib
 import h5py
 import tkinter as tk
+from datetime import datetime
 
 from .initializer import initialize_libraries, start_device, start_body_tracker
 from .utils.performace_calculator import (
@@ -72,15 +73,14 @@ def computation_thread(
         bodies = []
         for body_idx in range(frame.get_num_bodies()):
             body = frame.get_body(body_idx)
-            if ext_rot is not None:
-                body.positions[:] = body.positions @ ext_rot.T
-                body.positions[:] += (ext_trans * 1000.0)
-            bodies.append(body)
-
             positions_2d = body.get_2d_positions(
                 calibration=calibration,
                 target_camera=K4A_CALIBRATION_TYPE_COLOR)
             draw_body(bgra_image, positions_2d, body.id)
+            if ext_rot is not None:
+                body.positions[:] = body.positions @ ext_rot.T
+                body.positions[:] += (ext_trans * 1000.0)
+            bodies.append(body)
 
         if joints_queue.full():
             dfa.update()
@@ -129,8 +129,8 @@ def body_saver_thread(
         }
     ts_buffers = {
         i: {
-            "ts": np.empty(flush_size, dtype=np.int64),
-            "system_ts": np.empty(flush_size, dtype=np.int64),
+            "ts": np.empty(flush_size, dtype=np.uint64),
+            "system_ts": np.empty(flush_size, dtype=np.uint64),
             "idx": 0}
         for i in range(n_devices)}
 
@@ -169,10 +169,10 @@ def body_saver_thread(
         device_grp = ts_grp.create_group(f"device_{i}")
         device_grp.attrs["device_id"] = i
         device_grp.create_dataset(
-            "ts", shape=(0,), maxshape=(None,), dtype="i8",
+            "ts", shape=(0,), maxshape=(None,), dtype="u8",
             chunks=(flush_size,))
         device_grp.create_dataset(
-            "system_ts", shape=(0,), maxshape=(None,), dtype="i8",
+            "system_ts", shape=(0,), maxshape=(None,), dtype="u8",
             chunks=(flush_size,))
 
         ts_data[i] = {
@@ -187,7 +187,7 @@ def body_saver_thread(
         d_positions = data["positions"]
         d_confidences = data["confidences"]
 
-        old_n =  d_frame_idx.shape[0]
+        old_n = d_frame_idx.shape[0]
         new_n = old_n + idx
 
         d_frame_idx.resize(new_n, axis=0)
@@ -342,6 +342,7 @@ def visualization_main_tread(
             stop_event.set()
     cv2.destroyAllWindows()
 
+
 def _default_device_initialization(
         device_index: int = 0,
         device_mode: str = "standalone") -> tuple[Device, Tracker]:
@@ -362,6 +363,7 @@ def _default_device_initialization(
 
     return device, tracker
 
+
 def default_pipeline(
         base_dir: pathlib.Path | str,
         trans_matrices: dict[int, npt.NDArray[np.float32]] | None = None,
@@ -371,14 +373,14 @@ def default_pipeline(
     else:
         n_devices = len(trans_matrices) + 1
 
-    devices = []
-    trackers = []
+    devices = dict()
+    trackers = dict()
 
-    capture_queues = []
-    capture_threads = []
+    capture_queues = dict()
+    capture_t = dict()
     stop_event = threading.Event()
 
-    computation_threads = []
+    computation_t = dict()
     joints_queue = queue.Queue(maxsize=10)
     video_queue = queue.Queue(maxsize=10)
     visualization_queue = queue.Queue(maxsize=10)
@@ -394,13 +396,13 @@ def default_pipeline(
             device_mode = "standalone"
         device, tracker = _default_device_initialization(
             device_index=i, device_mode=device_mode)
-        devices.append(device)
-        trackers.append(tracker)
+        devices[i] = device
+        trackers[i] = tracker
 
-        capture_queues.append(queue.Queue(maxsize=10))
-        capture_threads.append(threading.Thread(
+        capture_queues[i] = queue.Queue(maxsize=10)
+        capture_t[i] = threading.Thread(
             target=capture_thread,
-            args=(devices[i], trackers[i], capture_queues[i], stop_event)))
+            args=(devices[i], trackers[i], capture_queues[i], stop_event))
 
         if i == 0:
             rot_matrix = None
@@ -408,35 +410,35 @@ def default_pipeline(
         else:
             rot_matrix = trans_matrices[i][:3, :3]
             trans_vector = trans_matrices[i][:3, 3]
-        computation_threads.append(threading.Thread(
+        computation_t[i] = threading.Thread(
             target=computation_thread,
             args=(
                 i, devices[i].calibration, capture_queues[i], joints_queue,
-                video_queue, visualization_queue, rot_matrix, trans_vector)))
+                video_queue, visualization_queue, rot_matrix, trans_vector))
 
     base_dir = pathlib.Path(base_dir)
     timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M")
     file_dir = base_dir / timestamp
     file_dir.mkdir(parents=True, exist_ok=True)
-    joints_saver_thread = threading.Thread(
+    body_saver_t = threading.Thread(
         target=body_saver_thread,
         args=(joints_queue, file_dir, n_devices, n_bodies))
-    video_saver_thread = threading.Thread(
+    video_saver_t = threading.Thread(
         target=video_saver_thread, args=(video_queue, file_dir, n_devices))
 
-    video_saver_thread.start()
-    joints_saver_thread.start()
-    for t in computation_threads:
+    video_saver_t.start()
+    body_saver_t.start()
+    for t in computation_t.values():
         t.start()
-    for t in capture_threads:
+    for t in capture_t.values():
         t.start()
     visualization_main_tread(visualization_queue, stop_event, n_devices)
 
-    video_saver_thread.join()
-    joints_saver_thread.join()
-    for t in capture_threads:
+    video_saver_t.join()
+    body_saver_t.join()
+    for t in capture_t.values():
         t.join()
-    for t in computation_threads:
+    for t in computation_t.values():
         t.join()
     del trackers
     del devices
