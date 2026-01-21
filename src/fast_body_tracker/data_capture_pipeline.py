@@ -141,7 +141,7 @@ def body_saver_thread(
         "joint_connections", data=K4ABT_SEGMENT_PAIRS, dtype="u1")
 
     joint_data = {}
-    joints_grp = h5file.create_group(f"joints")
+    joints_grp = h5file.create_group("joints")
     for i in range(n_devices):
         device_grp = joints_grp.create_group(f"device_{i}")
         device_grp.attrs["device_id"] = i
@@ -164,7 +164,7 @@ def body_saver_thread(
                 "confidences": body_grp["confidences"]}
 
     ts_data = {}
-    ts_grp = h5file.create_group(f"ts")
+    ts_grp = h5file.create_group("ts")
     for i in range(n_devices):
         device_grp = ts_grp.create_group(f"device_{i}")
         device_grp.attrs["device_id"] = i
@@ -402,7 +402,7 @@ def default_pipeline(
         capture_queues[i] = queue.Queue(maxsize=10)
         capture_t[i] = threading.Thread(
             target=capture_thread,
-            args=(devices[i], trackers[i], capture_queues[i], stop_event))
+            args=(device, tracker, capture_queues[i], stop_event))
 
         if i == 0:
             rot_matrix = None
@@ -413,7 +413,7 @@ def default_pipeline(
         computation_t[i] = threading.Thread(
             target=computation_thread,
             args=(
-                i, devices[i].calibration, capture_queues[i], joints_queue,
+                i, device.calibration, capture_queues[i], joints_queue,
                 video_queue, visualization_queue, rot_matrix, trans_vector))
 
     base_dir = pathlib.Path(base_dir)
