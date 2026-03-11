@@ -101,14 +101,12 @@ class K4aLib:
             "k4a_device_get_capture", ctypes.c_int,
             (
                 _k4a_types.k4a_device_t,
-                ctypes.POINTER(_k4a_types.k4a_capture_t),
-                ctypes.c_int32))
+                ctypes.POINTER(_k4a_types.k4a_capture_t), ctypes.c_int32))
         cls._bind(
             "k4a_device_get_imu_sample", ctypes.c_int,
             (
                 _k4a_types.k4a_device_t,
-                ctypes.POINTER(_k4a_types.k4a_imu_sample_t),
-                ctypes.c_int32))
+                ctypes.POINTER(_k4a_types.k4a_imu_sample_t), ctypes.c_int32))
         cls._bind(
             "k4a_device_start_cameras", _k4a_types.k4a_result_t,
             (
@@ -268,8 +266,7 @@ class K4aLib:
             "k4a_calibration_get_from_raw", _k4a_types.k4a_result_t,
             (
                 ctypes.POINTER(ctypes.c_char), ctypes.c_size_t,
-                _k4a_types.k4a_depth_mode_t,
-                _k4a_types.k4a_color_resolution_t,
+                _k4a_types.k4a_depth_mode_t, _k4a_types.k4a_color_resolution_t,
                 ctypes.POINTER(_k4a_types.k4a_calibration_t)))
         cls._bind(
             "k4a_calibration_3d_to_3d", _k4a_types.k4a_result_t,
