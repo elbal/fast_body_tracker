@@ -6,20 +6,19 @@ build-backend = "hatchling.build"
 name = "fast_body_tracker"
 version = "0.1.0"
 description = "Fast depth camera body tracker."
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 authors = [{name = "Ibai Gorordo" }, {name = "Elia Balugani" }]
 license = "MIT"
 
 dependencies = [
-    "opencv-python>=4.11.0.86",
-    "av>=16.1.0",
-    "numpy>=2.2.6",
-    "pyside6>=6.10.1",
-    "vispy>=0.16.1",
-    "matplotlib>=3.10.8",
-    "h5py>=3.15.1",
-    "jupyterlab>=4.5.2",
-    "pynput>=1.8.1"
+    "opencv-python",
+    "av",
+    "numpy",
+    "pyside6",
+    "vispy",
+    "matplotlib",
+    "h5py",
+    "pynput"
 ]
 
 classifiers = [
@@ -30,6 +29,12 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Image Recognition",
     "Topic :: Scientific/Engineering :: Human Machine Interfaces",
     "Topic :: Scientific/Engineering :: Visualization",
+]
+
+[project.optional-dependencies]
+notebook = [
+    "ipympl",
+    "jupyterlab",
 ]
 
 [tool.uv]
