@@ -1,7 +1,6 @@
 import numpy as np
 from numpy import typing as npt
 import cv2
-import cv2.aruco as aruco
 
 from ..initializer import initialize_libraries, start_device
 from ..k4a.k4a_const import (
@@ -11,15 +10,20 @@ from ..k4a.configuration import Configuration
 
 
 def external_calibration(
-        n_devices: int = 1,
-        n_samples: int = 60) -> dict[int, npt.NDArray[np.float32]]:
-    aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_5X5_1000)
-    board = aruco.CharucoBoard((3, 3), 94.0, 94.0 * 0.76, aruco_dict)
-    detector = aruco.CharucoDetector(board)
+        n_devices, n_samples: int = 60) -> dict[int, npt.NDArray[np.float32]]:
+    n_squares_w = 3
+    n_squares_h = 3
+    square_length_mm = 94.0
+    marker_length_mm = 94.0 * 0.76
+
+    aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_5X5_1000)
+    board = cv2.aruco.CharucoBoard(
+        size=(n_squares_w, n_squares_h), squareLength=square_length_mm,
+        markerLength=marker_length_mm, dictionary=aruco_dict)
+    detector = cv2.aruco.CharucoDetector(board)
 
     initialize_libraries()
-    devices_data = {}
-
+    calibration_data = {}
     for idx in range(n_devices):
         configuration = Configuration()
         configuration.color_resolution = K4A_COLOR_RESOLUTION_2160P
@@ -39,8 +43,8 @@ def external_calibration(
         cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
         while len(rvecs) < n_samples:
             bgra_image = device.update().get_color_image_object().to_numpy()
-            gray = cv2.cvtColor(bgra_image, cv2.COLOR_BGRA2GRAY)
-            corners_xy, corners_idx, _, _ = detector.detectBoard(gray)
+            gray_image = cv2.cvtColor(bgra_image, cv2.COLOR_BGRA2GRAY)
+            corners_xy, corners_idx, _, _ = detector.detectBoard(gray_image)
 
             if corners_idx is not None and len(corners_idx) >= 4:
                 main_corners_xyz, main_corners_xy = board.matchImagePoints(
@@ -50,7 +54,7 @@ def external_calibration(
                 if valid:
                     rvecs.append(rvec)
                     tvecs.append(tvec / 1000.0)  # From mm to meters.
-                    aruco.drawDetectedCornersCharuco(
+                    cv2.aruco.drawDetectedCornersCharuco(
                         bgra_image, corners_xy, corners_idx, (0, 255, 0))
                     cv2.drawFrameAxes(
                         bgra_image, k_matrix, dist_params, rvec, tvec, 100)
@@ -64,18 +68,17 @@ def external_calibration(
         cv2.destroyWindow(window_name)
 
         board2dev_rot, _ = cv2.Rodrigues(np.median(rvecs, axis=0))
-        devices_data[idx] = {
+        calibration_data[idx] = {
             "bgra2depth_rot": bgra2depth_rot,
             "bgra2depth_trans": bgra2depth_trans,
             "board2dev_rot": board2dev_rot,
-            "board2dev_trans": np.median(tvecs, axis=0).flatten()
-            }
+            "board2dev_trans": np.median(tvecs, axis=0).flatten()}
 
-    reference_data = devices_data[0]
+    reference_data = calibration_data[0]
     trans_matrices = dict()
 
     for i in [idx for idx in range(n_devices) if idx != 0]:
-        device_data = devices_data[i]
+        device_data = calibration_data[i]
         # Secondary RGBA -> main RGBA.
         sec2main_rgba_rot = (
                 reference_data["board2dev_rot"]
