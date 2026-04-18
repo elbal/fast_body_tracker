@@ -52,7 +52,7 @@ def capture_thread(
 
 def computation_thread(
         device_id: int, calibration: Calibration,
-        capture_queue: queue.Queue, joints_queue: queue.Queue,
+        capture_queue: queue.Queue, unification_queue: queue.Queue,
         video_queue: queue.Queue, visualization_queue: queue.Queue,
         ext_rot: npt.NDArray[np.float64] | None = None,
         ext_trans: npt.NDArray[np.float64] | None = None):
@@ -82,13 +82,13 @@ def computation_thread(
                 body.positions[:] += (ext_trans * 1000.0)
             bodies.append(body)
 
-        if joints_queue.full():
+        if unification_queue.full():
             dfa.update()
             try:
-                joints_queue.get_nowait()
+                unification_queue.get_nowait()
             except queue.Empty:
                 pass
-        joints_queue.put((frame_idx, ts, system_ts, device_id, bodies))
+        unification_queue.put((frame_idx, ts, system_ts, device_id, bodies))
 
         bgr_image = cv2.cvtColor(bgra_image, cv2.COLOR_BGRA2BGR)
         if video_queue.full():
@@ -108,9 +108,22 @@ def computation_thread(
         visualization_queue.put((bgr_image, device_id))
 
         frame_idx += 1
-    joints_queue.put(None)
+    unification_queue.put(None)
     video_queue.put(None)
     visualization_queue.put(None)
+
+
+def unification_thread(
+        unification_queue: queue.Queue, joints_queue: queue.Queue,
+        n_devices: int):
+    finished_workers = 0
+    while finished_workers < n_devices:
+        item = unification_queue.get()
+        if item is None:
+            finished_workers += 1
+            continue
+
+    joints_queue.put(None)
 
 
 def body_saver_thread(
@@ -381,6 +394,7 @@ def default_pipeline(
     stop_event = threading.Event()
 
     computation_t = dict()
+    unification_queue = queue.Queue(maxsize=10)
     joints_queue = queue.Queue(maxsize=10)
     video_queue = queue.Queue(maxsize=10)
     visualization_queue = queue.Queue(maxsize=10)
@@ -413,13 +427,16 @@ def default_pipeline(
         computation_t[i] = threading.Thread(
             target=computation_thread,
             args=(
-                i, device.calibration, capture_queues[i], joints_queue,
+                i, device.calibration, capture_queues[i], unification_queue,
                 video_queue, visualization_queue, rot_matrix, trans_vector))
 
     base_dir = pathlib.Path(base_dir)
     timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M")
     file_dir = base_dir / timestamp
     file_dir.mkdir(parents=True, exist_ok=True)
+    unification_t = threading.Thread(
+        target=unification_thread,
+        args=(unification_queue, joints_queue, n_devices))
     body_saver_t = threading.Thread(
         target=body_saver_thread,
         args=(joints_queue, file_dir, n_devices, n_bodies))
@@ -427,6 +444,7 @@ def default_pipeline(
         target=video_saver_thread, args=(video_queue, file_dir, n_devices))
 
     video_saver_t.start()
+    unification_t.start()
     body_saver_t.start()
     for t in computation_t.values():
         t.start()
@@ -435,6 +453,7 @@ def default_pipeline(
     visualization_main_tread(visualization_queue, stop_event, n_devices)
 
     video_saver_t.join()
+    unification_t.join()
     body_saver_t.join()
     for t in capture_t.values():
         t.join()
