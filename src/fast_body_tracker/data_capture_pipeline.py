@@ -116,12 +116,65 @@ def computation_thread(
 def unification_thread(
         unification_queue: queue.Queue, joints_queue: queue.Queue,
         n_devices: int):
+    max_ts_diff = 1 / 30 * 0.5 * 1e6  # 0.5 frames at 30 FPS, in microseconds.
+    items = [None] * n_devices
+    current_ts = None
+    current_positions = None
+    current_orientations = None
+    current_confidences = None
+
     finished_workers = 0
     while finished_workers < n_devices:
         item = unification_queue.get()
         if item is None:
             finished_workers += 1
             continue
+        frame_idx, ts, system_ts, device_id, bodies = item
+
+        if device_id == 0:
+            # TODO - send old positions away
+            current_ts = ts
+            current_positions = bodies[0].positions
+            current_orientations = bodies[0].orientations
+            current_confidences = bodies[0].confidences
+
+            for item in items:
+                if item is None:
+                    continue
+                frame_idx, ts, system_ts, device_id, bodies = item
+                if abs(ts-current_ts) < max_ts_diff:
+                    positions = bodies[0].positions
+                    orientations = bodies[0].orientations
+                    confidences = bodies[0].confidences
+
+                    confidence_mask = confidences > current_confidences
+                    current_positions[confidence_mask] = positions[confidence_mask]
+                    current_orientations[confidence_mask] = orientations[
+                        confidence_mask]
+                    current_confidences[confidence_mask] = confidences[
+                        confidence_mask]
+            items[:] = [None] * n_devices
+            continue
+
+        if current_ts is None:
+            items[device_id] = item
+            continue
+        if current_ts - ts > max_ts_diff:
+            continue
+        if ts - current_ts > max_ts_diff:
+            items[device_id] = item
+            continue
+        positions = bodies[0].positions
+        orientations = bodies[0].orientations
+        confidences = bodies[0].confidences
+
+        confidence_mask = confidences > current_confidences
+        current_positions[confidence_mask] = positions[confidence_mask]
+        current_orientations[confidence_mask] = orientations[confidence_mask]
+        current_confidences[confidence_mask] = confidences[confidence_mask]
+
+
+
 
     joints_queue.put(None)
 
