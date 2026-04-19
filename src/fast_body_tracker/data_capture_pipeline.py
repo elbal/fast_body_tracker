@@ -119,6 +119,7 @@ def unification_thread(
     max_ts_diff = 1 / 30 * 0.5 * 1e6  # 0.5 frames at 30 FPS, in microseconds.
     items = [None] * n_devices
     current_ts = None
+    body_flag = False
     current_positions = None
     current_orientations = None
     current_confidences = None
@@ -134,9 +135,13 @@ def unification_thread(
         if device_id == 0:
             # TODO - send old positions away
             current_ts = ts
-            current_positions = bodies[0].positions
-            current_orientations = bodies[0].orientations
-            current_confidences = bodies[0].confidences
+            if bodies:
+                current_positions = bodies[0].positions
+                current_orientations = bodies[0].orientations
+                current_confidences = bodies[0].confidences
+                body_flag = True
+            else:
+                body_flag = False
 
             for item in items:
                 if item is None:
@@ -146,16 +151,23 @@ def unification_thread(
                     positions = bodies[0].positions
                     orientations = bodies[0].orientations
                     confidences = bodies[0].confidences
-
-                    confidence_mask = confidences > current_confidences
-                    current_positions[confidence_mask] = positions[confidence_mask]
-                    current_orientations[confidence_mask] = orientations[
-                        confidence_mask]
-                    current_confidences[confidence_mask] = confidences[
-                        confidence_mask]
+                    if body_flag:
+                        confidence_mask = confidences > current_confidences
+                        current_positions[confidence_mask] = positions[confidence_mask]
+                        current_orientations[confidence_mask] = orientations[
+                            confidence_mask]
+                        current_confidences[confidence_mask] = confidences[
+                            confidence_mask]
+                    else:
+                        current_positions = positions
+                        current_orientations = orientations
+                        current_confidences = confidences
+                        body_flag = True
             items[:] = [None] * n_devices
             continue
 
+        if not bodies:
+            continue
         if current_ts is None:
             items[device_id] = item
             continue
@@ -164,17 +176,22 @@ def unification_thread(
         if ts - current_ts > max_ts_diff:
             items[device_id] = item
             continue
+
         positions = bodies[0].positions
         orientations = bodies[0].orientations
         confidences = bodies[0].confidences
-
-        confidence_mask = confidences > current_confidences
-        current_positions[confidence_mask] = positions[confidence_mask]
-        current_orientations[confidence_mask] = orientations[confidence_mask]
-        current_confidences[confidence_mask] = confidences[confidence_mask]
-
-
-
+        if body_flag:
+            confidence_mask = confidences > current_confidences
+            current_positions[confidence_mask] = positions[confidence_mask]
+            current_orientations[confidence_mask] = orientations[
+                confidence_mask]
+            current_confidences[confidence_mask] = confidences[
+                confidence_mask]
+        else:
+            current_positions = positions
+            current_orientations = orientations
+            current_confidences = confidences
+            body_flag = True
 
     joints_queue.put(None)
 
