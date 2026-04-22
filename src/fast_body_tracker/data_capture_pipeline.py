@@ -167,23 +167,23 @@ def update_tracked(
     bodies: list[Body],
     tracked_joints: npt.NDArray[np.float32],
     available_slots: set[int],
-    frame_bodies: list[Body],
     is_stale: npt.NDArray[np.bool],
-    reference_joint_idx: int,
+    frame_bodies: list[Body],
+    reference: int,
     max_distance: float,
     n_bodies: int,
 ) -> tuple[npt.NDArray[np.float32], npt.NDArray[bool]]:
     if len(available_slots) < n_bodies:
         joints_to_be_assigned = np.empty((len(bodies), 3), dtype=np.float32)
         for i, body in enumerate(bodies):
-            joints_to_be_assigned[i] = body.positions[reference_joint_idx]
+            joints_to_be_assigned[i] = body.positions[reference]
         assigned_idx, assigned_to_idx, unassigned_idx = assign_nearest(
             tracked_joints, joints_to_be_assigned, max_distance
         )
 
         for i, j in zip(assigned_to_idx, assigned_idx):
             if frame_bodies[i] is None:
-                tracked_joints[i] = bodies[j].positions[reference_joint_idx]
+                tracked_joints[i] = bodies[j].positions[reference]
                 frame_bodies[i] = bodies[j]
                 is_stale[i] = False
             else:
@@ -200,7 +200,7 @@ def update_tracked(
                     confidence_mask
                 ]
 
-                tracked_joints[i] = frame_bodies[i].positions[reference_joint_idx]
+                tracked_joints[i] = frame_bodies[i].positions[reference]
     else:
         unassigned_idx = range(len(bodies))
 
@@ -210,7 +210,7 @@ def update_tracked(
         except KeyError:
             break
         if frame_bodies[i] is None:
-            tracked_joints[i] = bodies[j].positions[reference_joint_idx]
+            tracked_joints[i] = bodies[j].positions[reference]
             frame_bodies[i] = bodies[j]
             is_stale[i] = False
         else:
@@ -225,7 +225,7 @@ def update_tracked(
             ]
             frame_bodies[i].confidences[confidence_mask] = confidences[confidence_mask]
 
-            tracked_joints[i] = frame_bodies[i].positions[reference_joint_idx]
+            tracked_joints[i] = frame_bodies[i].positions[reference]
 
     return tracked_joints, is_stale
 
@@ -239,7 +239,7 @@ def unification_thread(
     max_ts_diff = 1 / 30 * 0.5 * 1e6  # 0.5 frames at 30 FPS, in microseconds.
     max_distance = 300.0  # In mmm.
     max_stale_frames = 60
-    reference_joint_idx = K4ABT_JOINT_PELVIS
+    reference = K4ABT_JOINT_PELVIS
 
     tracked_joints = np.full((n_bodies, 3), np.nan, dtype=np.float32)
     available_slots = set(i for i in range(n_bodies))
@@ -278,9 +278,9 @@ def unification_thread(
                     bodies,
                     tracked_joints,
                     available_slots,
-                    frame_bodies,
                     is_stale,
-                    reference_joint_idx,
+                    frame_bodies,
+                    reference,
                     max_distance,
                     n_bodies,
                 )
@@ -293,9 +293,9 @@ def unification_thread(
                     bodies,
                     tracked_joints,
                     available_slots,
-                    frame_bodies,
                     is_stale,
-                    reference_joint_idx,
+                    frame_bodies,
+                    reference,
                     max_distance,
                     n_bodies,
                 )
@@ -316,9 +316,9 @@ def unification_thread(
             bodies,
             tracked_joints,
             available_slots,
-            frame_bodies,
             is_stale,
-            reference_joint_idx,
+            frame_bodies,
+            reference,
             max_distance,
             n_bodies,
         )
