@@ -9,7 +9,7 @@ class Datablock:
         self.reset()
 
     def is_valid(self):
-        return self.datablock_handle != None
+        return self.datablock_handle is not None
 
     def handle(self):
         return self._handle

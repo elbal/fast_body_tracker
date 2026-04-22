@@ -23,7 +23,7 @@ class Record:
         )
 
     def is_valid(self):
-        return self.record_handle != None
+        return self.record_handle is not None
 
     def close(self):
         if self.is_valid():

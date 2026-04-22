@@ -32,7 +32,7 @@ class Playback:
         return self.get_next_capture()
 
     def is_valid(self):
-        return self._handle != None
+        return self._handle is not None
 
     def is_capture_initialized(self):
         return self._capture
