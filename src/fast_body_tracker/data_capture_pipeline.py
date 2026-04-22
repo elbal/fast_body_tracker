@@ -247,6 +247,7 @@ def unification_thread(
     frame_bodies = [None] * n_bodies
 
     stored_bodies = [None] * n_devices
+    stored_ts = np.full(n_devices, 0, dtype=np.uint64)
 
     current_ts = None
 
@@ -285,8 +286,8 @@ def unification_thread(
                     n_bodies,
                 )
 
-            for bodies in stored_bodies:
-                if bodies is None:
+            for bodies, ts in zip(stored_bodies, stored_ts):
+                if bodies is None or np.abs(current_ts - ts) > max_ts_diff:
                     continue
                 # check time here as well?###############################################
                 tracked_joints, is_stale = update_tracked(
@@ -306,11 +307,13 @@ def unification_thread(
             continue
         if current_ts is None:
             stored_bodies[device_id] = bodies
+            stored_ts[device_id] = ts
             continue
         if current_ts - ts > max_ts_diff:
             continue
         if ts - current_ts > max_ts_diff:
             stored_bodies[device_id] = bodies
+            stored_ts[device_id] = ts
             continue
         tracked_joints, is_stale = update_tracked(
             bodies,
