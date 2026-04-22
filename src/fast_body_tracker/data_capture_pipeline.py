@@ -265,6 +265,7 @@ def unification_thread(
                 # TODO - send old positions away
                 frame_bodies = [None] * n_bodies
 
+                stale_counter[~is_stale] = 0
                 stale_counter[is_stale] += 1
                 drop_mask = stale_counter > max_stale_frames
                 available_slots.update(np.nonzero(drop_mask)[0])
@@ -289,7 +290,6 @@ def unification_thread(
             for bodies, ts in zip(stored_bodies, stored_ts):
                 if bodies is None or np.abs(current_ts - ts) > max_ts_diff:
                     continue
-                # check time here as well?###############################################
                 tracked_joints, is_stale = update_tracked(
                     bodies,
                     tracked_joints,
