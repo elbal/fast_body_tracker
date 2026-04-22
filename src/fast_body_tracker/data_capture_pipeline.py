@@ -116,44 +116,105 @@ def computation_thread(
     visualization_queue.put(None)
 
 
+def assign_nearest(
+        tracked_joints: npt.NDArray[np.float32],
+        joints_to_be_assigned: npt.NDArray[np.float32],
+        max_distance: float) -> tuple[
+    npt.NDArray[np.int64], npt.NDArray[np.int64], npt.NDArray[np.int64]]:
+    valid_mask = ~np.isnan(tracked_joints).any(axis=1)
+    valid_idx = np.nonzero(valid_mask)[0]
+    tracked_valid = tracked_joints[valid_mask]
+
+    diff = tracked_valid[:, np.newaxis, :] - joints_to_be_assigned[np.newaxis, :, :]
+    dist = np.linalg.norm(diff, axis=2)
+    dist[dist > max_distance] = np.inf
+
+    assigned_full = np.full(tracked_joints.shape[0], -1, dtype=np.int64)
+    max_matches = min(tracked_valid.shape[0], joints_to_be_assigned.shape[0])
+    for _ in range(max_matches):
+        dist_argmin = np.argmin(dist)
+        min_dist = dist.ravel()[dist_argmin]
+        if not np.isfinite(min_dist):
+            break
+
+        row_idx, col_idx = np.unravel_index(dist_argmin, dist.shape)
+        assigned_full[valid_idx[row_idx]] = col_idx
+
+        dist[row_idx, :] = np.inf
+        dist[:, col_idx] = np.inf
+
+    assigned_to_idx = np.nonzero(assigned_full >= 0)[0]
+    assigned_idx = assigned_full[assigned_to_idx]
+
+    used_mask = np.ones(joints_to_be_assigned.shape[0], dtype=bool)
+    used_mask[assigned_idx] = False
+    unassigned_idx = np.nonzero(used_mask)[0]
+
+    return assigned_idx, assigned_to_idx, unassigned_idx
+
+
+def update_tracked(
+        bodies: list[Body], tracked_joints: npt.NDArray[np.float32],
+        available_slots: set[int], frame_bodies: list[Body],
+        is_stale: npt.NDArray[np.bool], reference_joint_idx: int, max_distance: float,
+        n_bodies: int) -> tuple[
+    npt.NDArray[np.float32], npt.NDArray[bool]]:
+    if len(available_slots) < n_bodies:
+        joints_to_be_assigned = np.empty((len(bodies), 3), dtype=np.float32)
+        for i, body in enumerate(bodies):
+            joints_to_be_assigned[i] = body.positions[reference_joint_idx]
+        assigned_idx, assigned_to_idx, unassigned_idx = assign_nearest(
+            tracked_joints, joints_to_be_assigned, max_distance)
+
+        for i, j in zip(assigned_to_idx, assigned_idx):
+            if frame_bodies[i] is None:
+                tracked_joints[i] = bodies[j].positions[reference_joint_idx]
+                frame_bodies[i] = bodies[j]
+                is_stale[i] = False
+            else:
+                positions = bodies[j].positions
+                orientations = bodies[j].orientations
+                confidences = bodies[j].confidences
+
+                confidence_mask = confidences > frame_bodies[i].confidences
+                frame_bodies[i].positions[confidence_mask] = positions[confidence_mask]
+                frame_bodies[i].orientations[confidence_mask] = orientations[
+                    confidence_mask]
+                frame_bodies[i].confidences[confidence_mask] = confidences[
+                    confidence_mask]
+
+                tracked_joints[i] = frame_bodies[i].positions[reference_joint_idx]
+    else:
+        unassigned_idx = range(len(bodies))
+
+    for j in unassigned_idx:
+        try:
+            i = available_slots.pop()
+        except KeyError:
+            break
+        if frame_bodies[i] is None:
+            tracked_joints[i] = bodies[j].positions[reference_joint_idx]
+            frame_bodies[i] = bodies[j]
+            is_stale[i] = False
+        else:
+            positions = bodies[j].positions
+            orientations = bodies[j].orientations
+            confidences = bodies[j].confidences
+
+            confidence_mask = confidences > frame_bodies[i].confidences
+            frame_bodies[i].positions[confidence_mask] = positions[confidence_mask]
+            frame_bodies[i].orientations[confidence_mask] = orientations[
+                confidence_mask]
+            frame_bodies[i].confidences[confidence_mask] = confidences[confidence_mask]
+
+            tracked_joints[i] = frame_bodies[i].positions[reference_joint_idx]
+
+    return tracked_joints, is_stale
+
+
 def unification_thread(
-        unification_queue: queue.Queue, joints_queue: queue.Queue,
-        n_devices: int = 1, n_bodies: int = 1):
-    def assign_nearest(
-            tracked: npt.NDArray[np.float32], to_be_assigned: npt.NDArray[np.float32],
-            threshold: float) -> tuple[
-        npt.NDArray[np.int64], npt.NDArray[np.int64], npt.NDArray[np.int64]]:
-        valid_mask = ~np.isnan(tracked).any(axis=1)
-        valid_idx = np.nonzero(valid_mask)[0]
-        tracked_valid = tracked[valid_mask]
-
-        diff = tracked_valid[:, np.newaxis, :] - to_be_assigned[np.newaxis, :, :]
-        dist = np.linalg.norm(diff, axis=2)
-        dist[dist > threshold] = np.inf
-
-        assigned_full = np.full(tracked.shape[0], -1, dtype=np.int64)
-        max_matches = min(tracked_valid.shape[0], to_be_assigned.shape[0])
-        for _ in range(max_matches):
-            dist_argmin = np.argmin(dist)
-            min_dist = dist.ravel()[dist_argmin]
-            if not np.isfinite(min_dist):
-                break
-
-            row_idx, col_idx = np.unravel_index(dist_argmin, dist.shape)
-            assigned_full[valid_idx[row_idx]] = col_idx
-
-            dist[row_idx, :] = np.inf
-            dist[:, col_idx] = np.inf
-
-        assigned_to_idx = np.nonzero(assigned_full >= 0)[0]
-        assigned_idx = assigned_full[assigned_to_idx]
-
-        used_mask = np.ones(to_be_assigned.shape[0], dtype=bool)
-        used_mask[assigned_idx] = False
-        unassigned_idx = np.nonzero(used_mask)[0]
-
-        return assigned_idx, assigned_to_idx, unassigned_idx
-
+        unification_queue: queue.Queue, joints_queue: queue.Queue, n_devices: int = 1,
+        n_bodies: int = 1):
     max_ts_diff = 1 / 30 * 0.5 * 1e6  # 0.5 frames at 30 FPS, in microseconds.
     max_distance = 300.0  # In mmm.
     max_stale_frames = 60
@@ -180,6 +241,7 @@ def unification_thread(
         if device_id == 0:
             if current_ts is not None:
                 # TODO - send old positions away
+                frame_bodies = [None] * n_bodies
 
                 stale_counter[is_stale] += 1
                 drop_mask = stale_counter > max_stale_frames
@@ -218,64 +280,10 @@ def unification_thread(
             for bodies in stored_bodies:
                 if bodies is None:
                     continue
-                if len(available_slots) < n_bodies:
-                    joints_to_be_assigned = np.empty(
-                        (len(bodies), 3), dtype=np.float32)
-                    for i, body in enumerate(bodies):
-                        joints_to_be_assigned[i] = body.positions[
-                            reference_joint_idx]
-                    assigned_idx, assigned_to_idx, unassigned_idx = assign_nearest(
-                        tracked_joints, joints_to_be_assigned, max_distance)
-
-                    for i, j in zip(assigned_to_idx, assigned_idx):
-                        if frame_bodies[i] is None:
-                            tracked_joints[i] = bodies[j].positions[
-                                reference_joint_idx]
-                            frame_bodies[i] = bodies[j]
-                            is_stale[i] = False
-                        else:
-                            positions = bodies[j].positions
-                            orientations = bodies[j].orientations
-                            confidences = bodies[j].confidences
-
-                            confidence_mask = confidences > frame_bodies[i].confidences
-                            frame_bodies[i].positions[confidence_mask] = positions[
-                                confidence_mask]
-                            frame_bodies[i].orientations[confidence_mask] = (
-                                orientations[confidence_mask])
-                            frame_bodies[i].confidences[confidence_mask] = confidences[
-                                confidence_mask]
-
-                            tracked_joints[i] = frame_bodies[i].positions[
-                                reference_joint_idx]
-                else:
-                    unassigned_idx = range(len(bodies))
-
-                for j in unassigned_idx:
-                    try:
-                        i = available_slots.pop()
-                    except KeyError:
-                        break
-                    if frame_bodies[i] is None:
-                        tracked_joints[i] = bodies[j].positions[
-                            reference_joint_idx]
-                        frame_bodies[i] = bodies[j]
-                        is_stale[i] = False
-                    else:
-                        positions = bodies[j].positions
-                        orientations = bodies[j].orientations
-                        confidences = bodies[j].confidences
-
-                        confidence_mask = confidences > frame_bodies[i].confidences
-                        frame_bodies[i].positions[confidence_mask] = positions[
-                            confidence_mask]
-                        frame_bodies[i].orientations[confidence_mask] = orientations[
-                            confidence_mask]
-                        frame_bodies[i].confidences[confidence_mask] = confidences[
-                            confidence_mask]
-
-                        tracked_joints[i] = frame_bodies[i].positions[
-                            reference_joint_idx]
+                # check time here as well?###############################################
+                tracked_joints, is_stale = update_tracked(
+                    bodies, tracked_joints, available_slots, frame_bodies, is_stale,
+                    reference_joint_idx, max_distance, n_bodies)
             stored_bodies[:] = [None] * n_devices
             continue
 
@@ -289,58 +297,9 @@ def unification_thread(
         if ts - current_ts > max_ts_diff:
             stored_bodies[device_id] = bodies
             continue
-
-        if len(available_slots) < n_bodies:
-            joints_to_be_assigned = np.empty((len(bodies), 3), dtype=np.float32)
-            for i, body in enumerate(bodies):
-                joints_to_be_assigned[i] = body.positions[reference_joint_idx]
-            assigned_idx, assigned_to_idx, unassigned_idx = assign_nearest(
-                tracked_joints, joints_to_be_assigned, max_distance)
-
-            for i, j in zip(assigned_to_idx, assigned_idx):
-                if frame_bodies[i] is None:
-                    tracked_joints[i] = bodies[j].positions[reference_joint_idx]
-                    frame_bodies[i] = bodies[j]
-                    is_stale[i] = False
-                else:
-                    positions = bodies[j].positions
-                    orientations = bodies[j].orientations
-                    confidences = bodies[j].confidences
-
-                    confidence_mask = confidences > frame_bodies[i].confidences
-                    frame_bodies[i].positions[confidence_mask] = positions[
-                        confidence_mask]
-                    frame_bodies[i].orientations[confidence_mask] = (
-                        orientations[confidence_mask])
-                    frame_bodies[i].confidences[confidence_mask] = confidences[
-                        confidence_mask]
-
-                    tracked_joints[i] = frame_bodies[i].positions[reference_joint_idx]
-        else:
-            unassigned_idx = range(len(bodies))
-
-        for j in unassigned_idx:
-            try:
-                i = available_slots.pop()
-            except KeyError:
-                break
-            if frame_bodies[i] is None:
-                tracked_joints[i] = bodies[j].positions[reference_joint_idx]
-                frame_bodies[i] = bodies[j]
-                is_stale[i] = False
-            else:
-                positions = bodies[j].positions
-                orientations = bodies[j].orientations
-                confidences = bodies[j].confidences
-
-                confidence_mask = confidences > frame_bodies[i].confidences
-                frame_bodies[i].positions[confidence_mask] = positions[confidence_mask]
-                frame_bodies[i].orientations[confidence_mask] = orientations[
-                    confidence_mask]
-                frame_bodies[i].confidences[confidence_mask] = confidences[
-                    confidence_mask]
-
-                tracked_joints[i] = frame_bodies[i].positions[reference_joint_idx]
+        tracked_joints, is_stale = update_tracked(
+            bodies, tracked_joints, available_slots, frame_bodies, is_stale,
+            reference_joint_idx, max_distance, n_bodies)
 
     joints_queue.put(None)
 
