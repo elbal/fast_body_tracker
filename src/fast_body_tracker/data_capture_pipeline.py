@@ -274,29 +274,16 @@ def unification_thread(
             current_ts = ts
             is_stale = ~np.isnan(tracked_joints[:, 0])
             if bodies:
-                if len(available_slots) < n_bodies:
-                    joints_to_be_assigned = np.empty((len(bodies), 3), dtype=np.float32)
-                    for i, body in enumerate(bodies):
-                        joints_to_be_assigned[i] = body.positions[reference_joint_idx]
-                    assigned_idx, assigned_to_idx, unassigned_idx = assign_nearest(
-                        tracked_joints, joints_to_be_assigned, max_distance
-                    )
-
-                    for i, j in zip(assigned_to_idx, assigned_idx):
-                        tracked_joints[i] = bodies[j].positions[reference_joint_idx]
-                        frame_bodies[i] = bodies[j]
-                        is_stale[i] = False
-                else:
-                    unassigned_idx = range(len(bodies))
-
-                for j in unassigned_idx:
-                    try:
-                        i = available_slots.pop()
-                    except KeyError:
-                        break
-                    tracked_joints[i] = bodies[j].positions[reference_joint_idx]
-                    frame_bodies[i] = bodies[j]
-                    is_stale[i] = False
+                tracked_joints, is_stale = update_tracked(
+                    bodies,
+                    tracked_joints,
+                    available_slots,
+                    frame_bodies,
+                    is_stale,
+                    reference_joint_idx,
+                    max_distance,
+                    n_bodies,
+                )
 
             for bodies in stored_bodies:
                 if bodies is None:
