@@ -17,7 +17,8 @@ class SDKNotImplemented(Exception):
 
 
 def initialize_libraries(
-        module_k4a_path=None, module_k4abt_path=None, track_body=False):
+    module_k4a_path=None, module_k4abt_path=None, track_body=False
+):
     if module_k4a_path is None:
         module_k4a_path = _get_k4a_module_path()
     K4aLib.setup(module_k4a_path)
@@ -32,16 +33,15 @@ def initialize_libraries(
 
 
 def start_device(
-        device_index=0, config=Configuration(), record=False,
-        record_filepath="output.mkv"):
+    device_index=0, config=Configuration(), record=False, record_filepath="output.mkv"
+):
     device = Device(device_index)
     device.start(config, record, record_filepath)
 
     return device
 
 
-def start_body_tracker(
-        calibration, tracker_configuration=TrackerConfiguration()):
+def start_body_tracker(calibration, tracker_configuration=TrackerConfiguration()):
     return Tracker(calibration, tracker_configuration)
 
 
@@ -63,14 +63,20 @@ def _get_k4a_module_path():
         arch_folder = "amd64" if machine == "amd64" else "x86"
         for version in ["v1.4.2", "v1.4.1"]:
             dll_path = (
-                    base / f"Azure Kinect SDK {version}" / "sdk"
-                    / "windows-desktop" / arch_folder / "release" / "bin"
-                    / "k4a.dll")
+                base
+                / f"Azure Kinect SDK {version}"
+                / "sdk"
+                / "windows-desktop"
+                / arch_folder
+                / "release"
+                / "bin"
+                / "k4a.dll"
+            )
             if dll_path.exists():
                 return str(dll_path)
         raise FileNotFoundError(
-            "Compatible Azure Kinect SDK (v1.4.1 or v1.4.2) "
-            "not found in Program Files.")
+            "Compatible Azure Kinect SDK (v1.4.1 or v1.4.2) not found in Program Files."
+        )
 
     raise OSError(f"Unsupported operating system: {system}")
 
@@ -87,9 +93,15 @@ def _get_k4abt_module_path():
     if system == "windows":
         base = Path(os.environ.get("PROGRAMFILES", r"C:\Program Files"))
         full_path = (
-                base / "Azure Kinect Body Tracking SDK" / "sdk"
-                / "windows-desktop" / "amd64" / "release" / "bin"
-                / "k4abt.dll")
+            base
+            / "Azure Kinect Body Tracking SDK"
+            / "sdk"
+            / "windows-desktop"
+            / "amd64"
+            / "release"
+            / "bin"
+            / "k4abt.dll"
+        )
         if full_path.exists():
             return str(full_path)
         return "k4abt.dll"

@@ -30,7 +30,8 @@ def main():
     keyboard_closer = KeyboardCloser()
     keyboard_closer.start()
     t = threading.Thread(
-        target=capture_thread, args=(device, q, keyboard_closer.stop_event))
+        target=capture_thread, args=(device, q, keyboard_closer.stop_event)
+    )
 
     visualizer = PointCloudVisualizer()
     point_cloud_object = None
@@ -40,8 +41,10 @@ def main():
         capture = q.get()
         depth_image_object = capture.get_depth_image_object()
         point_cloud_object = transformation.depth_image_to_point_cloud(
-            depth_image_object, point_cloud_object,
-            calibration_type=fbt.K4A_CALIBRATION_TYPE_DEPTH)
+            depth_image_object,
+            point_cloud_object,
+            calibration_type=fbt.K4A_CALIBRATION_TYPE_DEPTH,
+        )
 
         point_cloud = point_cloud_object.to_numpy()
         visualizer.update(point_cloud)

@@ -15,8 +15,7 @@ class UnknownModelType(Exception):
 class TrackerConfiguration:
     def __init__(self):
         self.sensor_orientation = kabt_const.K4ABT_SENSOR_ORIENTATION_DEFAULT
-        self.tracker_processing_mode = (
-            kabt_const.K4ABT_TRACKER_PROCESSING_MODE_GPU)
+        self.tracker_processing_mode = kabt_const.K4ABT_TRACKER_PROCESSING_MODE_GPU
         self.gpu_device_id = 0
         self.model_type = kabt_const.K4ABT_DEFAULT_MODEL
 
@@ -46,21 +45,27 @@ class TrackerConfiguration:
             f"\n\t(0:Gpu, 1:Cpu, 2:CUDA, 3:TensorRT, 4:DirectML)\n\n"
             f"\tgpu_device_id: {self.gpu_device_id}\n\n"
             f"\tmodel_path: {
-            self.model_path if hasattr(self, 'model_path')
-            else 'Default Model'}")
+                self.model_path if hasattr(self, 'model_path') else 'Default Model'
+            }"
+        )
 
         return message
 
     def _on_value_change(self):
         if self.model_type == kabt_const.K4ABT_DEFAULT_MODEL:
             configuration_handle = k4abt_tracker_configuration_t(
-                self.sensor_orientation, self.tracker_processing_mode,
-                self.gpu_device_id)
+                self.sensor_orientation,
+                self.tracker_processing_mode,
+                self.gpu_device_id,
+            )
         elif self.model_type == kabt_const.K4ABT_LITE_MODEL:
             model_path = self._get_k4abt_lite_model_path()
             configuration_handle = k4abt_tracker_configuration_t(
-                self.sensor_orientation, self.tracker_processing_mode,
-                self.gpu_device_id, model_path)
+                self.sensor_orientation,
+                self.tracker_processing_mode,
+                self.gpu_device_id,
+                model_path,
+            )
         else:
             raise UnknownModelType("Unknown model type.")
 
@@ -76,9 +81,15 @@ class TrackerConfiguration:
         if system == "windows":
             base = Path(os.environ.get("PROGRAMFILES", r"C:\Program Files"))
             full_path = (
-                    base / "Azure Kinect Body Tracking SDK" / "sdk"
-                    / "windows-desktop" / "amd64" / "release" / "bin"
-                    / "dnn_model_2_0_lite_op11.onnx")
-            return str(full_path).encode('utf-8')
+                base
+                / "Azure Kinect Body Tracking SDK"
+                / "sdk"
+                / "windows-desktop"
+                / "amd64"
+                / "release"
+                / "bin"
+                / "dnn_model_2_0_lite_op11.onnx"
+            )
+            return str(full_path).encode("utf-8")
 
         raise OSError(f"Unsupported operating system: {system}")

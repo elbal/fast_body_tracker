@@ -1,5 +1,4 @@
 class RecordConfiguration:
-
     def __init__(self, configuration_handle=None):
 
         self._handle = configuration_handle

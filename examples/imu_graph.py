@@ -30,7 +30,8 @@ def main():
     keyboard_closer = KeyboardCloser()
     keyboard_closer.start()
     t = threading.Thread(
-        target=capture_thread, args=(device, q, keyboard_closer.stop_event))
+        target=capture_thread, args=(device, q, keyboard_closer.stop_event)
+    )
 
     visualizer = IMUVisualizer()
 

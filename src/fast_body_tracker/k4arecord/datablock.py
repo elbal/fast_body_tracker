@@ -2,7 +2,6 @@ from . import _k4arecord
 
 
 class Datablock:
-
     def __init__(self, modulePath):
         self._handle = _k4arecord.k4a_playback_data_block_t()
 
@@ -22,12 +21,11 @@ class Datablock:
 
     def get_device_timestamp_usec(self):
         return int(
-            _k4arecord.k4a_playback_data_block_get_device_timestamp_usec(
-                self._handle))
+            _k4arecord.k4a_playback_data_block_get_device_timestamp_usec(self._handle)
+        )
 
     def get_buffer_size(self):
-        return int(
-            _k4arecord.k4a_playback_data_block_get_buffer_size(self._handle))
+        return int(_k4arecord.k4a_playback_data_block_get_buffer_size(self._handle))
 
     def get_buffer(self):
         if not self.is_valid():

@@ -19,7 +19,8 @@ def main():
     q = queue.Queue(maxsize=10)
     stop_event = threading.Event()
     t = threading.Thread(
-        target=fbt.capture_thread, args=(device, tracker, q, stop_event))
+        target=fbt.capture_thread, args=(device, tracker, q, stop_event)
+    )
 
     cv2.namedWindow("Segmented depth image", cv2.WINDOW_NORMAL)
     frc = fbt.FrameRateCalculator()
@@ -39,14 +40,15 @@ def main():
         depth_image = image_object.to_numpy()
         cv2.convertScaleAbs(depth_image, alpha=0.08, dst=depth_8bit_image)
         cv2.applyColorMap(
-            depth_8bit_image, cv2.COLORMAP_CIVIDIS, dst=depth_colorized_image)
+            depth_8bit_image, cv2.COLORMAP_CIVIDIS, dst=depth_colorized_image
+        )
 
         seg_image_object = frame.get_segmentation_image_object()
         rgb_seg_image = fbt.colorize_segmentation_image(seg_image_object)
 
         combined_image = cv2.addWeighted(
-            rgb_seg_image, 0.6, depth_colorized_image, 0.4, 0,
-            dst=combined_image)
+            rgb_seg_image, 0.6, depth_colorized_image, 0.4, 0, dst=combined_image
+        )
         cv2.imshow("Segmented depth image", combined_image)
 
         if cv2.waitKey(1) == ord("q"):

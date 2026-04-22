@@ -55,15 +55,17 @@ def main():
 
         depth_image_object = capture.get_depth_image_object()
         transformed_image_object = transformation.depth_image_to_color_camera(
-            depth_image_object, transformed_image_object)
+            depth_image_object, transformed_image_object
+        )
         depth_image = transformed_image_object.to_numpy()
         cv2.convertScaleAbs(depth_image, alpha=0.08, dst=depth_8bit_image)
         cv2.applyColorMap(
-            depth_8bit_image, cv2.COLORMAP_CIVIDIS, dst=depth_colorized_image)
+            depth_8bit_image, cv2.COLORMAP_CIVIDIS, dst=depth_colorized_image
+        )
 
         cv2.addWeighted(
-            gray_3channel_image, 0.7, depth_colorized_image, 0.3, 0,
-            dst=combined_image)
+            gray_3channel_image, 0.7, depth_colorized_image, 0.3, 0, dst=combined_image
+        )
         cv2.imshow("Transformed depth image", combined_image)
 
         if cv2.waitKey(1) == ord("q"):

@@ -13,13 +13,16 @@ from datetime import datetime
 from .k4abt.kabt_const import K4ABT_JOINT_PELVIS
 
 from .initializer import initialize_libraries, start_device, start_body_tracker
-from .utils.performace_calculator import (
-    DroppedFramesAlert, FrameRateCalculator)
+from .utils.performace_calculator import DroppedFramesAlert, FrameRateCalculator
 from .k4a.k4a_const import (
-    K4A_CALIBRATION_TYPE_COLOR, K4A_WIRED_SYNC_MODE_STANDALONE,
-    K4A_WIRED_SYNC_MODE_MASTER, K4A_WIRED_SYNC_MODE_SUBORDINATE,
-    K4A_IMAGE_FORMAT_COLOR_BGRA32, K4A_COLOR_RESOLUTION_1080P,
-    K4A_DEPTH_MODE_WFOV_2X2BINNED)
+    K4A_CALIBRATION_TYPE_COLOR,
+    K4A_WIRED_SYNC_MODE_STANDALONE,
+    K4A_WIRED_SYNC_MODE_MASTER,
+    K4A_WIRED_SYNC_MODE_SUBORDINATE,
+    K4A_IMAGE_FORMAT_COLOR_BGRA32,
+    K4A_COLOR_RESOLUTION_1080P,
+    K4A_DEPTH_MODE_WFOV_2X2BINNED,
+)
 from .k4a.calibration import Calibration
 from .k4a.configuration import Configuration
 from .k4a.device import Device
@@ -29,8 +32,11 @@ from .k4abt.tracker import Tracker
 
 
 def capture_thread(
-        device: Device, tracker: Tracker | None, capture_queue: queue.Queue,
-        stop_event: threading.Event):
+    device: Device,
+    tracker: Tracker | None,
+    capture_queue: queue.Queue,
+    stop_event: threading.Event,
+):
     frc = FrameRateCalculator()
     dfa = DroppedFramesAlert()
 
@@ -54,11 +60,15 @@ def capture_thread(
 
 
 def computation_thread(
-        device_id: int, calibration: Calibration,
-        capture_queue: queue.Queue, unification_queue: queue.Queue,
-        video_queue: queue.Queue, visualization_queue: queue.Queue,
-        ext_rot: npt.NDArray[np.float64] | None = None,
-        ext_trans: npt.NDArray[np.float64] | None = None):
+    device_id: int,
+    calibration: Calibration,
+    capture_queue: queue.Queue,
+    unification_queue: queue.Queue,
+    video_queue: queue.Queue,
+    visualization_queue: queue.Queue,
+    ext_rot: npt.NDArray[np.float64] | None = None,
+    ext_trans: npt.NDArray[np.float64] | None = None,
+):
     dfa = DroppedFramesAlert()
 
     frame_idx = 0
@@ -77,12 +87,12 @@ def computation_thread(
         for body_idx in range(frame.get_num_bodies()):
             body = frame.get_body(body_idx)
             positions_2d = body.get_2d_positions(
-                calibration=calibration,
-                target_camera=K4A_CALIBRATION_TYPE_COLOR)
+                calibration=calibration, target_camera=K4A_CALIBRATION_TYPE_COLOR
+            )
             draw_body(bgra_image, positions_2d, body.id)
             if ext_rot is not None:
                 body.positions[:] = body.positions @ ext_rot.T
-                body.positions[:] += (ext_trans * 1000.0)
+                body.positions[:] += ext_trans * 1000.0
             bodies.append(body)
 
         if unification_queue.full():
@@ -117,10 +127,10 @@ def computation_thread(
 
 
 def assign_nearest(
-        tracked_joints: npt.NDArray[np.float32],
-        joints_to_be_assigned: npt.NDArray[np.float32],
-        max_distance: float) -> tuple[
-    npt.NDArray[np.int64], npt.NDArray[np.int64], npt.NDArray[np.int64]]:
+    tracked_joints: npt.NDArray[np.float32],
+    joints_to_be_assigned: npt.NDArray[np.float32],
+    max_distance: float,
+) -> tuple[npt.NDArray[np.int64], npt.NDArray[np.int64], npt.NDArray[np.int64]]:
     valid_mask = ~np.isnan(tracked_joints).any(axis=1)
     valid_idx = np.nonzero(valid_mask)[0]
     tracked_valid = tracked_joints[valid_mask]
@@ -154,17 +164,22 @@ def assign_nearest(
 
 
 def update_tracked(
-        bodies: list[Body], tracked_joints: npt.NDArray[np.float32],
-        available_slots: set[int], frame_bodies: list[Body],
-        is_stale: npt.NDArray[np.bool], reference_joint_idx: int, max_distance: float,
-        n_bodies: int) -> tuple[
-    npt.NDArray[np.float32], npt.NDArray[bool]]:
+    bodies: list[Body],
+    tracked_joints: npt.NDArray[np.float32],
+    available_slots: set[int],
+    frame_bodies: list[Body],
+    is_stale: npt.NDArray[np.bool],
+    reference_joint_idx: int,
+    max_distance: float,
+    n_bodies: int,
+) -> tuple[npt.NDArray[np.float32], npt.NDArray[bool]]:
     if len(available_slots) < n_bodies:
         joints_to_be_assigned = np.empty((len(bodies), 3), dtype=np.float32)
         for i, body in enumerate(bodies):
             joints_to_be_assigned[i] = body.positions[reference_joint_idx]
         assigned_idx, assigned_to_idx, unassigned_idx = assign_nearest(
-            tracked_joints, joints_to_be_assigned, max_distance)
+            tracked_joints, joints_to_be_assigned, max_distance
+        )
 
         for i, j in zip(assigned_to_idx, assigned_idx):
             if frame_bodies[i] is None:
@@ -179,9 +194,11 @@ def update_tracked(
                 confidence_mask = confidences > frame_bodies[i].confidences
                 frame_bodies[i].positions[confidence_mask] = positions[confidence_mask]
                 frame_bodies[i].orientations[confidence_mask] = orientations[
-                    confidence_mask]
+                    confidence_mask
+                ]
                 frame_bodies[i].confidences[confidence_mask] = confidences[
-                    confidence_mask]
+                    confidence_mask
+                ]
 
                 tracked_joints[i] = frame_bodies[i].positions[reference_joint_idx]
     else:
@@ -204,7 +221,8 @@ def update_tracked(
             confidence_mask = confidences > frame_bodies[i].confidences
             frame_bodies[i].positions[confidence_mask] = positions[confidence_mask]
             frame_bodies[i].orientations[confidence_mask] = orientations[
-                confidence_mask]
+                confidence_mask
+            ]
             frame_bodies[i].confidences[confidence_mask] = confidences[confidence_mask]
 
             tracked_joints[i] = frame_bodies[i].positions[reference_joint_idx]
@@ -213,8 +231,11 @@ def update_tracked(
 
 
 def unification_thread(
-        unification_queue: queue.Queue, joints_queue: queue.Queue, n_devices: int = 1,
-        n_bodies: int = 1):
+    unification_queue: queue.Queue,
+    joints_queue: queue.Queue,
+    n_devices: int = 1,
+    n_bodies: int = 1,
+):
     max_ts_diff = 1 / 30 * 0.5 * 1e6  # 0.5 frames at 30 FPS, in microseconds.
     max_distance = 300.0  # In mmm.
     max_stale_frames = 60
@@ -254,12 +275,12 @@ def unification_thread(
             is_stale = ~np.isnan(tracked_joints[:, 0])
             if bodies:
                 if len(available_slots) < n_bodies:
-                    joints_to_be_assigned = np.empty(
-                        (len(bodies), 3), dtype=np.float32)
+                    joints_to_be_assigned = np.empty((len(bodies), 3), dtype=np.float32)
                     for i, body in enumerate(bodies):
                         joints_to_be_assigned[i] = body.positions[reference_joint_idx]
                     assigned_idx, assigned_to_idx, unassigned_idx = assign_nearest(
-                        tracked_joints, joints_to_be_assigned, max_distance)
+                        tracked_joints, joints_to_be_assigned, max_distance
+                    )
 
                     for i, j in zip(assigned_to_idx, assigned_idx):
                         tracked_joints[i] = bodies[j].positions[reference_joint_idx]
@@ -282,8 +303,15 @@ def unification_thread(
                     continue
                 # check time here as well?###############################################
                 tracked_joints, is_stale = update_tracked(
-                    bodies, tracked_joints, available_slots, frame_bodies, is_stale,
-                    reference_joint_idx, max_distance, n_bodies)
+                    bodies,
+                    tracked_joints,
+                    available_slots,
+                    frame_bodies,
+                    is_stale,
+                    reference_joint_idx,
+                    max_distance,
+                    n_bodies,
+                )
             stored_bodies[:] = [None] * n_devices
             continue
 
@@ -298,15 +326,26 @@ def unification_thread(
             stored_bodies[device_id] = bodies
             continue
         tracked_joints, is_stale = update_tracked(
-            bodies, tracked_joints, available_slots, frame_bodies, is_stale,
-            reference_joint_idx, max_distance, n_bodies)
+            bodies,
+            tracked_joints,
+            available_slots,
+            frame_bodies,
+            is_stale,
+            reference_joint_idx,
+            max_distance,
+            n_bodies,
+        )
 
     joints_queue.put(None)
 
 
 def body_saver_thread(
-        joints_queue: queue.Queue, file_dir: pathlib.Path,
-        n_devices: int = 1, n_bodies: int = 1, flush_size: int = 30*60):
+    joints_queue: queue.Queue,
+    file_dir: pathlib.Path,
+    n_devices: int = 1,
+    n_bodies: int = 1,
+    flush_size: int = 30 * 60,
+):
     n_joints = len(K4ABT_JOINT_NAMES)
     h5file = h5py.File(file_dir / "body.h5", "w", libver="latest")
 
@@ -315,21 +354,23 @@ def body_saver_thread(
             "frame_idx": np.empty(flush_size, dtype=np.int64),
             "positions": np.empty((flush_size, n_joints, 3), dtype=np.float32),
             "confidences": np.empty((flush_size, n_joints), dtype=np.uint8),
-            "idx": 0}
-        for i in range(n_devices) for j in range(n_bodies)
+            "idx": 0,
         }
+        for i in range(n_devices)
+        for j in range(n_bodies)
+    }
     ts_buffers = {
         i: {
             "ts": np.empty(flush_size, dtype=np.uint64),
             "system_ts": np.empty(flush_size, dtype=np.uint64),
-            "idx": 0}
-        for i in range(n_devices)}
+            "idx": 0,
+        }
+        for i in range(n_devices)
+    }
 
-    joint_names = np.array(
-        K4ABT_JOINT_NAMES, dtype=h5py.string_dtype(encoding="utf-8"))
+    joint_names = np.array(K4ABT_JOINT_NAMES, dtype=h5py.string_dtype(encoding="utf-8"))
     h5file.create_dataset("joint_names", data=joint_names)
-    h5file.create_dataset(
-        "joint_connections", data=K4ABT_SEGMENT_PAIRS, dtype="u1")
+    h5file.create_dataset("joint_connections", data=K4ABT_SEGMENT_PAIRS, dtype="u1")
 
     joint_data = {}
     joints_grp = h5file.create_group("joints")
@@ -340,19 +381,32 @@ def body_saver_thread(
             body_grp = device_grp.create_group(f"body_{j}")
             body_grp.attrs["body_idx"] = j
             body_grp.create_dataset(
-                "frame_idx", shape=(0,), maxshape=(None,), dtype="i8",
-                chunks=(flush_size,))
+                "frame_idx",
+                shape=(0,),
+                maxshape=(None,),
+                dtype="i8",
+                chunks=(flush_size,),
+            )
             body_grp.create_dataset(
-                "positions", shape=(0, n_joints, 3), maxshape=(None, n_joints, 3),
-                dtype="f4", chunks=(flush_size, n_joints, 3))
+                "positions",
+                shape=(0, n_joints, 3),
+                maxshape=(None, n_joints, 3),
+                dtype="f4",
+                chunks=(flush_size, n_joints, 3),
+            )
             body_grp.create_dataset(
-                "confidences", shape=(0, n_joints), maxshape=(None, n_joints),
-                dtype="u1", chunks=(flush_size, n_joints))
+                "confidences",
+                shape=(0, n_joints),
+                maxshape=(None, n_joints),
+                dtype="u1",
+                chunks=(flush_size, n_joints),
+            )
 
             joint_data[(i, j)] = {
                 "frame_idx": body_grp["frame_idx"],
                 "positions": body_grp["positions"],
-                "confidences": body_grp["confidences"]}
+                "confidences": body_grp["confidences"],
+            }
 
     ts_data = {}
     ts_grp = h5file.create_group("ts")
@@ -360,14 +414,13 @@ def body_saver_thread(
         device_grp = ts_grp.create_group(f"device_{i}")
         device_grp.attrs["device_id"] = i
         device_grp.create_dataset(
-            "ts", shape=(0,), maxshape=(None,), dtype="u8",
-            chunks=(flush_size,))
+            "ts", shape=(0,), maxshape=(None,), dtype="u8", chunks=(flush_size,)
+        )
         device_grp.create_dataset(
-            "system_ts", shape=(0,), maxshape=(None,), dtype="u8",
-            chunks=(flush_size,))
+            "system_ts", shape=(0,), maxshape=(None,), dtype="u8", chunks=(flush_size,)
+        )
 
-        ts_data[i] = {
-            "ts": device_grp["ts"], "system_ts": device_grp["system_ts"]}
+        ts_data[i] = {"ts": device_grp["ts"], "system_ts": device_grp["system_ts"]}
 
     def flush_joint_buffer(device_id: int, body_idx: int):
         data = joint_data[(device_id, body_idx)]
@@ -459,8 +512,13 @@ def body_saver_thread(
 
 
 def video_saver_thread(
-        video_queue: queue.Queue, video_dir: pathlib.Path, n_devices: int,
-        fps: int = 30, width: int = 1920, height: int = 1080):
+    video_queue: queue.Queue,
+    video_dir: pathlib.Path,
+    n_devices: int,
+    fps: int = 30,
+    width: int = 1920,
+    height: int = 1080,
+):
     containers = {}
     streams = {}
     for i in range(n_devices):
@@ -473,7 +531,12 @@ def video_saver_thread(
         stream.pix_fmt = "yuv420p"
 
         stream.options = {
-            "preset": "p4", "tune": "ll", "rc": "vbr", "cq": "28", "gpu": "0"}
+            "preset": "p4",
+            "tune": "ll",
+            "rc": "vbr",
+            "cq": "28",
+            "gpu": "0",
+        }
         containers[i] = container
         streams[i] = stream
 
@@ -500,8 +563,12 @@ def video_saver_thread(
 
 
 def visualization_main_tread(
-        visualization_queue: queue.Queue, stop_event: threading.Event,
-        n_devices: int, width: int = 1920, height: int = 1080):
+    visualization_queue: queue.Queue,
+    stop_event: threading.Event,
+    n_devices: int,
+    width: int = 1920,
+    height: int = 1080,
+):
     window_bar_height = 20
     taskbar_height = 30
     from_border = 5
@@ -512,15 +579,14 @@ def visualization_main_tread(
     screen_h = root.winfo_screenheight()
     root.destroy()
 
-    window_h = (screen_h-taskbar_height)//n_devices - window_bar_height
+    window_h = (screen_h - taskbar_height) // n_devices - window_bar_height
     window_w = int(window_h * aspect_ratio)
 
     for i in range(n_devices):
         window_name = f"Color images with skeleton {i}"
         cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
         cv2.resizeWindow(window_name, window_w, window_h)
-        cv2.moveWindow(
-            window_name, screen_w - window_w - from_border, i*window_h)
+        cv2.moveWindow(window_name, screen_w - window_w - from_border, i * window_h)
 
     while True:
         item = visualization_queue.get()
@@ -535,12 +601,13 @@ def visualization_main_tread(
 
 
 def _default_device_initialization(
-        device_index: int = 0,
-        device_mode: str = "standalone") -> tuple[Device, Tracker]:
+    device_index: int = 0, device_mode: str = "standalone"
+) -> tuple[Device, Tracker]:
     modes = {
         "standalone": K4A_WIRED_SYNC_MODE_STANDALONE,
         "main": K4A_WIRED_SYNC_MODE_MASTER,
-        "secondary": K4A_WIRED_SYNC_MODE_SUBORDINATE}
+        "secondary": K4A_WIRED_SYNC_MODE_SUBORDINATE,
+    }
 
     device_config = Configuration()
     device_config.color_format = K4A_IMAGE_FORMAT_COLOR_BGRA32
@@ -556,9 +623,11 @@ def _default_device_initialization(
 
 
 def default_pipeline(
-        base_dir: pathlib.Path | str,
-        trans_matrices: dict[int, npt.NDArray[np.float32]] | None = None,
-        sync: bool = False, n_bodies: int = 1):
+    base_dir: pathlib.Path | str,
+    trans_matrices: dict[int, npt.NDArray[np.float32]] | None = None,
+    sync: bool = False,
+    n_bodies: int = 1,
+):
     if trans_matrices is None:
         n_devices = 1
     else:
@@ -587,14 +656,15 @@ def default_pipeline(
         else:
             device_mode = "standalone"
         device, tracker = _default_device_initialization(
-            device_index=i, device_mode=device_mode)
+            device_index=i, device_mode=device_mode
+        )
         devices[i] = device
         trackers[i] = tracker
 
         capture_queues[i] = queue.Queue(maxsize=10)
         capture_t[i] = threading.Thread(
-            target=capture_thread,
-            args=(device, tracker, capture_queues[i], stop_event))
+            target=capture_thread, args=(device, tracker, capture_queues[i], stop_event)
+        )
 
         if i == 0:
             rot_matrix = None
@@ -605,21 +675,30 @@ def default_pipeline(
         computation_t[i] = threading.Thread(
             target=computation_thread,
             args=(
-                i, device.calibration, capture_queues[i], unification_queue,
-                video_queue, visualization_queue, rot_matrix, trans_vector))
+                i,
+                device.calibration,
+                capture_queues[i],
+                unification_queue,
+                video_queue,
+                visualization_queue,
+                rot_matrix,
+                trans_vector,
+            ),
+        )
 
     base_dir = pathlib.Path(base_dir)
     timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M")
     file_dir = base_dir / timestamp
     file_dir.mkdir(parents=True, exist_ok=True)
     unification_t = threading.Thread(
-        target=unification_thread,
-        args=(unification_queue, joints_queue, n_devices))
+        target=unification_thread, args=(unification_queue, joints_queue, n_devices)
+    )
     body_saver_t = threading.Thread(
-        target=body_saver_thread,
-        args=(joints_queue, file_dir, n_devices, n_bodies))
+        target=body_saver_thread, args=(joints_queue, file_dir, n_devices, n_bodies)
+    )
     video_saver_t = threading.Thread(
-        target=video_saver_thread, args=(video_queue, file_dir, n_devices))
+        target=video_saver_thread, args=(video_queue, file_dir, n_devices)
+    )
 
     video_saver_t.start()
     unification_t.start()

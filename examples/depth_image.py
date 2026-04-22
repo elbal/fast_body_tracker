@@ -44,8 +44,7 @@ def main():
         image_object = capture.get_depth_image_object()
         depth_image = image_object.to_numpy()
         cv2.convertScaleAbs(depth_image, alpha=0.08, dst=depth_8bit_image)
-        cv2.applyColorMap(
-            depth_8bit_image, cv2.COLORMAP_CIVIDIS, dst=colorized_image)
+        cv2.applyColorMap(depth_8bit_image, cv2.COLORMAP_CIVIDIS, dst=colorized_image)
         cv2.imshow("Depth image", colorized_image)
 
         if cv2.waitKey(1) == ord("q"):

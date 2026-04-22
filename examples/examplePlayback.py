@@ -3,7 +3,6 @@ import cv2
 import fast_body_tracker as fbt
 
 if __name__ == "__main__":
-
     video_filename = "output.mkv"
 
     # Initialize the library, if the library is not found, add the library path as argument
@@ -15,9 +14,8 @@ if __name__ == "__main__":
     playback_config = playback.get_record_configuration()
     # print(playback_config)
 
-    cv2.namedWindow('Depth Image', cv2.WINDOW_NORMAL)
+    cv2.namedWindow("Depth Image", cv2.WINDOW_NORMAL)
     while True:
-
         # Get camera capture
         ret, capture = playback.update()
 
@@ -34,10 +32,11 @@ if __name__ == "__main__":
             continue
 
         # Plot the image
-        combined_image = cv2.addWeighted(color_image[:, :, :3], 0.7,
-                                         depth_color_image, 0.3, 0)
-        cv2.imshow('Depth Image', combined_image)
+        combined_image = cv2.addWeighted(
+            color_image[:, :, :3], 0.7, depth_color_image, 0.3, 0
+        )
+        cv2.imshow("Depth Image", combined_image)
 
         # Press q key to stop
-        if cv2.waitKey(30) == ord('q'):
+        if cv2.waitKey(30) == ord("q"):
             break

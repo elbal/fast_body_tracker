@@ -33,7 +33,8 @@ def main():
     keyboard_closer = KeyboardCloser()
     keyboard_closer.start()
     t = threading.Thread(
-        target=capture_thread, args=(device, q, keyboard_closer.stop_event))
+        target=capture_thread, args=(device, q, keyboard_closer.stop_event)
+    )
 
     visualizer = PointCloudVisualizer()
     point_cloud_object = None
@@ -45,12 +46,14 @@ def main():
 
         depth_image_object = capture.get_depth_image_object()
         point_cloud_object = transformation.depth_image_to_point_cloud(
-            depth_image_object, point_cloud_object)
+            depth_image_object, point_cloud_object
+        )
         point_cloud = point_cloud_object.to_numpy()
 
         color_image_object = capture.get_color_image_object()
         transformed_image_object = transformation.color_image_to_depth_camera(
-            depth_image_object, color_image_object, transformed_image_object)
+            depth_image_object, color_image_object, transformed_image_object
+        )
         bgra_image = transformed_image_object.to_numpy()
 
         visualizer.update(point_cloud, bgra_image)

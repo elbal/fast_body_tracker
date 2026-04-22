@@ -8,7 +8,7 @@ def main(base_dir: pathlib.Path | str, n_devices: int = 1):
     trans_matrices_path = base_dir / "trans_matrices.npz"
     trans_matrices = fbt.external_calibration(n_devices=n_devices)
     save_data = {str(k): v for k, v in trans_matrices.items()}
-    np.savez(trans_matrices_path , **save_data)
+    np.savez(trans_matrices_path, **save_data)
 
 
 if __name__ == "__main__":

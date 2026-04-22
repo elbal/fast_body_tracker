@@ -57,16 +57,22 @@ class Configuration:
             f"\tdisable_streaming_indicator: "
             f"{self.disable_streaming_indicator} \n\t"
             f"(True or False). Streaming indicator automatically turns on "
-            f"when the color or depth camera's are in use.\n\n")
+            f"when the color or depth camera's are in use.\n\n"
+        )
 
         return message
 
     def _on_value_change(self) -> k4a_device_configuration_t:
         configuration_handle = k4a_device_configuration_t(
-            self.color_format, self.color_resolution, self.depth_mode,
-            self.camera_fps, self.synchronized_images_only,
-            self.depth_delay_off_color_usec, self.wired_sync_mode,
+            self.color_format,
+            self.color_resolution,
+            self.depth_mode,
+            self.camera_fps,
+            self.synchronized_images_only,
+            self.depth_delay_off_color_usec,
+            self.wired_sync_mode,
             self.subordinate_delay_off_master_usec,
-            self.disable_streaming_indicator)
+            self.disable_streaming_indicator,
+        )
 
         return configuration_handle

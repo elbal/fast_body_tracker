@@ -9,7 +9,6 @@ from .record_configuration import RecordConfiguration
 
 
 class Playback:
-
     def __init__(self, filepath):
 
         self._handle = _k4arecord.k4a_playback_t()
@@ -25,9 +24,9 @@ class Playback:
     def open(self, filepath):
 
         _k4arecord.VERIFY(
-            _k4arecord.k4a_playback_open(filepath.encode('utf-8'),
-                                         self._handle),
-            "Failed to open recording!")
+            _k4arecord.k4a_playback_open(filepath.encode("utf-8"), self._handle),
+            "Failed to open recording!",
+        )
 
     def update(self):
         return self.get_next_capture()
@@ -50,9 +49,11 @@ class Playback:
         calibration_handle = _k4arecord.k4a_calibration_t()
         if self.is_valid():
             _k4arecord.VERIFY(
-                _k4arecord.k4a_playback_get_calibration(self._handle,
-                                                        calibration_handle),
-                "Failed to read device calibration from recording!")
+                _k4arecord.k4a_playback_get_calibration(
+                    self._handle, calibration_handle
+                ),
+                "Failed to read device calibration from recording!",
+            )
 
         return Calibration(calibration_handle)
 
@@ -61,9 +62,9 @@ class Playback:
 
         if self.is_valid():
             _k4arecord.VERIFY(
-                _k4arecord.k4a_playback_get_record_configuration(self._handle,
-                                                                 config),
-                "Failed to read record configuration!")
+                _k4arecord.k4a_playback_get_record_configuration(self._handle, config),
+                "Failed to read record configuration!",
+            )
 
         return RecordConfiguration(config)
 
@@ -76,8 +77,10 @@ class Playback:
         else:
             self._capture = Capture(capture_handle, self.calibration)
 
-        ret = _k4arecord.k4a_playback_get_next_capture(self._handle,
-                                                       capture_handle) != _k4arecord.K4A_STREAM_RESULT_EOF
+        ret = (
+            _k4arecord.k4a_playback_get_next_capture(self._handle, capture_handle)
+            != _k4arecord.K4A_STREAM_RESULT_EOF
+        )
 
         return ret, self._capture
 
@@ -90,16 +93,21 @@ class Playback:
         else:
             self._capture = Capture(capture_handle, self.calibration)
 
-        ret = _k4arecord.k4a_playback_get_previous_capture(self._handle,
-                                                           capture_handle) != _k4arecord.K4A_STREAM_RESULT_EOF
+        ret = (
+            _k4arecord.k4a_playback_get_previous_capture(self._handle, capture_handle)
+            != _k4arecord.K4A_STREAM_RESULT_EOF
+        )
 
         return ret, self._capture
 
     def get_next_imu_sample(self):
         imu_sample_struct = _k4a.k4a_imu_sample_t()
-        _k4a.verify(_k4arecord.k4a_playback_get_next_imu_sample(self._handle,
-                                                                imu_sample_struct),
-                    "Get next imu sample failed!")
+        _k4a.verify(
+            _k4arecord.k4a_playback_get_next_imu_sample(
+                self._handle, imu_sample_struct
+            ),
+            "Get next imu sample failed!",
+        )
 
         # Convert the structure into a dictionary
         _imu_sample = ImuSample(imu_sample_struct)
@@ -109,37 +117,40 @@ class Playback:
     def get_previous_imu_sample(self):
         imu_sample_struct = _k4a.k4a_imu_sample_t()
         _k4a.verify(
-            _k4arecord.k4a_playback_get_previous_imu_sample(self._handle,
-                                                            imu_sample_struct),
-            "Get previous imu sample failed!")
+            _k4arecord.k4a_playback_get_previous_imu_sample(
+                self._handle, imu_sample_struct
+            ),
+            "Get previous imu sample failed!",
+        )
 
         # Convert the structure into a dictionary
         _imu_sample = ImuSample(imu_sample_struct)
 
         return _imu_sample
 
-    def seek_timestamp(self, offset=0,
-                       origin=_k4arecord.K4A_PLAYBACK_SEEK_BEGIN):
+    def seek_timestamp(self, offset=0, origin=_k4arecord.K4A_PLAYBACK_SEEK_BEGIN):
         _k4a.verify(
-            _k4arecord.k4a_playback_seek_timestamp(self._handle, offset,
-                                                   origin),
-            "Seek recording failed!")
+            _k4arecord.k4a_playback_seek_timestamp(self._handle, offset, origin),
+            "Seek recording failed!",
+        )
 
     def get_recording_length(self):
-        return int(
-            _k4arecord.k4a_playback_get_recording_length_usec(self._handle))
+        return int(_k4arecord.k4a_playback_get_recording_length_usec(self._handle))
 
     def set_color_conversion(self, format=k4a_const.K4A_IMAGE_FORMAT_DEPTH16):
         _k4a.verify(
             _k4arecord.k4a_playback_set_color_conversion(self._handle, format),
-            "Seek color conversio failed!")
+            "Seek color conversio failed!",
+        )
 
     def get_next_data_block(self, track):
         block_handle = _k4arecord.k4a_playback_data_block_t()
         _k4a.verify(
-            _k4arecord.k4a_playback_get_next_data_block(self._handle, track,
-                                                        block_handle),
-            "Get next data block failed!")
+            _k4arecord.k4a_playback_get_next_data_block(
+                self._handle, track, block_handle
+            ),
+            "Get next data block failed!",
+        )
 
         if self.is_datablock_initialized():
             self._datablock._handle = block_handle
@@ -151,10 +162,11 @@ class Playback:
     def get_previous_data_block(self, track):
         block_handle = _k4arecord.k4a_playback_data_block_t()
         _k4a.verify(
-            _k4arecord.k4a_playback_get_previous_data_block(self._handle,
-                                                            track,
-                                                            block_handle),
-            "Get previous data block failed!")
+            _k4arecord.k4a_playback_get_previous_data_block(
+                self._handle, track, block_handle
+            ),
+            "Get previous data block failed!",
+        )
 
         if self.is_datablock_initialized():
             self._datablock._handle = block_handle

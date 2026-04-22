@@ -33,7 +33,8 @@ def main():
     q = queue.Queue(maxsize=10)
     stop_event = threading.Event()
     t = threading.Thread(
-        target=tracking_thread, args=(device, body_tracker, q, stop_event))
+        target=tracking_thread, args=(device, body_tracker, q, stop_event)
+    )
 
     cv2.namedWindow("Color image with skeleton", cv2.WINDOW_NORMAL)
     frc = fbt.FrameRateCalculator()
@@ -50,7 +51,8 @@ def main():
         for body in bodies:
             positions_2d = body.get_2d_positions(
                 calibration=device.calibration,
-                target_camera=fbt.K4A_CALIBRATION_TYPE_COLOR)
+                target_camera=fbt.K4A_CALIBRATION_TYPE_COLOR,
+            )
             fbt.draw_body(color_image, positions_2d, body.id)
 
         cv2.imshow("Color image with skeleton", color_image)

@@ -52,7 +52,8 @@ class Image:
 
     def to_numpy(self) -> npt.NDArray[np.uint8 | np.uint16 | np.int16]:
         buffer = np.ctypeslib.as_array(
-            _k4a.K4aLib.k4a_image_get_buffer(self._handle), shape=(self.size,))
+            _k4a.K4aLib.k4a_image_get_buffer(self._handle), shape=(self.size,)
+        )
 
         # COLOR MJPG, decode with OpenCV.
         if self.format == k4a_const.K4A_IMAGE_FORMAT_COLOR_MJPG:
@@ -74,28 +75,30 @@ class Image:
             height = self.height
             width = self.width
             arr2d = buffer.reshape((height, stride))
-            arr2d = arr2d[:, :width * 4]
+            arr2d = arr2d[:, : width * 4]
             view3d = np.lib.stride_tricks.as_strided(
-                arr2d, shape=(height, width, 4), strides=(stride, 4, 1))
+                arr2d, shape=(height, width, 4), strides=(stride, 4, 1)
+            )
             # Ensure contiguity for OpenCV plotting.
             return np.ascontiguousarray(view3d)
 
         # DEPTH16, IR16, CUSTOM16.
         elif self.format in (
-                k4a_const.K4A_IMAGE_FORMAT_DEPTH16,
-                k4a_const.K4A_IMAGE_FORMAT_IR16,
-                k4a_const.K4A_IMAGE_FORMAT_CUSTOM16):
+            k4a_const.K4A_IMAGE_FORMAT_DEPTH16,
+            k4a_const.K4A_IMAGE_FORMAT_IR16,
+            k4a_const.K4A_IMAGE_FORMAT_CUSTOM16,
+        ):
             arr16 = buffer.view("<u2")
             stride_elements = self.stride // 2
             arr16 = arr16.reshape((self.height, stride_elements))
-            arr16 = arr16[:, :self.width]
+            arr16 = arr16[:, : self.width]
             return np.ascontiguousarray(arr16)
 
         # CUSTOM8.
         elif self.format == k4a_const.K4A_IMAGE_FORMAT_CUSTOM8:
             stride_elements = self.stride
             arr8 = buffer.reshape((self.height, stride_elements))
-            arr8 = arr8[:, :self.width]
+            arr8 = arr8[:, : self.width]
             return np.ascontiguousarray(arr8)
 
         # CUSTOM.

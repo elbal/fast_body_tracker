@@ -19,7 +19,8 @@ def main():
     q = queue.Queue(maxsize=10)
     stop_event = threading.Event()
     t = threading.Thread(
-        target=fbt.capture_thread, args=(device, tracker, q, stop_event))
+        target=fbt.capture_thread, args=(device, tracker, q, stop_event)
+    )
 
     cv2.namedWindow("Depth image with skeleton", cv2.WINDOW_NORMAL)
     frc = fbt.FrameRateCalculator()
@@ -38,12 +39,12 @@ def main():
         depth_image = image_object.to_numpy()
         cv2.convertScaleAbs(depth_image, alpha=0.08, dst=depth_8bit_image)
         cv2.applyColorMap(
-            depth_8bit_image, cv2.COLORMAP_CIVIDIS, dst=depth_colorized_image)
+            depth_8bit_image, cv2.COLORMAP_CIVIDIS, dst=depth_colorized_image
+        )
 
         bodies = frame.get_bodies()
         for body in bodies:
-            positions_2d = body.get_2d_positions(
-                calibration=device.calibration)
+            positions_2d = body.get_2d_positions(calibration=device.calibration)
             fbt.draw_body(depth_colorized_image, positions_2d, body.id)
 
         cv2.imshow("Depth image with skeleton", depth_colorized_image)

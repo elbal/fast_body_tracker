@@ -9,8 +9,8 @@ def main(base_dir: pathlib.Path | str, n_bodies: int = 1):
     with np.load(trans_matrices_path) as data:
         trans_matrices = {int(k): v for k, v in data.items()}
     fbt.default_pipeline(
-        base_dir=base_dir, trans_matrices=trans_matrices, sync=True,
-        n_bodies=n_bodies)
+        base_dir=base_dir, trans_matrices=trans_matrices, sync=True, n_bodies=n_bodies
+    )
 
 
 if __name__ == "__main__":

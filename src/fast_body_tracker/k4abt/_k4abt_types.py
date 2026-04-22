@@ -26,16 +26,16 @@ class k4abt_tracker_configuration_t(ctypes.Structure):
         ("sensor_orientation", ctypes.c_int),
         ("processing_mode", ctypes.c_int),
         ("gpu_device_id", ctypes.c_int32),
-        ("model_path", ctypes.c_char_p)
-        ]
+        ("model_path", ctypes.c_char_p),
+    ]
 
 
 class k4abt_joint_t(ctypes.Structure):
     _fields_ = [
         ("position", k4a_float3),
         ("orientation", k4abt_float4),
-        ("confidence_level", ctypes.c_int)
-        ]
+        ("confidence_level", ctypes.c_int),
+    ]
 
 
 class k4abt_skeleton_t(ctypes.Structure):

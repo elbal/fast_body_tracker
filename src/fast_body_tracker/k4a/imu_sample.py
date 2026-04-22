@@ -9,5 +9,4 @@ class ImuSample:
         self.acc_time = int(imu_sample_struct.acc_timestamp_usec)
         self.gyro_time = int(imu_sample_struct.gyro_timestamp_usec)
         self.acc = np.array(imu_sample_struct.acc_sample, dtype=np.float32)
-        self.gyro = np.array(
-            imu_sample_struct.gyro_sample, dtype=np.float32)
+        self.gyro = np.array(imu_sample_struct.gyro_sample, dtype=np.float32)
