@@ -169,10 +169,11 @@ def update_tracked(
     available_slots: set[int],
     is_stale: npt.NDArray[np.bool],
     frame_bodies: list[Body],
+    how_many_contributed: npt.NDArray[np.uint64],
     reference: int,
     max_distance: float,
     n_bodies: int,
-) -> tuple[npt.NDArray[np.float32], npt.NDArray[bool]]:
+) -> tuple[npt.NDArray[np.float32], npt.NDArray[np.uint64], npt.NDArray[bool]]:
     if len(available_slots) < n_bodies:
         joints_to_be_assigned = np.empty((len(bodies), 3), dtype=np.float32)
         for i, body in enumerate(bodies):
@@ -185,6 +186,7 @@ def update_tracked(
             if frame_bodies[i] is None:
                 tracked_joints[i] = bodies[j].positions[reference]
                 frame_bodies[i] = bodies[j]
+                how_many_contributed[i] += 1
                 is_stale[i] = False
             else:
                 positions = bodies[j].positions
@@ -201,6 +203,8 @@ def update_tracked(
                 ]
 
                 tracked_joints[i] = frame_bodies[i].positions[reference]
+                if np.any(confidence_mask):
+                    how_many_contributed[i] += 1
     else:
         unassigned_idx = range(len(bodies))
 
@@ -212,6 +216,7 @@ def update_tracked(
         if frame_bodies[i] is None:
             tracked_joints[i] = bodies[j].positions[reference]
             frame_bodies[i] = bodies[j]
+            how_many_contributed[i] += 1
             is_stale[i] = False
         else:
             positions = bodies[j].positions
@@ -226,8 +231,10 @@ def update_tracked(
             frame_bodies[i].confidences[confidence_mask] = confidences[confidence_mask]
 
             tracked_joints[i] = frame_bodies[i].positions[reference]
+            if np.any(confidence_mask):
+                how_many_contributed[i] += 1
 
-    return tracked_joints, is_stale
+    return tracked_joints, how_many_contributed, is_stale
 
 
 def unification_thread(
@@ -245,6 +252,7 @@ def unification_thread(
     available_slots = set(i for i in range(n_bodies))
     stale_counter = np.full(n_bodies, 0, dtype=np.uint8)
     frame_bodies = [None] * n_bodies
+    how_many_contributed = np.zeros(n_bodies, dtype=np.uint64)
 
     stored_bodies = [None] * n_devices
     stored_ts = np.full(n_devices, 0, dtype=np.uint64)
@@ -264,6 +272,7 @@ def unification_thread(
             if current_ts is not None:
                 # TODO - send old positions away
                 frame_bodies = [None] * n_bodies
+                how_many_contributed[:] = 0
 
                 stale_counter[~is_stale] = 0
                 stale_counter[is_stale] += 1
@@ -276,12 +285,13 @@ def unification_thread(
             current_ts = ts
             is_stale = ~np.isnan(tracked_joints[:, 0])
             if bodies:
-                tracked_joints, is_stale = update_tracked(
+                tracked_joints, how_many_contributed, is_stale = update_tracked(
                     bodies,
                     tracked_joints,
                     available_slots,
                     is_stale,
                     frame_bodies,
+                    how_many_contributed,
                     reference,
                     max_distance,
                     n_bodies,
@@ -290,12 +300,13 @@ def unification_thread(
             for bodies, ts in zip(stored_bodies, stored_ts):
                 if bodies is None or np.abs(current_ts - ts) > max_ts_diff:
                     continue
-                tracked_joints, is_stale = update_tracked(
+                tracked_joints, how_many_contributed, is_stale = update_tracked(
                     bodies,
                     tracked_joints,
                     available_slots,
                     is_stale,
                     frame_bodies,
+                    how_many_contributed,
                     reference,
                     max_distance,
                     n_bodies,
@@ -315,12 +326,13 @@ def unification_thread(
             stored_bodies[device_id] = bodies
             stored_ts[device_id] = ts
             continue
-        tracked_joints, is_stale = update_tracked(
+        tracked_joints, how_many_contributed, is_stale = update_tracked(
             bodies,
             tracked_joints,
             available_slots,
             is_stale,
             frame_bodies,
+            how_many_contributed,
             reference,
             max_distance,
             n_bodies,
