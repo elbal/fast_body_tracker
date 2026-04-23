@@ -179,7 +179,8 @@ def update_tracked(
     max_distance: float,
     n_bodies: int,
 ) -> tuple[npt.NDArray[np.float32], npt.NDArray[np.uint64], npt.NDArray[bool]]:
-    if len(available_slots) < n_bodies:
+    n_available_slots = len(available_slots)
+    if n_available_slots < n_bodies:
         joints_to_be_assigned = np.empty((len(bodies), 3), dtype=np.float32)
         for i, body in enumerate(bodies):
             joints_to_be_assigned[i] = body.positions[reference]
@@ -188,54 +189,50 @@ def update_tracked(
         )
 
         for i, j in zip(assigned_to_idx, assigned_idx):
-            if frame_bodies[i] is None:
-                tracked_joints[i] = bodies[j].positions[reference]
-                frame_bodies[i] = bodies[j]
+            body = bodies[j]
+            frame_body = frame_bodies[i]
+            if frame_body is None:
+                tracked_joints[i] = body.positions[reference]
+                frame_bodies[i] = body
                 how_many_contributed[i] += 1
                 is_stale[i] = False
             else:
-                positions = bodies[j].positions
-                orientations = bodies[j].orientations
-                confidences = bodies[j].confidences
+                positions = body.positions
+                orientations = body.orientations
+                confidences = body.confidences
 
-                confidence_mask = confidences > frame_bodies[i].confidences
-                frame_bodies[i].positions[confidence_mask] = positions[confidence_mask]
-                frame_bodies[i].orientations[confidence_mask] = orientations[
-                    confidence_mask
-                ]
-                frame_bodies[i].confidences[confidence_mask] = confidences[
-                    confidence_mask
-                ]
+                confidence_mask = confidences > frame_body.confidences
+                frame_body.positions[confidence_mask] = positions[confidence_mask]
+                frame_body.orientations[confidence_mask] = orientations[confidence_mask]
+                frame_body.confidences[confidence_mask] = confidences[confidence_mask]
 
-                tracked_joints[i] = frame_bodies[i].positions[reference]
+                tracked_joints[i] = frame_body.positions[reference]
                 if np.any(confidence_mask):
                     how_many_contributed[i] += 1
     else:
         unassigned_idx = range(len(bodies))
 
-    for j in unassigned_idx:
-        try:
-            i = available_slots.pop()
-        except KeyError:
-            break
-        if frame_bodies[i] is None:
-            tracked_joints[i] = bodies[j].positions[reference]
-            frame_bodies[i] = bodies[j]
+    n_to_fill = min(n_available_slots, len(unassigned_idx))
+    for j in unassigned_idx[:n_to_fill]:
+        i = available_slots.pop()
+        body = bodies[j]
+        frame_body = frame_bodies[i]
+        if frame_body is None:
+            tracked_joints[i] = body.positions[reference]
+            frame_bodies[i] = body
             how_many_contributed[i] += 1
             is_stale[i] = False
         else:
-            positions = bodies[j].positions
-            orientations = bodies[j].orientations
-            confidences = bodies[j].confidences
+            positions = body.positions
+            orientations = body.orientations
+            confidences = body.confidences
 
-            confidence_mask = confidences > frame_bodies[i].confidences
-            frame_bodies[i].positions[confidence_mask] = positions[confidence_mask]
-            frame_bodies[i].orientations[confidence_mask] = orientations[
-                confidence_mask
-            ]
-            frame_bodies[i].confidences[confidence_mask] = confidences[confidence_mask]
+            confidence_mask = confidences > frame_body.confidences
+            frame_body.positions[confidence_mask] = positions[confidence_mask]
+            frame_body.orientations[confidence_mask] = orientations[confidence_mask]
+            frame_body.confidences[confidence_mask] = confidences[confidence_mask]
 
-            tracked_joints[i] = frame_bodies[i].positions[reference]
+            tracked_joints[i] = frame_body.positions[reference]
             if np.any(confidence_mask):
                 how_many_contributed[i] += 1
 
