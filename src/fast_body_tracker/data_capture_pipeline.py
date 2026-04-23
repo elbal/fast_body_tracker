@@ -359,8 +359,6 @@ def unification_thread(
             stored.bodies[:] = [None] * n_devices
             continue
 
-        if not bodies:
-            continue
         if current_frame.current_ts is None:
             stored.bodies[device_id] = bodies
             stored.ts[device_id] = ts
