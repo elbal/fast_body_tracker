@@ -28,19 +28,11 @@ class Body:
         )
         self.joints_data = joints.view(JOINT_DTYPE)
 
+        self.positions = self.joints_data["position"]
+        self.orientations = self.joints_data["orientation"]
+        self.confidences = self.joints_data["confidence"]
+
         self.id = self._handle.id
-
-    @property
-    def positions(self) -> npt.NDArray[np.float32]:
-        return self.joints_data["position"]
-
-    @property
-    def orientations(self) -> npt.NDArray[np.float32]:
-        return self.joints_data["orientation"]
-
-    @property
-    def confidences(self) -> npt.NDArray[np.int32]:
-        return self.joints_data["confidence"]
 
     def get_2d_positions(
         self,
