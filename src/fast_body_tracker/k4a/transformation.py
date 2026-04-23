@@ -54,7 +54,9 @@ class Transformation:
         return self._handle
 
     def depth_image_to_color_camera(
-        self, depth_image_object: Image, transformed_image_object: Image | None = None
+        self,
+        depth_image_object: Image,
+        transformed_image_object: Image | None = None,
     ) -> Image:
         if transformed_image_object is None:
             transformed_depth_handle = self._create_image_handle(
