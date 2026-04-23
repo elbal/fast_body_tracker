@@ -78,14 +78,12 @@ def computation_thread(
         if item is None:
             break
         capture, frame = item
-
         color_image_object = capture.get_color_image_object()
-        ts = color_image_object.timestamp
-        system_ts = color_image_object.system_timestamp
         bgra_image = color_image_object.to_numpy()
 
         bodies = []
-        for body_idx in range(frame.get_num_bodies()):
+        n_detected_bodies = frame.get_num_bodies()
+        for body_idx in range(n_detected_bodies):
             body = frame.get_body(body_idx)
             positions_2d = body.get_2d_positions(
                 calibration=calibration, target_camera=K4A_CALIBRATION_TYPE_COLOR
@@ -96,13 +94,16 @@ def computation_thread(
                 body.positions[:] += ext_trans * 1000.0
             bodies.append(body)
 
-        if unification_queue.full():
-            dfa.update()
-            try:
-                unification_queue.get_nowait()
-            except queue.Empty:
-                pass
-        unification_queue.put((frame_idx, ts, system_ts, device_id, bodies))
+        if device_id == 0 or n_detected_bodies > 0:
+            ts = color_image_object.timestamp
+            system_ts = color_image_object.system_timestamp
+            if unification_queue.full():
+                dfa.update()
+                try:
+                    unification_queue.get_nowait()
+                except queue.Empty:
+                    pass
+            unification_queue.put((device_id, frame_idx, ts, system_ts, bodies))
 
         bgr_image = cv2.cvtColor(bgra_image, cv2.COLOR_BGRA2BGR)
         if video_queue.full():
@@ -308,7 +309,7 @@ def unification_thread(
         if item is None:
             finished_workers += 1
             continue
-        frame_idx, ts, system_ts, device_id, bodies = item
+        device_id, frame_idx, ts, system_ts, bodies = item
 
         if device_id == 0:
             if current_frame.current_ts is not None:
