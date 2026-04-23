@@ -182,6 +182,7 @@ class _TrackingPool:
 @dataclass(slots=True)
 class _CurrentFrame:
     ts: int | None
+    system_ts: int | None
     idx: int | None
     bodies: list[Body | None]
     contribution_counter: npt.NDArray[np.uint64]
@@ -294,6 +295,7 @@ def unification_thread(
     is_stale = np.full(n_bodies, True, dtype=bool)
     current_frame = _CurrentFrame(
         ts=None,
+        system_ts=None,
         idx=None,
         bodies=[None] * n_bodies,
         contribution_counter=np.zeros((n_bodies, n_devices), dtype=np.uint64),
@@ -326,6 +328,7 @@ def unification_thread(
                 tracking_pool.tags[drop_mask] = -1
 
             current_frame.ts = ts
+            current_frame.system_ts = system_ts
             current_frame.idx = frame_idx
             is_stale = np.isfinite(tracking_pool.tracked_joints[:, 0])
             if bodies:
