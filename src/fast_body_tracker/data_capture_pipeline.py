@@ -2,7 +2,6 @@ import threading
 import queue
 from dataclasses import dataclass
 import numpy as np
-from fast_body_tracker import Body
 from numpy import typing as npt
 import cv2
 import av
@@ -10,8 +9,6 @@ import pathlib
 import h5py
 import tkinter as tk
 from datetime import datetime
-
-from .k4abt.kabt_const import K4ABT_JOINT_PELVIS
 
 from .initializer import initialize_libraries, start_device, start_body_tracker
 from .utils.performace_calculator import DroppedFramesAlert, FrameRateCalculator
@@ -27,8 +24,12 @@ from .k4a.k4a_const import (
 from .k4a.calibration import Calibration
 from .k4a.configuration import Configuration
 from .k4a.device import Device
-from .k4abt.kabt_const import K4ABT_JOINT_NAMES, K4ABT_SEGMENT_PAIRS
-from .k4abt.body import draw_body
+from .k4abt.kabt_const import (
+    K4ABT_JOINT_PELVIS,
+    K4ABT_JOINT_NAMES,
+    K4ABT_SEGMENT_PAIRS,
+)
+from .k4abt.body import Body, draw_body
 from .k4abt.tracker import Tracker
 
 
