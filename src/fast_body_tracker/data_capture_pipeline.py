@@ -133,31 +133,37 @@ def assign_nearest(
 ) -> tuple[npt.NDArray[np.int64], npt.NDArray[np.int64], npt.NDArray[np.int64]]:
     valid_idx = np.flatnonzero(np.isfinite(tracked_joints[:, 0]))
     tracked_valid = tracked_joints[valid_idx]
-
     diff = tracked_valid[:, np.newaxis, :] - joints_to_be_assigned[np.newaxis, :, :]
     dist_sq = np.sum(diff * diff, axis=2)
-    dist_sq[dist_sq > max_distance * max_distance] = np.inf
+    max_distance_sq = max_distance * max_distance
+    candidate_rows, candidate_cols = np.nonzero(dist_sq <= max_distance_sq)
+    if candidate_rows.size == 0:
+        empty = np.empty(0, dtype=np.int64)
+        n_to_assign = joints_to_be_assigned.shape[0]
+        return empty, empty, np.arange(n_to_assign, dtype=np.int64)
 
     assigned_full = np.full(tracked_joints.shape[0], -1, dtype=np.int64)
+    row_used = np.zeros(tracked_valid.shape[0], dtype=bool)
+    col_used = np.zeros(joints_to_be_assigned.shape[0], dtype=bool)
     max_matches = min(tracked_valid.shape[0], joints_to_be_assigned.shape[0])
-    for _ in range(max_matches):
-        dist_argmin = np.argmin(dist_sq)
-        min_dist = dist_sq.ravel()[dist_argmin]
-        if not np.isfinite(min_dist):
-            break
+    assigned_count = 0
+    order = np.argsort(dist_sq[candidate_rows, candidate_cols], kind="quicksort")
+    for k in order:
+        row_idx = candidate_rows[k]
+        col_idx = candidate_cols[k]
+        if row_used[row_idx] or col_used[col_idx]:
+            continue
 
-        row_idx, col_idx = np.unravel_index(dist_argmin, dist_sq.shape)
+        row_used[row_idx] = True
+        col_used[col_idx] = True
         assigned_full[valid_idx[row_idx]] = col_idx
-
-        dist_sq[row_idx, :] = np.inf
-        dist_sq[:, col_idx] = np.inf
+        assigned_count += 1
+        if assigned_count == max_matches:
+            break
 
     assigned_to_idx = np.flatnonzero(assigned_full >= 0)
     assigned_idx = assigned_full[assigned_to_idx]
-
-    used_mask = np.ones(joints_to_be_assigned.shape[0], dtype=bool)
-    used_mask[assigned_idx] = False
-    unassigned_idx = np.flatnonzero(used_mask)
+    unassigned_idx = np.flatnonzero(~col_used)
 
     return assigned_idx, assigned_to_idx, unassigned_idx
 
