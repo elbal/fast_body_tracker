@@ -185,6 +185,7 @@ class _CurrentFrame:
     ts: int | None
     system_ts: int | None
     bodies: list[Body | None]
+    tags: npt.NDArray[np.int64]
     contributions: npt.NDArray[np.uint64]
 
 
@@ -207,6 +208,7 @@ def _update_tracked(
     tags = tracking_pool.tags
     available_slots = tracking_pool.available_slots
     current_bodies = current_frame.bodies
+    current_tags = current_frame.tags
     contributions = current_frame.contributions
     next_tag = tracking_pool.next_tag
     n_bodies = tracked_joints.shape[0]
@@ -225,6 +227,7 @@ def _update_tracked(
             if current_body is None:
                 tracked_joints[i] = body.positions[reference]
                 current_bodies[i] = body
+                current_tags[i] = tags[i]
                 contributions[i, device_id] += 1
                 is_stale[i] = False
             else:
@@ -240,6 +243,7 @@ def _update_tracked(
                 current_body.confidences[confidence_mask] = confidences[confidence_mask]
 
                 tracked_joints[i] = current_body.positions[reference]
+                current_tags[i] = tags[i]
                 if np.any(confidence_mask):
                     contributions[i, device_id] += 1
     else:
@@ -255,6 +259,7 @@ def _update_tracked(
         if current_body is None:
             tracked_joints[i] = body.positions[reference]
             current_bodies[i] = body
+            current_tags[i] = tags[i]
             contributions[i, device_id] += 1
             is_stale[i] = False
         else:
@@ -268,6 +273,7 @@ def _update_tracked(
             current_body.confidences[confidence_mask] = confidences[confidence_mask]
 
             tracked_joints[i] = current_body.positions[reference]
+            current_tags[i] = tags[i]
             if np.any(confidence_mask):
                 contributions[i, device_id] += 1
 
@@ -276,7 +282,7 @@ def _update_tracked(
 
 def unification_thread(
     unification_queue: queue.Queue,
-    joints_queue: queue.Queue,
+    save_queue: queue.Queue,
     n_devices: int = 1,
     n_bodies: int = 1,
 ):
@@ -298,6 +304,7 @@ def unification_thread(
         ts=None,
         system_ts=None,
         bodies=[None] * n_bodies,
+        tags=np.full(n_bodies, -1, dtype=np.int64),
         contributions=np.zeros((n_bodies, n_devices), dtype=np.uint64),
     )
     stored = _Stored(
@@ -315,9 +322,7 @@ def unification_thread(
 
         if device_id == 0:
             if current_frame.ts is not None:
-                # TODO - send old positions away
-                current_frame.bodies = [None] * n_bodies
-                current_frame.contributions[:] = 0
+                save_queue.put(current_frame)
 
                 tracking_pool.stale_counter[~is_stale] = 0
                 tracking_pool.stale_counter[is_stale] += 1
@@ -327,9 +332,14 @@ def unification_thread(
                 tracking_pool.tracked_joints[drop_mask] = np.nan
                 tracking_pool.tags[drop_mask] = -1
 
-            current_frame.ts = ts
-            current_frame.system_ts = system_ts
-            current_frame.idx = frame_idx
+            current_frame = _CurrentFrame(
+                idx=frame_idx,
+                ts=ts,
+                system_ts=system_ts,
+                bodies=[None] * n_bodies,
+                tags=np.full(n_bodies, -1, dtype=np.int64),
+                contributions=np.zeros((n_bodies, n_devices), dtype=np.uint64),
+            )
             is_stale = np.isfinite(tracking_pool.tracked_joints[:, 0])
             if bodies:
                 _update_tracked(
@@ -379,11 +389,11 @@ def unification_thread(
             max_distance,
         )
 
-    joints_queue.put(None)
+    save_queue.put(None)
 
 
-def body_saver_thread(
-    joints_queue: queue.Queue,
+def saver_thread(
+    save_queue: queue.Queue,
     file_dir: pathlib.Path,
     n_devices: int = 1,
     n_bodies: int = 1,
@@ -506,7 +516,7 @@ def body_saver_thread(
     finished_workers = 0
     flush = False
     while finished_workers < n_devices:
-        item = joints_queue.get()
+        item = save_queue.get()
         if item is None:
             finished_workers += 1
             continue
@@ -685,7 +695,7 @@ def default_pipeline(
 
     computation_t = dict()
     unification_queue = queue.Queue(maxsize=10)
-    joints_queue = queue.Queue(maxsize=10)
+    save_queue = queue.Queue(maxsize=10)
     video_queue = queue.Queue(maxsize=10)
     visualization_queue = queue.Queue(maxsize=10)
 
@@ -734,10 +744,10 @@ def default_pipeline(
     file_dir = base_dir / timestamp
     file_dir.mkdir(parents=True, exist_ok=True)
     unification_t = threading.Thread(
-        target=unification_thread, args=(unification_queue, joints_queue, n_devices)
+        target=unification_thread, args=(unification_queue, save_queue, n_devices)
     )
-    body_saver_t = threading.Thread(
-        target=body_saver_thread, args=(joints_queue, file_dir, n_devices, n_bodies)
+    saver_t = threading.Thread(
+        target=saver_thread, args=(save_queue, file_dir, n_devices, n_bodies)
     )
     video_saver_t = threading.Thread(
         target=video_saver_thread, args=(video_queue, file_dir, n_devices)
@@ -745,7 +755,7 @@ def default_pipeline(
 
     video_saver_t.start()
     unification_t.start()
-    body_saver_t.start()
+    saver_t.start()
     for t in computation_t.values():
         t.start()
     for t in capture_t.values():
@@ -754,7 +764,7 @@ def default_pipeline(
 
     video_saver_t.join()
     unification_t.join()
-    body_saver_t.join()
+    saver_t.join()
     for t in capture_t.values():
         t.join()
     for t in computation_t.values():
