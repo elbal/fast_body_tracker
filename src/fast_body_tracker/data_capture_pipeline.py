@@ -181,11 +181,11 @@ class _TrackingPool:
 
 @dataclass(slots=True)
 class _CurrentFrame:
+    idx: int | None
     ts: int | None
     system_ts: int | None
-    idx: int | None
     bodies: list[Body | None]
-    contribution_counter: npt.NDArray[np.uint64]
+    contributions: npt.NDArray[np.uint64]
 
 
 @dataclass(slots=True)
@@ -207,7 +207,7 @@ def _update_tracked(
     tags = tracking_pool.tags
     available_slots = tracking_pool.available_slots
     current_bodies = current_frame.bodies
-    contribution_counter = current_frame.contribution_counter
+    contributions = current_frame.contributions
     next_tag = tracking_pool.next_tag
     n_bodies = tracked_joints.shape[0]
     n_available_slots = len(available_slots)
@@ -225,7 +225,7 @@ def _update_tracked(
             if current_body is None:
                 tracked_joints[i] = body.positions[reference]
                 current_bodies[i] = body
-                contribution_counter[i, device_id] += 1
+                contributions[i, device_id] += 1
                 is_stale[i] = False
             else:
                 positions = body.positions
@@ -241,7 +241,7 @@ def _update_tracked(
 
                 tracked_joints[i] = current_body.positions[reference]
                 if np.any(confidence_mask):
-                    contribution_counter[i, device_id] += 1
+                    contributions[i, device_id] += 1
     else:
         unassigned_idx = range(len(bodies))
 
@@ -255,7 +255,7 @@ def _update_tracked(
         if current_body is None:
             tracked_joints[i] = body.positions[reference]
             current_bodies[i] = body
-            contribution_counter[i, device_id] += 1
+            contributions[i, device_id] += 1
             is_stale[i] = False
         else:
             positions = body.positions
@@ -269,7 +269,7 @@ def _update_tracked(
 
             tracked_joints[i] = current_body.positions[reference]
             if np.any(confidence_mask):
-                contribution_counter[i, device_id] += 1
+                contributions[i, device_id] += 1
 
     tracking_pool.next_tag = next_tag
 
@@ -294,11 +294,11 @@ def unification_thread(
     )
     is_stale = np.full(n_bodies, True, dtype=bool)
     current_frame = _CurrentFrame(
+        idx=None,
         ts=None,
         system_ts=None,
-        idx=None,
         bodies=[None] * n_bodies,
-        contribution_counter=np.zeros((n_bodies, n_devices), dtype=np.uint64),
+        contributions=np.zeros((n_bodies, n_devices), dtype=np.uint64),
     )
     stored = _Stored(
         bodies=[None] * n_devices,
@@ -317,7 +317,7 @@ def unification_thread(
             if current_frame.ts is not None:
                 # TODO - send old positions away
                 current_frame.bodies = [None] * n_bodies
-                current_frame.contribution_counter[:] = 0
+                current_frame.contributions[:] = 0
 
                 tracking_pool.stale_counter[~is_stale] = 0
                 tracking_pool.stale_counter[is_stale] += 1
