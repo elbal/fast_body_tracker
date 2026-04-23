@@ -403,22 +403,21 @@ def saver_thread(
     h5file = h5py.File(file_dir / "body.h5", "w", libver="latest")
 
     joint_buffers = {
-        (i, j): {
+        j: {
             "frame_idx": np.empty(flush_size, dtype=np.int64),
+            "tags": np.empty(flush_size, dtype=np.int64),
             "positions": np.empty((flush_size, n_joints, 3), dtype=np.float32),
             "confidences": np.empty((flush_size, n_joints), dtype=np.uint8),
+            "contributions": np.empty((flush_size, n_devices), dtype=np.uint64),
             "idx": 0,
         }
-        for i in range(n_devices)
         for j in range(n_bodies)
     }
-    ts_buffers = {
-        i: {
-            "ts": np.empty(flush_size, dtype=np.uint64),
-            "system_ts": np.empty(flush_size, dtype=np.uint64),
-            "idx": 0,
-        }
-        for i in range(n_devices)
+    ts_buffer = {
+        "frame_idx": np.empty(flush_size, dtype=np.int64),
+        "ts": np.empty(flush_size, dtype=np.uint64),
+        "system_ts": np.empty(flush_size, dtype=np.uint64),
+        "idx": 0,
     }
 
     joint_names = np.array(K4ABT_JOINT_NAMES, dtype=h5py.string_dtype(encoding="utf-8"))
@@ -427,123 +426,148 @@ def saver_thread(
 
     joint_data = {}
     joints_grp = h5file.create_group("joints")
-    for i in range(n_devices):
-        device_grp = joints_grp.create_group(f"device_{i}")
-        device_grp.attrs["device_id"] = i
-        for j in range(n_bodies):
-            body_grp = device_grp.create_group(f"body_{j}")
-            body_grp.attrs["body_idx"] = j
-            body_grp.create_dataset(
-                "frame_idx",
-                shape=(0,),
-                maxshape=(None,),
-                dtype="i8",
-                chunks=(flush_size,),
-            )
-            body_grp.create_dataset(
-                "positions",
-                shape=(0, n_joints, 3),
-                maxshape=(None, n_joints, 3),
-                dtype="f4",
-                chunks=(flush_size, n_joints, 3),
-            )
-            body_grp.create_dataset(
-                "confidences",
-                shape=(0, n_joints),
-                maxshape=(None, n_joints),
-                dtype="u1",
-                chunks=(flush_size, n_joints),
-            )
+    for j in range(n_bodies):
+        body_grp = joints_grp.create_group(f"body_{j}")
+        body_grp.attrs["body_idx"] = j
+        body_grp.create_dataset(
+            "frame_idx",
+            shape=(0,),
+            maxshape=(None,),
+            dtype="i8",
+            chunks=(flush_size,),
+        )
+        body_grp.create_dataset(
+            "tags",
+            shape=(0,),
+            maxshape=(None,),
+            dtype="i8",
+            chunks=(flush_size,),
+        )
+        body_grp.create_dataset(
+            "positions",
+            shape=(0, n_joints, 3),
+            maxshape=(None, n_joints, 3),
+            dtype="f4",
+            chunks=(flush_size, n_joints, 3),
+        )
+        body_grp.create_dataset(
+            "confidences",
+            shape=(0, n_joints),
+            maxshape=(None, n_joints),
+            dtype="u1",
+            chunks=(flush_size, n_joints),
+        )
+        body_grp.create_dataset(
+            "contributions",
+            shape=(0, n_devices),
+            maxshape=(None, n_devices),
+            dtype="u8",
+            chunks=(flush_size, n_devices),
+        )
 
-            joint_data[(i, j)] = {
-                "frame_idx": body_grp["frame_idx"],
-                "positions": body_grp["positions"],
-                "confidences": body_grp["confidences"],
-            }
+        joint_data[j] = {
+            "frame_idx": body_grp["frame_idx"],
+            "tags": body_grp["tags"],
+            "positions": body_grp["positions"],
+            "confidences": body_grp["confidences"],
+            "contributions": body_grp["contributions"],
+        }
 
-    ts_data = {}
     ts_grp = h5file.create_group("ts")
-    for i in range(n_devices):
-        device_grp = ts_grp.create_group(f"device_{i}")
-        device_grp.attrs["device_id"] = i
-        device_grp.create_dataset(
-            "ts", shape=(0,), maxshape=(None,), dtype="u8", chunks=(flush_size,)
-        )
-        device_grp.create_dataset(
-            "system_ts", shape=(0,), maxshape=(None,), dtype="u8", chunks=(flush_size,)
-        )
+    ts_grp.create_dataset(
+        "frame_idx", shape=(0,), maxshape=(None,), dtype="i8", chunks=(flush_size,)
+    )
+    ts_grp.create_dataset(
+        "ts", shape=(0,), maxshape=(None,), dtype="u8", chunks=(flush_size,)
+    )
+    ts_grp.create_dataset(
+        "system_ts", shape=(0,), maxshape=(None,), dtype="u8", chunks=(flush_size,)
+    )
+    ts_data = {
+        "frame_idx": ts_grp["frame_idx"],
+        "ts": ts_grp["ts"],
+        "system_ts": ts_grp["system_ts"],
+    }
 
-        ts_data[i] = {"ts": device_grp["ts"], "system_ts": device_grp["system_ts"]}
-
-    def flush_joint_buffer(device_id: int, body_idx: int):
-        data = joint_data[(device_id, body_idx)]
-        buffer = joint_buffers[(device_id, body_idx)]
+    def flush_joint_buffer(body_idx: int):
+        data = joint_data[body_idx]
+        buffer = joint_buffers[body_idx]
         idx = buffer["idx"]
 
         d_frame_idx = data["frame_idx"]
+        d_tags = data["tags"]
         d_positions = data["positions"]
         d_confidences = data["confidences"]
+        d_contributions = data["contributions"]
 
         old_n = d_frame_idx.shape[0]
         new_n = old_n + idx
 
         d_frame_idx.resize(new_n, axis=0)
+        d_tags.resize(new_n, axis=0)
         d_positions.resize(new_n, axis=0)
         d_confidences.resize(new_n, axis=0)
+        d_contributions.resize(new_n, axis=0)
 
         d_frame_idx[old_n:new_n] = buffer["frame_idx"][:idx]
+        d_tags[old_n:new_n] = buffer["tags"][:idx]
         d_positions[old_n:new_n, :, :] = buffer["positions"][:idx]
         d_confidences[old_n:new_n, :] = buffer["confidences"][:idx]
+        d_contributions[old_n:new_n, :] = buffer["contributions"][:idx]
 
         buffer["idx"] = 0
 
-    def flush_ts_buffer(device_id: int):
-        data = ts_data[device_id]
-        buffer = ts_buffers[device_id]
+    def flush_ts_buffer():
+        data = ts_data
+        buffer = ts_buffer
         idx = buffer["idx"]
 
+        d_frame_idx = data["frame_idx"]
         d_ts = data["ts"]
         d_system_ts = data["system_ts"]
-        old_n = d_ts.shape[0]
+        old_n = d_frame_idx.shape[0]
         new_n = old_n + idx
+        d_frame_idx.resize(new_n, axis=0)
         d_ts.resize(new_n, axis=0)
         d_system_ts.resize(new_n, axis=0)
+        d_frame_idx[old_n:new_n] = buffer["frame_idx"][:idx]
         d_ts[old_n:new_n] = buffer["ts"][:idx]
         d_system_ts[old_n:new_n] = buffer["system_ts"][:idx]
 
         buffer["idx"] = 0
 
-    finished_workers = 0
     flush = False
-    while finished_workers < n_devices:
+    while True:
         item = save_queue.get()
         if item is None:
-            finished_workers += 1
-            continue
+            break
 
-        frame_idx, ts, system_ts, device_id, bodies = item
-        buffer = ts_buffers[device_id]
+        frame = item
+        buffer = ts_buffer
         idx = buffer["idx"]
 
-        buffer["ts"][idx] = ts
-        buffer["system_ts"][idx] = system_ts
+        buffer["frame_idx"][idx] = frame.idx
+        buffer["ts"][idx] = frame.ts
+        buffer["system_ts"][idx] = frame.system_ts
         buffer["idx"] += 1
         if buffer["idx"] >= flush_size:
-            flush_ts_buffer(device_id)
+            flush_ts_buffer()
             flush = True
 
-        for body_idx, body in enumerate(bodies):
-            if body_idx >= n_bodies:
-                break
-            buffer = joint_buffers[(device_id, body_idx)]
+        for body_idx, (body, tag) in enumerate(zip(frame.bodies, frame.tags)):
+            if body is None or tag < 0:
+                continue
+            buffer = joint_buffers[body_idx]
             idx = buffer["idx"]
 
-            buffer["frame_idx"][idx] = frame_idx
+            buffer["frame_idx"][idx] = frame.idx
+            buffer["tags"][idx] = tag
             buffer["positions"][idx, :, :] = body.positions
             buffer["confidences"][idx, :] = body.confidences
+            buffer["contributions"][idx, :] = frame.contributions[body_idx]
             buffer["idx"] += 1
             if (buffer["idx"] >= flush_size) or flush:
-                flush_joint_buffer(device_id, body_idx)
+                flush_joint_buffer(body_idx)
                 flush = True
 
         if flush:
@@ -551,14 +575,13 @@ def saver_thread(
             flush = False
 
     flush = False
-    for device_id in range(n_devices):
-        if ts_buffers[device_id]["idx"] > 0:
-            flush_ts_buffer(device_id)
+    if ts_buffer["idx"] > 0:
+        flush_ts_buffer()
+        flush = True
+    for body_idx in range(n_bodies):
+        if joint_buffers[body_idx]["idx"] > 0:
+            flush_joint_buffer(body_idx)
             flush = True
-        for body_idx in range(n_bodies):
-            if joint_buffers[(device_id, body_idx)]["idx"] > 0:
-                flush_joint_buffer(device_id, body_idx)
-                flush = True
     if flush:
         h5file.flush()
     h5file.close()
@@ -744,7 +767,8 @@ def default_pipeline(
     file_dir = base_dir / timestamp
     file_dir.mkdir(parents=True, exist_ok=True)
     unification_t = threading.Thread(
-        target=unification_thread, args=(unification_queue, save_queue, n_devices)
+        target=unification_thread,
+        args=(unification_queue, save_queue, n_devices, n_bodies),
     )
     saver_t = threading.Thread(
         target=saver_thread, args=(save_queue, file_dir, n_devices, n_bodies)
