@@ -125,7 +125,7 @@ def computation_thread(
         frame_idx += 1
     unification_queue.put(None)
     video_queue.put(None)
-    visualization_queue.put(None)
+    visualization_queue.put((None, device_id))
 
 
 def _assign_nearest(
@@ -664,11 +664,13 @@ def visualization_main_tread(
         cv2.resizeWindow(window_name, window_w, window_h)
         cv2.moveWindow(window_name, screen_w - window_w - from_border, i * window_h)
 
-    while True:
-        item = visualization_queue.get()
-        if item is None:
-            break
-        bgr_image, device_id = item
+    finished_workers = 0
+    while finished_workers < n_devices:
+        bgr_image, device_id = visualization_queue.get()
+        if bgr_image is None:
+            cv2.destroyWindow(f"Color images with skeleton {device_id}")
+            finished_workers += 1
+            continue
 
         cv2.imshow(f"Color images with skeleton {device_id}", bgr_image)
         if cv2.waitKey(1) == ord("q"):
