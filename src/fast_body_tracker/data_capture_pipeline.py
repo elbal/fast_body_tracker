@@ -267,6 +267,7 @@ def unification_thread(
     stored_ts = np.full(n_devices, 0, dtype=np.uint64)
 
     current_ts = None
+    current_idx = None
 
     finished_workers = 0
     is_stale = np.full(n_bodies, True, dtype=bool)
@@ -292,6 +293,7 @@ def unification_thread(
                 tracked_tags[drop_mask] = -1
 
             current_ts = ts
+            current_idx = frame_idx
             is_stale = np.isfinite(tracked_joints[:, 0])
             if bodies:
                 (
