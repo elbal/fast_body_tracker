@@ -68,6 +68,3 @@ to the unavailability of the Azure Kinect Body Tracking SDK for that OS.
 > permission to the USB devices, or always execute under the root permission by
 > adding `sudo` ahead. Additional information on the use on Linux can be found
 > [here](https://github.com/microsoft/Azure-Kinect-Sensor-SDK/blob/develop/docs/usage.md).
-
-## Contribution
-Feel free to send pull requests, bug reports are also appreciated.
