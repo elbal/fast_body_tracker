@@ -165,7 +165,7 @@ def assign_nearest(
 def update_tracked(
     bodies: list[Body],
     tracked_joints: npt.NDArray[np.float32],
-    available_slots: set[int],
+    available_slots: list[int],
     is_stale: npt.NDArray[np.bool],
     frame_bodies: list[Body],
     how_many_contributed: npt.NDArray[np.uint64],
@@ -248,7 +248,7 @@ def unification_thread(
     reference = K4ABT_JOINT_PELVIS
 
     tracked_joints = np.full((n_bodies, 3), np.nan, dtype=np.float32)
-    available_slots = set(i for i in range(n_bodies))
+    available_slots = list(range(n_bodies))
     stale_counter = np.full(n_bodies, 0, dtype=np.uint8)
     frame_bodies = [None] * n_bodies
     how_many_contributed = np.zeros(n_bodies, dtype=np.uint64)
@@ -276,7 +276,7 @@ def unification_thread(
                 stale_counter[~is_stale] = 0
                 stale_counter[is_stale] += 1
                 drop_mask = stale_counter > max_stale_frames
-                available_slots.update(np.nonzero(drop_mask)[0])
+                available_slots.extend(np.flatnonzero(drop_mask).tolist())
                 stale_counter[drop_mask] = 0
                 tracked_joints[drop_mask] = np.nan
 
