@@ -131,34 +131,33 @@ def assign_nearest(
     joints_to_be_assigned: npt.NDArray[np.float32],
     max_distance: float,
 ) -> tuple[npt.NDArray[np.int64], npt.NDArray[np.int64], npt.NDArray[np.int64]]:
-    valid_mask = ~np.isnan(tracked_joints).any(axis=1)
-    valid_idx = np.nonzero(valid_mask)[0]
-    tracked_valid = tracked_joints[valid_mask]
+    valid_idx = np.flatnonzero(np.isfinite(tracked_joints[:, 0]))
+    tracked_valid = tracked_joints[valid_idx]
 
     diff = tracked_valid[:, np.newaxis, :] - joints_to_be_assigned[np.newaxis, :, :]
-    dist = np.linalg.norm(diff, axis=2)
-    dist[dist > max_distance] = np.inf
+    dist_sq = np.sum(diff * diff, axis=2)
+    dist_sq[dist_sq > max_distance * max_distance] = np.inf
 
     assigned_full = np.full(tracked_joints.shape[0], -1, dtype=np.int64)
     max_matches = min(tracked_valid.shape[0], joints_to_be_assigned.shape[0])
     for _ in range(max_matches):
-        dist_argmin = np.argmin(dist)
-        min_dist = dist.ravel()[dist_argmin]
+        dist_argmin = np.argmin(dist_sq)
+        min_dist = dist_sq.ravel()[dist_argmin]
         if not np.isfinite(min_dist):
             break
 
-        row_idx, col_idx = np.unravel_index(dist_argmin, dist.shape)
+        row_idx, col_idx = np.unravel_index(dist_argmin, dist_sq.shape)
         assigned_full[valid_idx[row_idx]] = col_idx
 
-        dist[row_idx, :] = np.inf
-        dist[:, col_idx] = np.inf
+        dist_sq[row_idx, :] = np.inf
+        dist_sq[:, col_idx] = np.inf
 
-    assigned_to_idx = np.nonzero(assigned_full >= 0)[0]
+    assigned_to_idx = np.flatnonzero(assigned_full >= 0)
     assigned_idx = assigned_full[assigned_to_idx]
 
     used_mask = np.ones(joints_to_be_assigned.shape[0], dtype=bool)
     used_mask[assigned_idx] = False
-    unassigned_idx = np.nonzero(used_mask)[0]
+    unassigned_idx = np.flatnonzero(used_mask)
 
     return assigned_idx, assigned_to_idx, unassigned_idx
 
@@ -278,12 +277,11 @@ def unification_thread(
                 stale_counter[is_stale] += 1
                 drop_mask = stale_counter > max_stale_frames
                 available_slots.update(np.nonzero(drop_mask)[0])
-                np.nonzero(drop_mask)[0]
                 stale_counter[drop_mask] = 0
                 tracked_joints[drop_mask] = np.nan
 
             current_ts = ts
-            is_stale = ~np.isnan(tracked_joints[:, 0])
+            is_stale = np.isfinite(tracked_joints[:, 0])
             if bodies:
                 tracked_joints, how_many_contributed, is_stale = update_tracked(
                     bodies,
