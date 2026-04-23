@@ -128,7 +128,7 @@ def computation_thread(
     visualization_queue.put(None)
 
 
-def assign_nearest(
+def _assign_nearest(
     tracked_joints: npt.NDArray[np.float32],
     joints_to_be_assigned: npt.NDArray[np.float32],
     max_distance: float,
@@ -171,7 +171,7 @@ def assign_nearest(
 
 
 @dataclass(slots=True)
-class TrackingPool:
+class _TrackingPool:
     tracked_joints: npt.NDArray[np.float32]
     tags: npt.NDArray[np.int64]
     available_slots: list[int]
@@ -180,7 +180,7 @@ class TrackingPool:
 
 
 @dataclass(slots=True)
-class CurrentFrame:
+class _CurrentFrame:
     current_ts: int | None
     current_idx: int | None
     current_bodies: list[Body | None]
@@ -188,16 +188,16 @@ class CurrentFrame:
 
 
 @dataclass(slots=True)
-class Stored:
+class _Stored:
     bodies: list[list[Body] | None]
     ts: npt.NDArray[np.uint64]
 
 
-def update_tracked(
+def _update_tracked(
     bodies: list[Body],
     device_id: int,
-    tracking_pool: TrackingPool,
-    current_frame: CurrentFrame,
+    tracking_pool: _TrackingPool,
+    current_frame: _CurrentFrame,
     is_stale: npt.NDArray[np.bool],
     reference: int,
     max_distance: float,
@@ -214,7 +214,7 @@ def update_tracked(
         joints_to_be_assigned = np.empty((len(bodies), 3), dtype=np.float32)
         for i, body in enumerate(bodies):
             joints_to_be_assigned[i] = body.positions[reference]
-        assigned_idx, assigned_to_idx, unassigned_idx = assign_nearest(
+        assigned_idx, assigned_to_idx, unassigned_idx = _assign_nearest(
             tracked_joints, joints_to_be_assigned, max_distance
         )
 
@@ -284,7 +284,7 @@ def unification_thread(
     max_stale_frames = 60
     reference_joint = K4ABT_JOINT_PELVIS
 
-    tracking_pool = TrackingPool(
+    tracking_pool = _TrackingPool(
         tracked_joints=np.full((n_bodies, 3), np.nan, dtype=np.float32),
         tags=np.full(n_bodies, -1, dtype=np.int64),
         available_slots=list(range(n_bodies)),
@@ -292,13 +292,13 @@ def unification_thread(
         next_tag=0,
     )
     is_stale = np.full(n_bodies, True, dtype=bool)
-    current_frame = CurrentFrame(
+    current_frame = _CurrentFrame(
         current_ts=None,
         current_idx=None,
         current_bodies=[None] * n_bodies,
         contribution_counter=np.zeros((n_bodies, n_devices), dtype=np.uint64),
     )
-    stored = Stored(
+    stored = _Stored(
         bodies=[None] * n_devices,
         ts=np.full(n_devices, 0, dtype=np.uint64),
     )
@@ -329,7 +329,7 @@ def unification_thread(
             current_frame.current_idx = frame_idx
             is_stale = np.isfinite(tracking_pool.tracked_joints[:, 0])
             if bodies:
-                update_tracked(
+                _update_tracked(
                     bodies,
                     device_id,
                     tracking_pool,
@@ -347,7 +347,7 @@ def unification_thread(
                     or np.abs(current_frame.current_ts - ts) > max_ts_diff
                 ):
                     continue
-                update_tracked(
+                _update_tracked(
                     bodies,
                     stored_device_id,
                     tracking_pool,
@@ -369,7 +369,7 @@ def unification_thread(
             stored.bodies[device_id] = bodies
             stored.ts[device_id] = ts
             continue
-        update_tracked(
+        _update_tracked(
             bodies,
             device_id,
             tracking_pool,
