@@ -74,13 +74,12 @@ BONE_LIST = [
 ]
 
 
-DEFAULT_OUTPUT_DIR = Path("C:/Users/eliab/Python/postura/data")
-
-
-def process_h5_to_json(h5_file_path: str, output_dir: str | Path = DEFAULT_OUTPUT_DIR):
+def process_h5_to_json(h5_file_path: str, output_dir: str | Path | None = None):
     path = Path(h5_file_path)
     folder_timestamp = path.parents[0].name
     folder_ex = path.parents[1].name
+    if output_dir is None:
+        output_dir = path.parent
     output_dir = Path(output_dir)
     with h5py.File(h5_file_path, "r") as f:
         if "joints" in f and "ts" in f:
@@ -133,48 +132,52 @@ def _process_body_saver_h5(
 ):
     joints_group = h5file["joints"]
     ts_group = h5file["ts"]
+    ts_frame_idx = ts_group["frame_idx"][:].tolist()
+    ts_values = ts_group["ts"][:].tolist()
 
-    for device_name in sorted(joints_group.keys(), key=_device_sort_key):
-        frame_timestamps = ts_group[device_name]["ts"][:].tolist()
-        frames_dict = {}
-        device_group = joints_group[device_name]
-
-        for body_name in sorted(device_group.keys(), key=_body_sort_key):
-            body_id = int(body_name.replace("body_", "")) + 1
-            body_group = device_group[body_name]
-
-            frame_indices = body_group["frame_idx"][:].tolist()
-            positions = body_group["positions"][:].tolist()
-
-            for frame_idx, joint_positions in zip(frame_indices, positions):
-                if frame_idx not in frames_dict:
-                    timestamp_usec = None
-                    if 0 <= frame_idx < len(frame_timestamps):
-                        timestamp_usec = frame_timestamps[frame_idx]
-                    frames_dict[frame_idx] = {
-                        "bodies": [],
-                        "frame_id": frame_idx,
-                        "num_bodies": 0,
-                        "timestamp_usec": timestamp_usec,
-                    }
-
-                frames_dict[frame_idx]["bodies"].append(
-                    {
-                        "body_id": body_id,
-                        "joint_positions": joint_positions,
-                    }
-                )
-                frames_dict[frame_idx]["num_bodies"] += 1
-
-        sorted_frames = [frames_dict[k] for k in sorted(frames_dict.keys())]
-        output_data = {
-            "bone_list": BONE_LIST,
-            "frames": sorted_frames,
-            "joint_names": JOINT_NAMES,
+    frames_dict = {
+        frame_idx: {
+            "bodies": [],
+            "frame_id": frame_idx,
+            "num_bodies": 0,
+            "timestamp_usec": timestamp_usec,
         }
+        for frame_idx, timestamp_usec in zip(ts_frame_idx, ts_values)
+    }
 
-        output_filename = f"{folder_ex}_{folder_timestamp}_{device_name}.json"
-        _write_output_json(output_dir, output_filename, output_data)
+    for body_name in sorted(joints_group.keys(), key=_body_sort_key):
+        body_group = joints_group[body_name]
+
+        frame_indices = body_group["frame_idx"][:].tolist()
+        tags = body_group["tags"][:].tolist()
+        positions = body_group["positions"][:].tolist()
+
+        for frame_idx, tag, joint_positions in zip(frame_indices, tags, positions):
+            if frame_idx not in frames_dict:
+                frames_dict[frame_idx] = {
+                    "bodies": [],
+                    "frame_id": frame_idx,
+                    "num_bodies": 0,
+                    "timestamp_usec": None,
+                }
+
+            frames_dict[frame_idx]["bodies"].append(
+                {
+                    "body_id": tag + 1,
+                    "joint_positions": joint_positions,
+                }
+            )
+            frames_dict[frame_idx]["num_bodies"] += 1
+
+    sorted_frames = [frames_dict[k] for k in sorted(frames_dict.keys())]
+    output_data = {
+        "bone_list": BONE_LIST,
+        "frames": sorted_frames,
+        "joint_names": JOINT_NAMES,
+    }
+
+    output_filename = f"{folder_ex}_{folder_timestamp}.json"
+    _write_output_json(output_dir, output_filename, output_data)
 
 
 def _write_output_json(output_dir: Path, output_filename: str, output_data: dict):
@@ -193,6 +196,4 @@ def _body_sort_key(body_name: str) -> int:
 
 
 if __name__ == "__main__":
-    process_h5_to_json(
-        "C:/Users/eliab/Python/fast_body_tracker/data/test/body.h5", DEFAULT_OUTPUT_DIR
-    )
+    process_h5_to_json("C:/Users/eliab/Python/fast_body_tracker/data/test/body.h5")
