@@ -172,15 +172,15 @@ def update_tracked(
     bodies: list[Body],
     device_id: int,
     tracked_joints: npt.NDArray[np.float32],
-    tracked_tags: npt.NDArray[np.int64],
+    tags: npt.NDArray[np.int64],
     available_slots: list[int],
     is_stale: npt.NDArray[np.bool],
     current_bodies: list[Body],
-    how_many_contributed: npt.NDArray[np.uint64],
+    contribution_counter: npt.NDArray[np.uint64],
     reference: int,
     max_distance: float,
     n_bodies: int,
-    next_tracked_tag: int,
+    next_tag: int,
 ) -> tuple[npt.NDArray[np.float32], npt.NDArray[np.uint64], npt.NDArray[bool], int]:
     n_available_slots = len(available_slots)
     if n_available_slots < n_bodies:
@@ -197,7 +197,7 @@ def update_tracked(
             if current_body is None:
                 tracked_joints[i] = body.positions[reference]
                 current_bodies[i] = body
-                how_many_contributed[i, device_id] += 1
+                contribution_counter[i, device_id] += 1
                 is_stale[i] = False
             else:
                 positions = body.positions
@@ -211,21 +211,21 @@ def update_tracked(
 
                 tracked_joints[i] = current_body.positions[reference]
                 if np.any(confidence_mask):
-                    how_many_contributed[i, device_id] += 1
+                    contribution_counter[i, device_id] += 1
     else:
         unassigned_idx = range(len(bodies))
 
     n_to_fill = min(n_available_slots, len(unassigned_idx))
     for j in unassigned_idx[:n_to_fill]:
         i = available_slots.pop()
-        tracked_tags[i] = next_tracked_tag
-        next_tracked_tag += 1
+        tags[i] = next_tag
+        next_tag += 1
         body = bodies[j]
         current_body = current_bodies[i]
         if current_body is None:
             tracked_joints[i] = body.positions[reference]
             current_bodies[i] = body
-            how_many_contributed[i, device_id] += 1
+            contribution_counter[i, device_id] += 1
             is_stale[i] = False
         else:
             positions = body.positions
@@ -239,9 +239,9 @@ def update_tracked(
 
             tracked_joints[i] = current_body.positions[reference]
             if np.any(confidence_mask):
-                how_many_contributed[i, device_id] += 1
+                contribution_counter[i, device_id] += 1
 
-    return tracked_joints, how_many_contributed, is_stale, next_tracked_tag
+    return tracked_joints, contribution_counter, is_stale, next_tag
 
 
 def unification_thread(
@@ -253,15 +253,17 @@ def unification_thread(
     max_ts_diff = 1 / 30 * 0.5 * 1e6  # 0.5 frames at 30 FPS, in microseconds.
     max_distance = 300.0  # In mmm.
     max_stale_frames = 60
-    reference = K4ABT_JOINT_PELVIS
+    reference_joint = K4ABT_JOINT_PELVIS
 
     tracked_joints = np.full((n_bodies, 3), np.nan, dtype=np.float32)
-    tracked_tags = np.full(n_bodies, -1, dtype=np.int64)
     available_slots = list(range(n_bodies))
+    tags = np.full(n_bodies, -1, dtype=np.int64)
     stale_counter = np.full(n_bodies, 0, dtype=np.uint8)
+    is_stale = np.full(n_bodies, True, dtype=bool)
+
     current_bodies = [None] * n_bodies
-    how_many_contributed = np.zeros((n_bodies, n_devices), dtype=np.uint64)
-    next_tracked_tag = 0
+    contribution_counter = np.zeros((n_bodies, n_devices), dtype=np.uint64)
+    next_tag = 0
 
     stored_bodies = [None] * n_devices
     stored_ts = np.full(n_devices, 0, dtype=np.uint64)
@@ -270,7 +272,6 @@ def unification_thread(
     current_idx = None
 
     finished_workers = 0
-    is_stale = np.full(n_bodies, True, dtype=bool)
     while finished_workers < n_devices:
         item = unification_queue.get()
         if item is None:
@@ -282,7 +283,7 @@ def unification_thread(
             if current_ts is not None:
                 # TODO - send old positions away
                 current_bodies = [None] * n_bodies
-                how_many_contributed[:] = 0
+                contribution_counter[:] = 0
 
                 stale_counter[~is_stale] = 0
                 stale_counter[is_stale] += 1
@@ -290,7 +291,7 @@ def unification_thread(
                 available_slots.extend(np.flatnonzero(drop_mask).tolist())
                 stale_counter[drop_mask] = 0
                 tracked_joints[drop_mask] = np.nan
-                tracked_tags[drop_mask] = -1
+                tags[drop_mask] = -1
 
             current_ts = ts
             current_idx = frame_idx
@@ -298,46 +299,26 @@ def unification_thread(
             if bodies:
                 (
                     tracked_joints,
-                    how_many_contributed,
+                    contribution_counter,
                     is_stale,
-                    next_tracked_tag,
-                ) = update_tracked(
-                    bodies,
-                    device_id,
-                    tracked_joints,
-                    tracked_tags,
-                    available_slots,
-                    is_stale,
-                    current_bodies,
-                    how_many_contributed,
-                    reference,
-                    max_distance,
-                    n_bodies,
-                    next_tracked_tag,
-                )
+                    next_tag,
+                ) = update_tracked(bodies, device_id, tracked_joints, tags,
+                                   available_slots, is_stale, current_bodies,
+                                   contribution_counter, reference_joint, max_distance,
+                                   n_bodies, next_tag)
 
             for stored_device_id, (bodies, ts) in enumerate(zip(stored_bodies, stored_ts)):
                 if bodies is None or np.abs(current_ts - ts) > max_ts_diff:
                     continue
                 (
                     tracked_joints,
-                    how_many_contributed,
+                    contribution_counter,
                     is_stale,
-                    next_tracked_tag,
-                ) = update_tracked(
-                    bodies,
-                    stored_device_id,
-                    tracked_joints,
-                    tracked_tags,
-                    available_slots,
-                    is_stale,
-                    current_bodies,
-                    how_many_contributed,
-                    reference,
-                    max_distance,
-                    n_bodies,
-                    next_tracked_tag,
-                )
+                    next_tag,
+                ) = update_tracked(bodies, stored_device_id, tracked_joints, tags,
+                                   available_slots, is_stale, current_bodies,
+                                   contribution_counter, reference_joint, max_distance,
+                                   n_bodies, next_tag)
             stored_bodies[:] = [None] * n_devices
             continue
 
@@ -355,23 +336,12 @@ def unification_thread(
             continue
         (
             tracked_joints,
-            how_many_contributed,
+            contribution_counter,
             is_stale,
-            next_tracked_tag,
-        ) = update_tracked(
-            bodies,
-            device_id,
-            tracked_joints,
-            tracked_tags,
-            available_slots,
-            is_stale,
-            current_bodies,
-            how_many_contributed,
-            reference,
-            max_distance,
-            n_bodies,
-            next_tracked_tag,
-        )
+            next_tag,
+        ) = update_tracked(bodies, device_id, tracked_joints, tags, available_slots,
+                           is_stale, current_bodies, contribution_counter, reference_joint,
+                           max_distance, n_bodies, next_tag)
 
     joints_queue.put(None)
 
