@@ -40,6 +40,8 @@ def main():
     while True:
         capture = q.get()
         image_object = capture.get_ir_image_object()
+        if image_object is None:
+            continue
 
         ir_image = image_object.to_numpy()
         ir_image = cv2.convertScaleAbs(ir_image, alpha=ir_scale_factor)

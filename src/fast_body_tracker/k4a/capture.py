@@ -14,17 +14,23 @@ class Capture:
     def handle(self) -> k4a_capture_t:
         return self._handle
 
-    def get_color_image_object(self) -> Image:
+    def get_color_image_object(self) -> Image | None:
         image_handle = _k4a.K4aLib.k4a_capture_get_color_image(self._handle)
+        if not image_handle:
+            return None
 
         return Image(image_handle)
 
-    def get_depth_image_object(self) -> Image:
+    def get_depth_image_object(self) -> Image | None:
         image_handle = _k4a.K4aLib.k4a_capture_get_depth_image(self._handle)
+        if not image_handle:
+            return None
 
         return Image(image_handle)
 
-    def get_ir_image_object(self) -> Image:
+    def get_ir_image_object(self) -> Image | None:
         image_handle = _k4a.K4aLib.k4a_capture_get_ir_image(self._handle)
+        if not image_handle:
+            return None
 
         return Image(image_handle)

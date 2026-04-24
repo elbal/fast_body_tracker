@@ -49,11 +49,14 @@ def main():
         capture = q.get()
 
         color_image_object = capture.get_color_image_object()
+        depth_image_object = capture.get_depth_image_object()
+        if color_image_object is None or depth_image_object is None:
+            continue
+
         bgra_image = color_image_object.to_numpy()
         cv2.cvtColor(bgra_image, cv2.COLOR_BGRA2GRAY, dst=gray_image)
         cv2.cvtColor(gray_image, cv2.COLOR_GRAY2BGR, dst=gray_3channel_image)
 
-        depth_image_object = capture.get_depth_image_object()
         transformed_image_object = transformation.depth_image_to_color_camera(
             depth_image_object, transformed_image_object
         )

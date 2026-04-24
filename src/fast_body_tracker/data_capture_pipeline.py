@@ -80,6 +80,9 @@ def computation_thread(
             break
         capture, frame = item
         color_image_object = capture.get_color_image_object()
+        if color_image_object is None:
+            continue
+
         bgra_image = color_image_object.to_numpy()
 
         bodies = []

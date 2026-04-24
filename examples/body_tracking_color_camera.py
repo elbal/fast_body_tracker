@@ -45,6 +45,9 @@ def main():
         capture, frame = q.get()
 
         color_image_object = capture.get_color_image_object()
+        if color_image_object is None:
+            continue
+
         color_image = color_image_object.to_numpy()
 
         bodies = frame.get_bodies()

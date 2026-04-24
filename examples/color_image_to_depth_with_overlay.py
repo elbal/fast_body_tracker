@@ -45,13 +45,16 @@ def main():
         capture = q.get()
 
         depth_image_object = capture.get_depth_image_object()
+        color_image_object = capture.get_color_image_object()
+        if depth_image_object is None or color_image_object is None:
+            continue
+
         depth_image = depth_image_object.to_numpy()
         cv2.convertScaleAbs(depth_image, alpha=0.05, dst=depth_8bit_image)
         cv2.applyColorMap(
             depth_8bit_image, cv2.COLORMAP_CIVIDIS, dst=depth_colorized_image
         )
 
-        color_image_object = capture.get_color_image_object()
         transformed_image_object = transformation.color_image_to_depth_camera(
             depth_image_object, color_image_object
         )

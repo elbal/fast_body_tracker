@@ -49,7 +49,11 @@ def external_calibration(
         window_name = f"{idx}"
         cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
         while len(rvecs) < n_samples:
-            bgra_image = device.update().get_color_image_object().to_numpy()
+            color_image_object = device.update().get_color_image_object()
+            if color_image_object is None:
+                continue
+
+            bgra_image = color_image_object.to_numpy()
             gray_image = cv2.cvtColor(bgra_image, cv2.COLOR_BGRA2GRAY)
             corners_xy, corners_idx, _, _ = detector.detectBoard(gray_image)
 

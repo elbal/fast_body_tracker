@@ -45,12 +45,15 @@ def main():
         capture = q.get()
 
         depth_image_object = capture.get_depth_image_object()
+        color_image_object = capture.get_color_image_object()
+        if depth_image_object is None or color_image_object is None:
+            continue
+
         point_cloud_object = transformation.depth_image_to_point_cloud(
             depth_image_object, point_cloud_object
         )
         point_cloud = point_cloud_object.to_numpy()
 
-        color_image_object = capture.get_color_image_object()
         transformed_image_object = transformation.color_image_to_depth_camera(
             depth_image_object, color_image_object, transformed_image_object
         )

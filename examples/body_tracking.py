@@ -36,6 +36,9 @@ def main():
             break
 
         image_object = capture.get_depth_image_object()
+        if image_object is None:
+            continue
+
         depth_image = image_object.to_numpy()
         cv2.convertScaleAbs(depth_image, alpha=0.08, dst=depth_8bit_image)
         cv2.applyColorMap(

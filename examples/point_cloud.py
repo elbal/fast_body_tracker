@@ -40,6 +40,9 @@ def main():
     while not keyboard_closer.stop_event.is_set():
         capture = q.get()
         depth_image_object = capture.get_depth_image_object()
+        if depth_image_object is None:
+            continue
+
         point_cloud_object = transformation.depth_image_to_point_cloud(
             depth_image_object,
             point_cloud_object,

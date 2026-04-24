@@ -40,6 +40,9 @@ def main():
     while True:
         capture = q.get()
         image_object = capture.get_color_image_object()
+        if image_object is None:
+            continue
+
         bgra_image = image_object.to_numpy()
         cv2.imshow("Color image", bgra_image)
 
