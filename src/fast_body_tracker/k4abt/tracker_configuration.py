@@ -2,6 +2,7 @@ import platform
 from pathlib import Path
 import os
 
+from ._k4abt import K4abLib
 from ._k4abt_types import k4abt_tracker_configuration_t
 from . import kabt_const
 
@@ -15,7 +16,7 @@ class UnknownModelType(Exception):
 class TrackerConfiguration:
     def __init__(self):
         self.sensor_orientation = kabt_const.K4ABT_SENSOR_ORIENTATION_DEFAULT
-        self.tracker_processing_mode = kabt_const.K4ABT_TRACKER_PROCESSING_MODE_GPU
+        self.tracker_processing_mode = K4abLib.default_tracker_processing_mode()
         self.gpu_device_id = 0
         self.model_type = kabt_const.K4ABT_DEFAULT_MODEL
 

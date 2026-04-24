@@ -5,7 +5,8 @@ import os
 from .k4a._k4a import K4aLib
 from .k4a.device import Device
 from .k4a.configuration import Configuration
-from .k4abt import _k4abt, Tracker, TrackerConfiguration
+from .k4abt import Tracker, TrackerConfiguration
+from .k4abt._k4abt import K4abLib
 from .k4arecord import _k4arecord
 from .k4arecord.playback import Playback
 
@@ -26,22 +27,28 @@ def initialize_libraries(
     if track_body:
         if module_k4abt_path is None:
             module_k4abt_path = _get_k4abt_module_path()
-        _k4abt.setup_library(module_k4abt_path)
+        K4abLib.setup(module_k4abt_path)
 
     module_k4arecord_path = _get_k4arecord_module_path(module_k4a_path)
     _k4arecord.setup_library(module_k4arecord_path)
 
 
 def start_device(
-    device_index=0, config=Configuration(), record=False, record_filepath="output.mkv"
+    device_index=0, config=None, record=False, record_filepath="output.mkv"
 ):
+    if config is None:
+        config = Configuration()
+
     device = Device(device_index)
     device.start(config, record, record_filepath)
 
     return device
 
 
-def start_body_tracker(calibration, tracker_configuration=TrackerConfiguration()):
+def start_body_tracker(calibration, tracker_configuration=None):
+    if tracker_configuration is None:
+        tracker_configuration = TrackerConfiguration()
+
     return Tracker(calibration, tracker_configuration)
 
 

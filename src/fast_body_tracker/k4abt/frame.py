@@ -23,10 +23,10 @@ class Frame:
 
     def __del__(self):
         if self._handle:
-            _k4abt.k4abt_frame_release(self._handle)
+            _k4abt.K4abLib.k4abt_frame_release(self._handle)
 
     def get_num_bodies(self) -> int:
-        return _k4abt.k4abt_frame_get_num_bodies(self._handle)
+        return _k4abt.K4abLib.k4abt_frame_get_num_bodies(self._handle)
 
     def get_bodies(self) -> list[Body]:
         num_bodies = self.get_num_bodies()
@@ -40,9 +40,9 @@ class Frame:
     def get_body(self, body_idx: int = 0) -> Body:
         body_handle = k4abt_body_t()
 
-        body_handle.id = _k4abt.k4abt_frame_get_body_id(self._handle, body_idx)
+        body_handle.id = _k4abt.K4abLib.k4abt_frame_get_body_id(self._handle, body_idx)
 
-        result_code = _k4abt.k4abt_frame_get_body_skeleton(
+        result_code = _k4abt.K4abLib.k4abt_frame_get_body_skeleton(
             self._handle, body_idx, ctypes.byref(body_handle.skeleton)
         )
         if result_code != kabt_const.K4ABT_RESULT_SUCCEEDED:
@@ -53,11 +53,11 @@ class Frame:
         return Body(body_handle)
 
     def get_segmentation_image_object(self) -> Image:
-        return Image(_k4abt.k4abt_frame_get_body_index_map(self._handle))
+        return Image(_k4abt.K4abLib.k4abt_frame_get_body_index_map(self._handle))
 
     @property
     def timestamp(self) -> int:
-        return _k4abt.k4abt_frame_get_device_timestamp_usec(self._handle)
+        return _k4abt.K4abLib.k4abt_frame_get_device_timestamp_usec(self._handle)
 
 
 def colorize_segmentation_image(seg_image_object: Image) -> npt.NDArray[np.uint8]:
