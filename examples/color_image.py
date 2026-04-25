@@ -5,19 +5,6 @@ import queue
 import fast_body_tracker as fbt
 
 
-def capture_thread(device, q, stop_event):
-    dfa = fbt.DroppedFramesAlert()
-    while not stop_event.is_set():
-        capture = device.update()
-        if q.full():
-            dfa.update()
-            try:
-                q.get_nowait()
-            except queue.Empty:
-                pass
-        q.put(capture)
-
-
 def main():
     fbt.initialize_libraries()
 
@@ -29,7 +16,9 @@ def main():
     device = fbt.start_device(config=device_config)
     q = queue.Queue(maxsize=10)
     stop_event = threading.Event()
-    t = threading.Thread(target=capture_thread, args=(device, q, stop_event))
+    t = threading.Thread(
+        target=fbt.capture_thread, args=(device, None, q, stop_event)
+    )
 
     cv2.namedWindow("Color image", cv2.WINDOW_NORMAL)
 
@@ -39,18 +28,19 @@ def main():
     frc.start()
     while True:
         capture = q.get()
+        if capture is None:
+            break
+
         image_object = capture.get_color_image_object()
         if image_object is None:
             continue
-
         bgra_image = image_object.to_numpy()
         cv2.imshow("Color image", bgra_image)
 
         if cv2.waitKey(1) == ord("q"):
-            break
+            stop_event.set()
         frc.update()
     cv2.destroyAllWindows()
-    stop_event.set()
     t.join()
     del device
 

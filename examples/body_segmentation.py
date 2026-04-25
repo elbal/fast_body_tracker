@@ -32,14 +32,14 @@ def main():
     t.start()
     frc.start()
     while True:
-        capture, frame = q.get()
-        if capture is None:
+        item = q.get()
+        if item is None:
             break
+        capture, frame = item
 
         image_object = capture.get_depth_image_object()
         if image_object is None:
             continue
-
         depth_image = image_object.to_numpy()
         cv2.convertScaleAbs(depth_image, alpha=0.08, dst=depth_8bit_image)
         cv2.applyColorMap(

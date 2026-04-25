@@ -4,19 +4,6 @@ import fast_body_tracker as fbt
 from fast_body_tracker import PointCloudVisualizer, KeyboardCloser
 
 
-def capture_thread(device, q, stop_event):
-    dfa = fbt.DroppedFramesAlert()
-    while not stop_event.is_set():
-        capture = device.update()
-        if q.full():
-            dfa.update()
-            try:
-                q.get_nowait()
-            except queue.Empty:
-                pass
-        q.put(capture)
-
-
 def main():
     fbt.initialize_libraries()
 
@@ -30,7 +17,7 @@ def main():
     keyboard_closer = KeyboardCloser()
     keyboard_closer.start()
     t = threading.Thread(
-        target=capture_thread, args=(device, q, keyboard_closer.stop_event)
+        target=fbt.capture_thread, args=(device, None, q, keyboard_closer.stop_event)
     )
 
     visualizer = PointCloudVisualizer()
@@ -39,6 +26,9 @@ def main():
     t.start()
     while not keyboard_closer.stop_event.is_set():
         capture = q.get()
+        if capture is None:
+            break
+
         depth_image_object = capture.get_depth_image_object()
         if depth_image_object is None:
             continue
@@ -48,10 +38,9 @@ def main():
             point_cloud_object,
             calibration_type=fbt.K4A_CALIBRATION_TYPE_DEPTH,
         )
-
         point_cloud = point_cloud_object.to_numpy()
-        visualizer.update(point_cloud)
 
+        visualizer.update(point_cloud)
     t.join()
     del device
 
