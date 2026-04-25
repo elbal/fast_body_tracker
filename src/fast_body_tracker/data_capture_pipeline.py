@@ -109,14 +109,13 @@ def computation_thread(
                     pass
             unification_queue.put((device_id, frame_idx, ts, system_ts, bodies))
 
-        bgr_image = cv2.cvtColor(bgra_image, cv2.COLOR_BGRA2BGR)
         if video_queue.full():
             dfa.update()
             try:
                 video_queue.get_nowait()
             except queue.Empty:
                 pass
-        video_queue.put((bgr_image, device_id))
+        video_queue.put((bgra_image, device_id))
 
         if visualization_queue.full():
             dfa.update()
@@ -124,7 +123,7 @@ def computation_thread(
                 visualization_queue.get_nowait()
             except queue.Empty:
                 pass
-        visualization_queue.put((bgr_image, device_id))
+        visualization_queue.put((bgra_image, device_id))
 
         frame_idx += 1
     unification_queue.put(None)
@@ -627,8 +626,8 @@ def video_saver_thread(
             finished_workers += 1
             continue
 
-        image, device_id = item
-        frame = av.VideoFrame.from_ndarray(image, format="bgr24")
+        bgra_image, device_id = item
+        frame = av.VideoFrame.from_numpy_buffer(bgra_image, format="bgra")
 
         stream = streams[device_id]
         container = containers[device_id]
@@ -670,13 +669,13 @@ def visualization_main_tread(
 
     finished_workers = 0
     while finished_workers < n_devices:
-        bgr_image, device_id = visualization_queue.get()
-        if bgr_image is None:
+        bgra_image, device_id = visualization_queue.get()
+        if bgra_image is None:
             cv2.destroyWindow(f"Color images with skeleton {device_id}")
             finished_workers += 1
             continue
 
-        cv2.imshow(f"Color images with skeleton {device_id}", bgr_image)
+        cv2.imshow(f"Color images with skeleton {device_id}", bgra_image)
         if cv2.waitKey(1) == ord("q"):
             stop_event.set()
     cv2.destroyAllWindows()
