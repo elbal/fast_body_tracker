@@ -14,11 +14,16 @@ from .initializer import initialize_libraries, start_device, start_body_tracker
 from .utils.performace_calculator import DroppedFramesAlert, FrameRateCalculator
 from .k4a.k4a_const import (
     K4A_CALIBRATION_TYPE_COLOR,
+    K4A_COLOR_RESOLUTION_720P,
     K4A_WIRED_SYNC_MODE_STANDALONE,
     K4A_WIRED_SYNC_MODE_MASTER,
     K4A_WIRED_SYNC_MODE_SUBORDINATE,
     K4A_IMAGE_FORMAT_COLOR_BGRA32,
     K4A_COLOR_RESOLUTION_1080P,
+    K4A_COLOR_RESOLUTION_1440P,
+    K4A_COLOR_RESOLUTION_1536P,
+    K4A_COLOR_RESOLUTION_2160P,
+    K4A_COLOR_RESOLUTION_3072P,
     K4A_DEPTH_MODE_WFOV_2X2BINNED,
 )
 from .k4a.calibration import Calibration
@@ -31,6 +36,15 @@ from .k4abt.kabt_const import (
 )
 from .k4abt.body import Body, draw_body
 from .k4abt.tracker import Tracker
+
+_COLOR_RESOLUTION_TO_IMAGE_SIZE = {
+    K4A_COLOR_RESOLUTION_720P: (1280, 720),
+    K4A_COLOR_RESOLUTION_1080P: (1920, 1080),
+    K4A_COLOR_RESOLUTION_1440P: (2560, 1440),
+    K4A_COLOR_RESOLUTION_1536P: (2048, 1536),
+    K4A_COLOR_RESOLUTION_2160P: (3840, 2160),
+    K4A_COLOR_RESOLUTION_3072P: (4096, 3072),
+}
 
 
 def capture_thread(
@@ -63,6 +77,7 @@ def capture_thread(
 
 def computation_thread(
     device_id: int,
+    configuration: Configuration,
     calibration: Calibration,
     capture_queue: queue.Queue,
     unification_queue: queue.Queue,
@@ -72,6 +87,16 @@ def computation_thread(
     ext_trans: npt.NDArray[np.float64] | None = None,
 ):
     dfa = DroppedFramesAlert()
+    overlay_font = cv2.FONT_HERSHEY_SIMPLEX
+    overlay_font_scale = 0.8
+    overlay_thickness = 2
+    overlay_line_type = cv2.LINE_AA
+    overlay_text_color = (255, 255, 255, 255)
+    overlay_outline_color = (0, 0, 0, 255)
+    overlay_margin = 20
+    _, image_h = _COLOR_RESOLUTION_TO_IMAGE_SIZE[configuration.color_resolution]
+    overlay_line_gap = 30
+    overlay_org = (overlay_margin, image_h - overlay_margin - 2 * overlay_line_gap)
 
     frame_idx = 0
     while True:
@@ -98,8 +123,8 @@ def computation_thread(
                 body.positions[:] += ext_trans * 1000.0
             bodies.append(body)
 
+        ts = color_image_object.timestamp
         if device_id == 0 or n_detected_bodies > 0:
-            ts = color_image_object.timestamp
             system_ts = color_image_object.system_timestamp
             if unification_queue.full():
                 dfa.update()
@@ -108,6 +133,37 @@ def computation_thread(
                 except queue.Empty:
                     pass
             unification_queue.put((device_id, frame_idx, ts, system_ts, bodies))
+
+        overlay_texts = (
+            f"device {device_id}",
+            f"frame idx: {frame_idx}",
+            f"ts: {ts}",
+        )
+        for line_idx, overlay_text in enumerate(overlay_texts):
+            line_org = (
+                overlay_org[0],
+                overlay_org[1] + line_idx * overlay_line_gap,
+            )
+            cv2.putText(
+                bgra_image,
+                overlay_text,
+                line_org,
+                overlay_font,
+                overlay_font_scale,
+                overlay_outline_color,
+                overlay_thickness + 2,
+                overlay_line_type,
+            )
+            cv2.putText(
+                bgra_image,
+                overlay_text,
+                line_org,
+                overlay_font,
+                overlay_font_scale,
+                overlay_text_color,
+                overlay_thickness,
+                overlay_line_type,
+            )
 
         if video_queue.full():
             dfa.update()
@@ -683,7 +739,7 @@ def visualization_main_tread(
 
 def _default_device_initialization(
     device_index: int = 0, device_mode: str = "standalone"
-) -> tuple[Device, Tracker]:
+) -> tuple[Device, Tracker, Configuration]:
     modes = {
         "standalone": K4A_WIRED_SYNC_MODE_STANDALONE,
         "main": K4A_WIRED_SYNC_MODE_MASTER,
@@ -700,7 +756,7 @@ def _default_device_initialization(
     device = start_device(device_index=device_index, config=device_config)
     tracker = start_body_tracker(calibration=device.calibration)
 
-    return device, tracker
+    return device, tracker, device_config
 
 
 def default_pipeline(
@@ -736,7 +792,7 @@ def default_pipeline(
                 device_mode = "secondary"
         else:
             device_mode = "standalone"
-        device, tracker = _default_device_initialization(
+        device, tracker, device_config = _default_device_initialization(
             device_index=i, device_mode=device_mode
         )
         devices[i] = device
@@ -757,6 +813,7 @@ def default_pipeline(
             target=computation_thread,
             args=(
                 i,
+                device_config,
                 device.calibration,
                 capture_queues[i],
                 unification_queue,
