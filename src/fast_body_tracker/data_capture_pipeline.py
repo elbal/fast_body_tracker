@@ -196,7 +196,7 @@ class _CurrentFrame:
 @dataclass(slots=True)
 class _Stored:
     bodies: list[list[Body] | None]
-    ts: npt.NDArray[np.uint64]
+    ts: npt.NDArray[np.int64]
 
 
 def _update_tracked(
@@ -313,7 +313,7 @@ def unification_thread(
     )
     stored = _Stored(
         bodies=[None] * n_devices,
-        ts=np.full(n_devices, 0, dtype=np.uint64),
+        ts=np.full(n_devices, 0, dtype=np.int64),
     )
 
     finished_workers = 0
@@ -359,7 +359,7 @@ def unification_thread(
             for stored_device_id, (bodies, ts) in enumerate(
                 zip(stored.bodies, stored.ts)
             ):
-                if bodies is None or np.abs(current_frame.ts - ts) > max_ts_diff:
+                if bodies is None or abs(current_frame.ts - ts) > max_ts_diff:
                     continue
                 _update_tracked(
                     bodies,
@@ -419,8 +419,8 @@ def saver_thread(
     }
     ts_buffer = {
         "frame_idx": np.empty(flush_size, dtype=np.int64),
-        "ts": np.empty(flush_size, dtype=np.uint64),
-        "system_ts": np.empty(flush_size, dtype=np.uint64),
+        "ts": np.empty(flush_size, dtype=np.int64),
+        "system_ts": np.empty(flush_size, dtype=np.int64),
         "idx": 0,
     }
 
@@ -482,10 +482,10 @@ def saver_thread(
         "frame_idx", shape=(0,), maxshape=(None,), dtype="i8", chunks=(flush_size,)
     )
     ts_grp.create_dataset(
-        "ts", shape=(0,), maxshape=(None,), dtype="u8", chunks=(flush_size,)
+        "ts", shape=(0,), maxshape=(None,), dtype="i8", chunks=(flush_size,)
     )
     ts_grp.create_dataset(
-        "system_ts", shape=(0,), maxshape=(None,), dtype="u8", chunks=(flush_size,)
+        "system_ts", shape=(0,), maxshape=(None,), dtype="i8", chunks=(flush_size,)
     )
     ts_data = {
         "frame_idx": ts_grp["frame_idx"],
