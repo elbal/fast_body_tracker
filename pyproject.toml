@@ -40,6 +40,8 @@ dev = [
 notebook = [
     "ipympl",
     "jupyterlab",
+    "pandas",
+    "pandas-stubs"
 ]
 
 [tool.hatch.build.targets.wheel]
