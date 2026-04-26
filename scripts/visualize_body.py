@@ -4,14 +4,7 @@ import h5py
 import fast_body_tracker as fbt
 
 
-def main(
-    h5_file_path: pathlib.Path | str = (
-        pathlib.Path(__file__).resolve().parents[1]
-        / "data"
-        / "analysis_data"
-        / "body.h5"
-    ),
-):
+def main(h5_file_path: pathlib.Path | str):
     h5_file_path = pathlib.Path(h5_file_path)
 
     with h5py.File(h5_file_path, "r") as h5file:
@@ -31,4 +24,4 @@ def main(
 
 
 if __name__ == "__main__":
-    main()
+    main(pathlib.Path(__file__).resolve().parents[1] / "data" / "test_run" / "body.h5")

@@ -2,7 +2,9 @@ import numpy as np
 import numpy.typing as npt
 from vispy import app, scene
 from vispy.color import get_colormap
-from vispy.scene.visuals import Markers, Text
+from vispy.scene.visuals import Line, Markers, Mesh, Text
+
+from ..k4abt.kabt_const import K4ABT_SEGMENT_PAIRS
 
 
 class BodyVisualizer:
@@ -21,6 +23,8 @@ class BodyVisualizer:
         self.body_tracks = []
         all_positions_parts = []
         unique_tags = set()
+        self.segment_pairs = np.asarray(K4ABT_SEGMENT_PAIRS, dtype=np.int32)
+        self.empty_segments = np.empty((0, 2), dtype=np.int32)
 
         for body_name in sorted(
             joints_dict,
@@ -67,9 +71,33 @@ class BodyVisualizer:
         )
         self.view = self.canvas.central_widget.add_view()
         self.view.camera = scene.cameras.TurntableCamera(
-            fov=45, azimuth=30, elevation=30, distance=radius, up="-y"
+            fov=45, azimuth=30, elevation=30, distance=radius, up="z"
         )
         self.view.camera.center = center
+
+        xy_span = max(float(max_xyz[0] - min_xyz[0]), float(max_xyz[1] - min_xyz[1]), 1.0)
+        floor_pad = 0.1 * xy_span
+        x_min = min(float(min_xyz[0]), 0.0) - floor_pad
+        x_max = max(float(max_xyz[0]), 0.0) + floor_pad
+        y_min = min(float(min_xyz[1]), 0.0) - floor_pad
+        y_max = max(float(max_xyz[1]), 0.0) + floor_pad
+        floor_vertices = np.array(
+            [
+                [x_min, y_min, 0.0],
+                [x_max, y_min, 0.0],
+                [x_max, y_max, 0.0],
+                [x_min, y_max, 0.0],
+            ],
+            dtype=np.float32,
+        )
+        floor_faces = np.array([[0, 1, 2], [0, 2, 3]], dtype=np.uint32)
+        self.floor = Mesh(
+            vertices=floor_vertices,
+            faces=floor_faces,
+            color=(0.85, 0.85, 0.85, 0.35),
+            parent=self.view.scene,
+        )
+        self.floor.set_gl_state("translucent", depth_test=True)
 
         self.frame_text = Text(
             text="",
@@ -100,10 +128,14 @@ class BodyVisualizer:
 
         max_bodies = len(self.body_tracks)
         self.body_markers = []
+        self.body_segments = []
         self.tag_texts = []
         for i in range(max_bodies):
             marker = Markers(parent=self.view.scene)
             self.body_markers.append(marker)
+
+            segment_line = Line(parent=self.view.scene)
+            self.body_segments.append(segment_line)
 
             tag_text = Text(
                 text="",
@@ -197,16 +229,27 @@ class BodyVisualizer:
             if i < len(bodies):
                 body = bodies[i]
                 color = self.tag_colors[body["tag"]]
+                positions = body["positions"]
                 marker.set_data(
-                    pos=body["positions"],
+                    pos=positions,
                     face_color=color,
                     size=5,
                     edge_width=0,
+                )
+                self.body_segments[i].set_data(
+                    pos=positions,
+                    color=color,
+                    width=2,
+                    connect=self.segment_pairs,
                 )
                 self.tag_texts[i].text = f"Tag {body['tag']}"
                 self.tag_texts[i].color = color
             else:
                 marker.set_data(pos=np.empty((0, 3), dtype=np.float32))
+                self.body_segments[i].set_data(
+                    pos=np.empty((0, 3), dtype=np.float32),
+                    connect=self.empty_segments,
+                )
                 self.tag_texts[i].text = ""
 
     def on_resize(self, event):
