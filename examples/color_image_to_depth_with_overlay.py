@@ -17,9 +17,7 @@ def main():
     transformation = device.transformation
     q = queue.Queue(maxsize=10)
     stop_event = threading.Event()
-    t = threading.Thread(
-        target=fbt.capture_thread, args=(device, None, q, stop_event)
-    )
+    t = threading.Thread(target=fbt.capture_thread, args=(device, None, q, stop_event))
 
     cv2.namedWindow("Transformed color image", cv2.WINDOW_NORMAL)
     depth_8bit_image = np.zeros((512, 512), dtype=np.uint8)

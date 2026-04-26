@@ -7,6 +7,9 @@ from .data_capture_pipeline import (
     video_saver_thread as video_saver_thread,
     visualization_main_tread as visualization_main_tread,
 )
+from .check_calibration import (
+    check_calibration as check_calibration,
+)
 from .show_devices import (
     show_devices as show_devices,
 )

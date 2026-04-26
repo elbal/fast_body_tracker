@@ -16,9 +16,7 @@ def main():
     device = fbt.start_device(config=device_config)
     q = queue.Queue(maxsize=10)
     stop_event = threading.Event()
-    t = threading.Thread(
-        target=fbt.capture_thread, args=(device, None, q, stop_event)
-    )
+    t = threading.Thread(target=fbt.capture_thread, args=(device, None, q, stop_event))
 
     cv2.namedWindow("Color image", cv2.WINDOW_NORMAL)
 
