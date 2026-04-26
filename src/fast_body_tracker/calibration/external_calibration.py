@@ -10,6 +10,7 @@ from ..k4a.k4a_const import (
     K4A_DEPTH_MODE_WFOV_2X2BINNED,
 )
 from ..k4a.configuration import Configuration
+from ..k4a.device import Device
 
 
 _BOARD_CV2_TO_WORLD_ROT = np.diag((1.0, -1.0, -1.0)).astype(np.float32)
@@ -24,9 +25,7 @@ def _invert_rigid_transform(
     return inv_rot, inv_trans
 
 
-def external_calibration(
-    n_devices, n_samples: int = 60
-) -> dict[int, npt.NDArray[np.float32]]:
+def external_calibration(n_samples: int = 60) -> dict[int, npt.NDArray[np.float32]]:
     n_squares_w = 3
     n_squares_h = 3
     square_length_mm = 94.0
@@ -42,6 +41,10 @@ def external_calibration(
     detector = cv2.aruco.CharucoDetector(board)
 
     initialize_libraries()
+    n_devices = Device.device_get_installed_count()
+    if n_devices == 0:
+        raise RuntimeError("No devices detected.")
+
     calibration_data = {}
     for idx in range(n_devices):
         configuration = Configuration()

@@ -4,11 +4,11 @@ import pathlib
 import fast_body_tracker as fbt
 
 
-def main(base_dir: pathlib.Path | str, n_devices: int = 1):
+def main(base_dir: pathlib.Path | str):
     base_dir = pathlib.Path(base_dir)
     base_dir.mkdir(parents=True, exist_ok=True)
 
-    trans_matrices = fbt.external_calibration(n_devices=n_devices)
+    trans_matrices = fbt.external_calibration()
     trans_matrices = {str(k): v for k, v in trans_matrices.items()}
 
     trans_matrices_path = base_dir / "trans_matrices.npz"
@@ -17,4 +17,4 @@ def main(base_dir: pathlib.Path | str, n_devices: int = 1):
 
 if __name__ == "__main__":
     base_dir = pathlib.Path("../data/")
-    main(base_dir=base_dir, n_devices=2)
+    main(base_dir=base_dir)
