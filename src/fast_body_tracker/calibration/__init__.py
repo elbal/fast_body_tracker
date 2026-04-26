@@ -1,2 +1,3 @@
 from .charuco_board import save_charuco_board as save_charuco_board
+from .check_calibration import check_calibration as check_calibration
 from .external_calibration import external_calibration as external_calibration

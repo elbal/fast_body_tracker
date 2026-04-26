@@ -9,10 +9,10 @@ def main(base_dir: pathlib.Path | str):
     base_dir.mkdir(parents=True, exist_ok=True)
 
     trans_matrices = fbt.external_calibration()
-    trans_matrices = {str(k): v for k, v in trans_matrices.items()}
+    fbt.check_calibration(trans_matrices=trans_matrices)
 
     trans_matrices_path = base_dir / "trans_matrices.npz"
-    np.savez(trans_matrices_path, **trans_matrices)
+    np.savez(trans_matrices_path, **{str(k): v for k, v in trans_matrices.items()})
 
 
 if __name__ == "__main__":

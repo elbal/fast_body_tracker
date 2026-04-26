@@ -78,8 +78,7 @@ def check_calibration(
     cmap = plt.get_cmap("tab10")
 
     for device_id in range(n_devices):
-        color_idx = device_id
-        color = cmap(color_idx % 10)
+        color = cmap(device_id % 10)
         ax.scatter(
             positions[device_id, :, 0],
             positions[device_id, :, 1],

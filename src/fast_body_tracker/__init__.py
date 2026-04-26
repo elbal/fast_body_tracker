@@ -5,7 +5,6 @@ from .initializer import (
     start_playback as start_playback,
 )
 from .pipeline import (
-    check_calibration as check_calibration,
     capture_thread as capture_thread,
     computation_thread as computation_thread,
     default_pipeline as default_pipeline,
@@ -16,6 +15,7 @@ from .pipeline import (
     visualization_main_tread as visualization_main_tread,
 )
 from .calibration import (
+    check_calibration as check_calibration,
     external_calibration as external_calibration,
     save_charuco_board as save_charuco_board,
 )
