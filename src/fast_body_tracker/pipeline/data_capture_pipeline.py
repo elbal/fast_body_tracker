@@ -46,6 +46,14 @@ _COLOR_RESOLUTION_TO_IMAGE_SIZE = {
     K4A_COLOR_RESOLUTION_3072P: (4096, 3072),
 }
 
+_N_JOINTS = len(K4ABT_JOINT_NAMES)
+_SEGMENT_PAIRS = np.asarray(K4ABT_SEGMENT_PAIRS, dtype=np.int32)
+_PARENT_JOINT_IDX = np.full(_N_JOINTS, -1, dtype=np.int32)
+_PARENT_JOINT_IDX[_SEGMENT_PAIRS[:, 0]] = _SEGMENT_PAIRS[:, 1]
+_HAS_PARENT = _PARENT_JOINT_IDX >= 0
+_CHILD_JOINT_IDX = np.flatnonzero(_HAS_PARENT)
+_CHILD_PARENT_JOINT_IDX = _PARENT_JOINT_IDX[_CHILD_JOINT_IDX]
+
 
 def capture_thread(
     device: Device,
@@ -229,6 +237,31 @@ def _assign_nearest(
     return assigned_idx, assigned_to_idx, unassigned_idx
 
 
+def _merge_joints(current_body: Body, candidate_body: Body) -> bool:
+    candidate_confidences = candidate_body.confidences
+    current_confidences = current_body.confidences
+
+    better_confidence_mask = candidate_confidences > current_confidences
+    equal_confidence_mask = candidate_confidences == current_confidences
+    update_mask = better_confidence_mask.copy()
+    frontier = better_confidence_mask.copy()
+    parent_updated = np.zeros(_N_JOINTS, dtype=bool)
+
+    while np.any(frontier):
+        parent_updated.fill(False)
+        parent_updated[_CHILD_JOINT_IDX] = frontier[_CHILD_PARENT_JOINT_IDX]
+        frontier = (~update_mask) & equal_confidence_mask & parent_updated
+        update_mask |= frontier
+    if not np.any(update_mask):
+        return False
+
+    current_body.positions[update_mask] = candidate_body.positions[update_mask]
+    current_body.orientations[update_mask] = candidate_body.orientations[update_mask]
+    current_body.confidences[update_mask] = candidate_confidences[update_mask]
+
+    return True
+
+
 @dataclass(slots=True)
 class _TrackingPool:
     tracked_joints: npt.NDArray[np.float32]
@@ -290,20 +323,10 @@ def _update_tracked(
                 contributions[i, device_id] += 1
                 is_stale[i] = False
             else:
-                positions = body.positions
-                orientations = body.orientations
-                confidences = body.confidences
-
-                confidence_mask = confidences > current_body.confidences
-                current_body.positions[confidence_mask] = positions[confidence_mask]
-                current_body.orientations[confidence_mask] = orientations[
-                    confidence_mask
-                ]
-                current_body.confidences[confidence_mask] = confidences[confidence_mask]
-
+                body_updated = _merge_joints(current_body, body)
                 tracked_joints[i] = current_body.positions[reference]
                 current_tags[i] = tags[i]
-                if np.any(confidence_mask):
+                if body_updated:
                     contributions[i, device_id] += 1
     else:
         unassigned_idx = range(len(bodies))
@@ -322,18 +345,10 @@ def _update_tracked(
             contributions[i, device_id] += 1
             is_stale[i] = False
         else:
-            positions = body.positions
-            orientations = body.orientations
-            confidences = body.confidences
-
-            confidence_mask = confidences > current_body.confidences
-            current_body.positions[confidence_mask] = positions[confidence_mask]
-            current_body.orientations[confidence_mask] = orientations[confidence_mask]
-            current_body.confidences[confidence_mask] = confidences[confidence_mask]
-
+            body_updated = _merge_joints(current_body, body)
             tracked_joints[i] = current_body.positions[reference]
             current_tags[i] = tags[i]
-            if np.any(confidence_mask):
+            if body_updated:
                 contributions[i, device_id] += 1
 
     tracking_pool.next_tag = next_tag
