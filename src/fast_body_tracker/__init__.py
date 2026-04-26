@@ -9,7 +9,7 @@ from .pipeline import (
     computation_thread as computation_thread,
     default_pipeline as default_pipeline,
     saver_thread as saver_thread,
-    show_cameras_positions as show_cameras_positions,
+    show_devices as show_devices,
     unification_thread as unification_thread,
     video_saver_thread as video_saver_thread,
     visualization_main_tread as visualization_main_tread,

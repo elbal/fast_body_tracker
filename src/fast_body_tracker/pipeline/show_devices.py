@@ -38,7 +38,7 @@ def _draw_device_label(bgra_image, device_id: int):
     )
 
 
-def show_cameras_positions():
+def show_devices():
     initialize_libraries()
     n_devices = Device.device_get_installed_count()
     if n_devices == 0:
