@@ -25,6 +25,56 @@ def _invert_rigid_transform(
     return inv_rot, inv_trans
 
 
+def _draw_sample_counter(bgra_image, n_samples_done: int, n_samples: int):
+    cv2.putText(
+        bgra_image,
+        f"Samples: {n_samples_done}/{n_samples}",
+        (20, 40),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.8,
+        (0, 0, 0, 255),
+        4,
+        cv2.LINE_AA,
+    )
+    cv2.putText(
+        bgra_image,
+        f"Samples: {n_samples_done}/{n_samples}",
+        (20, 40),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.8,
+        (255, 255, 255, 255),
+        2,
+        cv2.LINE_AA,
+    )
+
+
+def _draw_device_label(bgra_image, device_id: int):
+    image_h = bgra_image.shape[0]
+    text = f"device {device_id}"
+    org = (20, image_h - 20)
+
+    cv2.putText(
+        bgra_image,
+        text,
+        org,
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.8,
+        (0, 0, 0, 255),
+        4,
+        cv2.LINE_AA,
+    )
+    cv2.putText(
+        bgra_image,
+        text,
+        org,
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.8,
+        (255, 255, 255, 255),
+        2,
+        cv2.LINE_AA,
+    )
+
+
 def external_calibration(n_samples: int = 60) -> dict[int, npt.NDArray[np.float32]]:
     n_squares_w = 3
     n_squares_h = 3
@@ -89,15 +139,8 @@ def external_calibration(n_samples: int = 60) -> dict[int, npt.NDArray[np.float3
                         bgra_image, k_matrix, dist_params, rvec, tvec, 100
                     )
 
-            cv2.putText(
-                bgra_image,
-                f"Samples: {len(rvecs)}/{n_samples}",
-                (50, 80),
-                1,
-                3,
-                (0, 0, 255),
-                3,
-            )
+            _draw_sample_counter(bgra_image, len(rvecs), n_samples)
+            _draw_device_label(bgra_image, idx)
             cv2.imshow(window_name, bgra_image)
             if cv2.waitKey(1) == ord("q"):
                 break
