@@ -1,6 +1,6 @@
 import time
 
-import matplotlib.pyplot as plt
+import matplotlib
 import numpy as np
 from numpy import typing as npt
 
@@ -11,6 +11,9 @@ from ..k4a.k4a_const import (
     K4A_COLOR_RESOLUTION_OFF,
     K4A_DEPTH_MODE_WFOV_2X2BINNED,
 )
+
+matplotlib.use("QtAgg")
+import matplotlib.pyplot as plt
 
 
 def check_calibration(
