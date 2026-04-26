@@ -10,9 +10,9 @@ import h5py
 import tkinter as tk
 from datetime import datetime
 
-from .initializer import initialize_libraries, start_device, start_body_tracker
-from .utils.performace_calculator import DroppedFramesAlert, FrameRateCalculator
-from .k4a.k4a_const import (
+from ..initializer import initialize_libraries, start_device, start_body_tracker
+from ..utils.performace_calculator import DroppedFramesAlert, FrameRateCalculator
+from ..k4a.k4a_const import (
     K4A_CALIBRATION_TYPE_COLOR,
     K4A_COLOR_RESOLUTION_720P,
     K4A_WIRED_SYNC_MODE_STANDALONE,
@@ -26,16 +26,16 @@ from .k4a.k4a_const import (
     K4A_COLOR_RESOLUTION_3072P,
     K4A_DEPTH_MODE_WFOV_2X2BINNED,
 )
-from .k4a.calibration import Calibration
-from .k4a.configuration import Configuration
-from .k4a.device import Device
-from .k4abt.kabt_const import (
+from ..k4a.calibration import Calibration
+from ..k4a.configuration import Configuration
+from ..k4a.device import Device
+from ..k4abt.kabt_const import (
     K4ABT_JOINT_PELVIS,
     K4ABT_JOINT_NAMES,
     K4ABT_SEGMENT_PAIRS,
 )
-from .k4abt.body import Body, draw_body
-from .k4abt.tracker import Tracker
+from ..k4abt.body import Body, draw_body
+from ..k4abt.tracker import Tracker
 
 _COLOR_RESOLUTION_TO_IMAGE_SIZE = {
     K4A_COLOR_RESOLUTION_720P: (1280, 720),
