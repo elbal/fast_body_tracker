@@ -22,8 +22,11 @@ from .calibration import (
 from .utils import (
     DroppedFramesAlert as DroppedFramesAlert,
     FrameRateCalculator as FrameRateCalculator,
-    IMUVisualizer as IMUVisualizer,
     KeyboardCloser as KeyboardCloser,
+)
+from .visualizer import (
+    BodyVisualizer as BodyVisualizer,
+    IMUVisualizer as IMUVisualizer,
     PointCloudVisualizer as PointCloudVisualizer,
 )
 from .k4a import (
