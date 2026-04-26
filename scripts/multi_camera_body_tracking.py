@@ -5,6 +5,7 @@ import fast_body_tracker as fbt
 
 
 def main(base_dir: pathlib.Path | str, n_bodies: int = 1):
+    base_dir = pathlib.Path(base_dir)
     trans_matrices_path = base_dir / "trans_matrices.npz"
     with np.load(trans_matrices_path) as data:
         trans_matrices = {int(k): v for k, v in data.items()}
