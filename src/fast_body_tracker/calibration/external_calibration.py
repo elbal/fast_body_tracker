@@ -29,21 +29,21 @@ def _draw_sample_counter(bgra_image, n_samples_done: int, n_samples: int):
     cv2.putText(
         bgra_image,
         f"Samples: {n_samples_done}/{n_samples}",
-        (20, 40),
+        (40, 80),
         cv2.FONT_HERSHEY_SIMPLEX,
-        0.8,
+        1.6,
         (0, 0, 0, 255),
-        4,
+        8,
         cv2.LINE_AA,
     )
     cv2.putText(
         bgra_image,
         f"Samples: {n_samples_done}/{n_samples}",
-        (20, 40),
+        (40, 80),
         cv2.FONT_HERSHEY_SIMPLEX,
-        0.8,
+        1.6,
         (255, 255, 255, 255),
-        2,
+        4,
         cv2.LINE_AA,
     )
 
@@ -51,16 +51,16 @@ def _draw_sample_counter(bgra_image, n_samples_done: int, n_samples: int):
 def _draw_device_label(bgra_image, device_id: int):
     image_h = bgra_image.shape[0]
     text = f"device {device_id}"
-    org = (20, image_h - 20)
+    org = (40, image_h - 40)
 
     cv2.putText(
         bgra_image,
         text,
         org,
         cv2.FONT_HERSHEY_SIMPLEX,
-        0.8,
+        1.6,
         (0, 0, 0, 255),
-        4,
+        8,
         cv2.LINE_AA,
     )
     cv2.putText(
@@ -68,9 +68,9 @@ def _draw_device_label(bgra_image, device_id: int):
         text,
         org,
         cv2.FONT_HERSHEY_SIMPLEX,
-        0.8,
+        1.6,
         (255, 255, 255, 255),
-        2,
+        4,
         cv2.LINE_AA,
     )
 
