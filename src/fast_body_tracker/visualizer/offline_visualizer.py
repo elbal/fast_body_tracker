@@ -75,7 +75,9 @@ class BodyVisualizer:
         )
         self.view.camera.center = center
 
-        xy_span = max(float(max_xyz[0] - min_xyz[0]), float(max_xyz[1] - min_xyz[1]), 1.0)
+        xy_span = max(
+            float(max_xyz[0] - min_xyz[0]), float(max_xyz[1] - min_xyz[1]), 1.0
+        )
         floor_pad = 0.1 * xy_span
         x_min = min(float(min_xyz[0]), 0.0) - floor_pad
         x_max = max(float(max_xyz[0]), 0.0) + floor_pad

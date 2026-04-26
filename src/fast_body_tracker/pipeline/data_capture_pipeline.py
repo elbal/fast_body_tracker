@@ -30,9 +30,40 @@ from ..k4a.calibration import Calibration
 from ..k4a.configuration import Configuration
 from ..k4a.device import Device
 from ..k4abt.kabt_const import (
+    K4ABT_JOINT_ANKLE_LEFT,
+    K4ABT_JOINT_ANKLE_RIGHT,
+    K4ABT_JOINT_CLAVICLE_LEFT,
+    K4ABT_JOINT_CLAVICLE_RIGHT,
+    K4ABT_JOINT_EAR_LEFT,
+    K4ABT_JOINT_EAR_RIGHT,
+    K4ABT_JOINT_ELBOW_LEFT,
+    K4ABT_JOINT_ELBOW_RIGHT,
+    K4ABT_JOINT_EYE_LEFT,
+    K4ABT_JOINT_EYE_RIGHT,
+    K4ABT_JOINT_FOOT_LEFT,
+    K4ABT_JOINT_FOOT_RIGHT,
+    K4ABT_JOINT_HANDTIP_LEFT,
+    K4ABT_JOINT_HANDTIP_RIGHT,
+    K4ABT_JOINT_HAND_LEFT,
+    K4ABT_JOINT_HAND_RIGHT,
+    K4ABT_JOINT_HEAD,
+    K4ABT_JOINT_HIP_LEFT,
+    K4ABT_JOINT_HIP_RIGHT,
+    K4ABT_JOINT_KNEE_LEFT,
+    K4ABT_JOINT_KNEE_RIGHT,
+    K4ABT_JOINT_NECK,
+    K4ABT_JOINT_NOSE,
     K4ABT_JOINT_PELVIS,
+    K4ABT_JOINT_SHOULDER_LEFT,
+    K4ABT_JOINT_SHOULDER_RIGHT,
+    K4ABT_JOINT_SPINE_CHEST,
+    K4ABT_JOINT_SPINE_NAVEL,
+    K4ABT_JOINT_THUMB_LEFT,
+    K4ABT_JOINT_THUMB_RIGHT,
     K4ABT_JOINT_NAMES,
     K4ABT_SEGMENT_PAIRS,
+    K4ABT_JOINT_WRIST_LEFT,
+    K4ABT_JOINT_WRIST_RIGHT,
 )
 from ..k4abt.body import Body, draw_body
 from ..k4abt.tracker import Tracker
@@ -47,12 +78,99 @@ _COLOR_RESOLUTION_TO_IMAGE_SIZE = {
 }
 
 _N_JOINTS = len(K4ABT_JOINT_NAMES)
-_SEGMENT_PAIRS = np.asarray(K4ABT_SEGMENT_PAIRS, dtype=np.int32)
-_PARENT_JOINT_IDX = np.full(_N_JOINTS, -1, dtype=np.int32)
-_PARENT_JOINT_IDX[_SEGMENT_PAIRS[:, 0]] = _SEGMENT_PAIRS[:, 1]
-_HAS_PARENT = _PARENT_JOINT_IDX >= 0
-_CHILD_JOINT_IDX = np.flatnonzero(_HAS_PARENT)
-_CHILD_PARENT_JOINT_IDX = _PARENT_JOINT_IDX[_CHILD_JOINT_IDX]
+_LIMB_ATTACHMENT_TOLERANCE = 1.5
+_LIMB_ATTACHMENT_TOLERANCE_SQ = _LIMB_ATTACHMENT_TOLERANCE**2
+_TRUNK_MASK = np.isin(
+    np.arange(_N_JOINTS),
+    (
+        K4ABT_JOINT_PELVIS,
+        K4ABT_JOINT_SPINE_NAVEL,
+        K4ABT_JOINT_SPINE_CHEST,
+        K4ABT_JOINT_NECK,
+        K4ABT_JOINT_CLAVICLE_LEFT,
+        K4ABT_JOINT_CLAVICLE_RIGHT,
+        K4ABT_JOINT_HIP_LEFT,
+        K4ABT_JOINT_HIP_RIGHT,
+    ),
+)
+_HEAD_MASK = np.isin(
+    np.arange(_N_JOINTS),
+    (
+        K4ABT_JOINT_HEAD,
+        K4ABT_JOINT_NOSE,
+        K4ABT_JOINT_EYE_LEFT,
+        K4ABT_JOINT_EAR_LEFT,
+        K4ABT_JOINT_EYE_RIGHT,
+        K4ABT_JOINT_EAR_RIGHT,
+    ),
+)
+_LEFT_ARM_MASK = np.isin(
+    np.arange(_N_JOINTS),
+    (
+        K4ABT_JOINT_SHOULDER_LEFT,
+        K4ABT_JOINT_ELBOW_LEFT,
+        K4ABT_JOINT_WRIST_LEFT,
+        K4ABT_JOINT_HAND_LEFT,
+        K4ABT_JOINT_HANDTIP_LEFT,
+        K4ABT_JOINT_THUMB_LEFT,
+    ),
+)
+_RIGHT_ARM_MASK = np.isin(
+    np.arange(_N_JOINTS),
+    (
+        K4ABT_JOINT_SHOULDER_RIGHT,
+        K4ABT_JOINT_ELBOW_RIGHT,
+        K4ABT_JOINT_WRIST_RIGHT,
+        K4ABT_JOINT_HAND_RIGHT,
+        K4ABT_JOINT_HANDTIP_RIGHT,
+        K4ABT_JOINT_THUMB_RIGHT,
+    ),
+)
+_LEFT_LEG_MASK = np.isin(
+    np.arange(_N_JOINTS),
+    (
+        K4ABT_JOINT_KNEE_LEFT,
+        K4ABT_JOINT_ANKLE_LEFT,
+        K4ABT_JOINT_FOOT_LEFT,
+    ),
+)
+_RIGHT_LEG_MASK = np.isin(
+    np.arange(_N_JOINTS),
+    (
+        K4ABT_JOINT_KNEE_RIGHT,
+        K4ABT_JOINT_ANKLE_RIGHT,
+        K4ABT_JOINT_FOOT_RIGHT,
+    ),
+)
+_BODY_PART_MASKS = np.stack(
+    (
+        _TRUNK_MASK,
+        _HEAD_MASK,
+        _LEFT_ARM_MASK,
+        _RIGHT_ARM_MASK,
+        _LEFT_LEG_MASK,
+        _RIGHT_LEG_MASK,
+    )
+)
+_LIMB_MASKS = _BODY_PART_MASKS[2:]
+_LIMB_TRUNK_JOINT_IDX = np.array(
+    (
+        K4ABT_JOINT_CLAVICLE_LEFT,
+        K4ABT_JOINT_CLAVICLE_RIGHT,
+        K4ABT_JOINT_HIP_LEFT,
+        K4ABT_JOINT_HIP_RIGHT,
+    ),
+    dtype=np.int32,
+)
+_LIMB_ROOT_JOINT_IDX = np.array(
+    (
+        K4ABT_JOINT_SHOULDER_LEFT,
+        K4ABT_JOINT_SHOULDER_RIGHT,
+        K4ABT_JOINT_KNEE_LEFT,
+        K4ABT_JOINT_KNEE_RIGHT,
+    ),
+    dtype=np.int32,
+)
 
 
 def capture_thread(
@@ -241,19 +359,28 @@ def _merge_joints(current_body: Body, candidate_body: Body) -> bool:
     candidate_confidences = candidate_body.confidences
     current_confidences = current_body.confidences
 
-    better_confidence_mask = candidate_confidences > current_confidences
-    equal_confidence_mask = candidate_confidences == current_confidences
-    update_mask = better_confidence_mask.copy()
-    frontier = better_confidence_mask.copy()
-    parent_updated = np.zeros(_N_JOINTS, dtype=bool)
+    current_scores = np.sum(_LIMB_MASKS * current_confidences[np.newaxis, :], axis=1)
+    candidate_scores = np.sum(
+        _LIMB_MASKS * candidate_confidences[np.newaxis, :], axis=1
+    )
 
-    while np.any(frontier):
-        parent_updated.fill(False)
-        parent_updated[_CHILD_JOINT_IDX] = frontier[_CHILD_PARENT_JOINT_IDX]
-        frontier = (~update_mask) & equal_confidence_mask & parent_updated
-        update_mask |= frontier
-    if not np.any(update_mask):
+    trunk_positions = current_body.positions[_LIMB_TRUNK_JOINT_IDX]
+    current_root_positions = current_body.positions[_LIMB_ROOT_JOINT_IDX]
+    candidate_root_positions = candidate_body.positions[_LIMB_ROOT_JOINT_IDX]
+    current_length_sq = np.sum((current_root_positions - trunk_positions) ** 2, axis=1)
+    candidate_length_sq = np.sum(
+        (candidate_root_positions - trunk_positions) ** 2, axis=1
+    )
+    min_length_sq = current_length_sq / _LIMB_ATTACHMENT_TOLERANCE_SQ
+    max_length_sq = current_length_sq * _LIMB_ATTACHMENT_TOLERANCE_SQ
+    attachment_ok = (candidate_length_sq >= min_length_sq) & (
+        candidate_length_sq <= max_length_sq
+    )
+
+    part_update_mask = (candidate_scores > current_scores) & attachment_ok
+    if not np.any(part_update_mask):
         return False
+    update_mask = np.any(_LIMB_MASKS[part_update_mask], axis=0)
 
     current_body.positions[update_mask] = candidate_body.positions[update_mask]
     current_body.orientations[update_mask] = candidate_body.orientations[update_mask]
