@@ -5,10 +5,14 @@ import fast_body_tracker as fbt
 
 
 def main(base_dir: pathlib.Path | str, n_devices: int = 1):
-    trans_matrices_path = base_dir / "trans_matrices.npz"
+    base_dir = pathlib.Path(base_dir)
+    base_dir.mkdir(parents=True, exist_ok=True)
+
     trans_matrices = fbt.external_calibration(n_devices=n_devices)
-    save_data = {str(k): v for k, v in trans_matrices.items()}
-    np.savez(trans_matrices_path, **save_data)
+    trans_matrices = {str(k): v for k, v in trans_matrices.items()}
+
+    trans_matrices_path = base_dir / "trans_matrices.npz"
+    np.savez(trans_matrices_path, **trans_matrices)
 
 
 if __name__ == "__main__":
