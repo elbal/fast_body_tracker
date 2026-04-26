@@ -101,23 +101,23 @@ def external_calibration(
 
     for i in [idx for idx in range(n_devices) if idx != 0]:
         device_data = calibration_data[i]
-        # Secondary RGBA -> main RGBA.
-        sec2main_rgba_rot = (
+        # Secondary BGRA -> main BGRA.
+        sec2main_bgra_rot = (
             reference_data["board2dev_rot"] @ device_data["board2dev_rot"].T
         )
-        sec2main_rgba_trans = reference_data["board2dev_trans"] - (
-            sec2main_rgba_rot @ device_data["board2dev_trans"]
+        sec2main_bgra_trans = reference_data["board2dev_trans"] - (
+            sec2main_bgra_rot @ device_data["board2dev_trans"]
         )
-        # Secondary depth -> secondary RGBA.
-        depth2rgba_sec_rot = device_data["bgra2depth_rot"].T
-        depth2rgba_sec_trans = -depth2rgba_sec_rot @ device_data["bgra2depth_trans"]
+        # Secondary depth -> secondary BGRA.
+        depth2bgra_sec_rot = device_data["bgra2depth_rot"].T
+        depth2bgra_sec_trans = -depth2bgra_sec_rot @ device_data["bgra2depth_trans"]
         # Secondary depth -> main depth.
         sec2main_depth_rot = (
-            reference_data["bgra2depth_rot"] @ sec2main_rgba_rot @ depth2rgba_sec_rot
+            reference_data["bgra2depth_rot"] @ sec2main_bgra_rot @ depth2bgra_sec_rot
         )
         sec2main_depth_trans = (
             reference_data["bgra2depth_rot"]
-            @ (sec2main_rgba_rot @ depth2rgba_sec_trans + sec2main_rgba_trans)
+            @ (sec2main_bgra_rot @ depth2bgra_sec_trans + sec2main_bgra_trans)
         ) + reference_data["bgra2depth_trans"]
 
         trans_matrix = np.eye(4, dtype=np.float32)
