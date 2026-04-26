@@ -12,6 +12,18 @@ from ..k4a.k4a_const import (
 from ..k4a.configuration import Configuration
 
 
+_BOARD_CV2_TO_WORLD_ROT = np.diag((1.0, -1.0, -1.0)).astype(np.float32)
+
+
+def _invert_rigid_transform(
+    rot_matrix: npt.NDArray[np.float32], trans_vector: npt.NDArray[np.float32]
+) -> tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]:
+    inv_rot = rot_matrix.T
+    inv_trans = -inv_rot @ trans_vector
+
+    return inv_rot, inv_trans
+
+
 def external_calibration(
     n_devices, n_samples: int = 60
 ) -> dict[int, npt.NDArray[np.float32]]:
@@ -87,42 +99,42 @@ def external_calibration(
             if cv2.waitKey(1) == ord("q"):
                 break
         cv2.destroyWindow(window_name)
+        if not rvecs:
+            raise RuntimeError(
+                f"No valid ChArUco board pose detected for device {idx}. "
+                "External calibration aborted."
+            )
 
-        board2dev_rot, _ = cv2.Rodrigues(np.median(rvecs, axis=0))
+        board2bgra_rot, _ = cv2.Rodrigues(np.median(rvecs, axis=0))
         calibration_data[idx] = {
             "bgra2depth_rot": bgra2depth_rot,
             "bgra2depth_trans": bgra2depth_trans,
-            "board2dev_rot": board2dev_rot,
-            "board2dev_trans": np.median(tvecs, axis=0).flatten(),
+            "board2bgra_rot": board2bgra_rot,
+            "board2bgra_trans": np.median(tvecs, axis=0).flatten(),
         }
 
-    reference_data = calibration_data[0]
     trans_matrices = dict()
 
-    for i in [idx for idx in range(n_devices) if idx != 0]:
-        device_data = calibration_data[i]
-        # Secondary BGRA -> main BGRA.
-        sec2main_bgra_rot = (
-            reference_data["board2dev_rot"] @ device_data["board2dev_rot"].T
+    for idx in range(n_devices):
+        device_data = calibration_data[idx]
+        depth2bgra_rot, depth2bgra_trans = _invert_rigid_transform(
+            device_data["bgra2depth_rot"], device_data["bgra2depth_trans"]
         )
-        sec2main_bgra_trans = reference_data["board2dev_trans"] - (
-            sec2main_bgra_rot @ device_data["board2dev_trans"]
+        bgra2board_cv_rot, bgra2board_cv_trans = _invert_rigid_transform(
+            device_data["board2bgra_rot"], device_data["board2bgra_trans"]
         )
-        # Secondary depth -> secondary BGRA.
-        depth2bgra_sec_rot = device_data["bgra2depth_rot"].T
-        depth2bgra_sec_trans = -depth2bgra_sec_rot @ device_data["bgra2depth_trans"]
-        # Secondary depth -> main depth.
-        sec2main_depth_rot = (
-            reference_data["bgra2depth_rot"] @ sec2main_bgra_rot @ depth2bgra_sec_rot
+        depth2board_cv_rot = bgra2board_cv_rot @ depth2bgra_rot
+        depth2board_cv_trans = (
+            bgra2board_cv_rot @ depth2bgra_trans + bgra2board_cv_trans
         )
-        sec2main_depth_trans = (
-            reference_data["bgra2depth_rot"]
-            @ (sec2main_bgra_rot @ depth2bgra_sec_trans + sec2main_bgra_trans)
-        ) + reference_data["bgra2depth_trans"]
+        # Rotate 180 degrees around the board X axis so +Z points up while
+        # preserving a right-handed frame.
+        depth2world_rot = _BOARD_CV2_TO_WORLD_ROT @ depth2board_cv_rot
+        depth2world_trans = _BOARD_CV2_TO_WORLD_ROT @ depth2board_cv_trans
 
         trans_matrix = np.eye(4, dtype=np.float32)
-        trans_matrix[:3, :3] = sec2main_depth_rot
-        trans_matrix[:3, 3] = sec2main_depth_trans
-        trans_matrices[i] = trans_matrix
+        trans_matrix[:3, :3] = depth2world_rot
+        trans_matrix[:3, 3] = depth2world_trans
+        trans_matrices[idx] = trans_matrix
 
     return trans_matrices

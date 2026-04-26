@@ -765,10 +765,38 @@ def default_pipeline(
     sync: bool = False,
     n_bodies: int = 1,
 ):
+    initialize_libraries(track_body=True)
+    n_devices = Device.device_get_installed_count()
+    if n_devices == 0:
+        raise RuntimeError("No devices detected.")
+
     if trans_matrices is None:
-        n_devices = 1
+        if n_devices > 1:
+            raise ValueError(
+                "External calibration matrices are required when multiple devices are "
+                "connected."
+            )
+        trans_matrices = {}
     else:
-        n_devices = len(trans_matrices) + 1
+        expected_ids = set(range(n_devices))
+        actual_ids = set(trans_matrices)
+        if actual_ids != expected_ids:
+            problems = []
+            missing_ids = sorted(expected_ids - actual_ids)
+            unexpected_ids = sorted(actual_ids - expected_ids)
+            if missing_ids:
+                problems.append(f"missing device ids: {missing_ids}")
+            if unexpected_ids:
+                problems.append(f"unexpected device ids: {unexpected_ids}")
+            raise ValueError(
+                "Invalid external calibration matrices: " + ", ".join(problems)
+            )
+        for device_id, trans_matrix in trans_matrices.items():
+            if trans_matrix.shape != (4, 4):
+                raise ValueError(
+                    f"Invalid external calibration matrix for device {device_id}: "
+                    f"expected shape (4, 4), got {trans_matrix.shape}."
+                )
 
     devices = dict()
     trackers = dict()
@@ -783,7 +811,6 @@ def default_pipeline(
     video_queue = queue.Queue(maxsize=10)
     visualization_queue = queue.Queue(maxsize=10)
 
-    initialize_libraries(track_body=True)
     for i in range(n_devices - 1, -1, -1):  # Start the secondary first.
         if sync and n_devices != 1:
             if i == 0:
@@ -803,12 +830,13 @@ def default_pipeline(
             target=capture_thread, args=(device, tracker, capture_queues[i], stop_event)
         )
 
-        if i == 0:
+        trans_matrix = trans_matrices.get(i)
+        if trans_matrix is None:
             rot_matrix = None
             trans_vector = None
         else:
-            rot_matrix = trans_matrices[i][:3, :3]
-            trans_vector = trans_matrices[i][:3, 3]
+            rot_matrix = trans_matrix[:3, :3]
+            trans_vector = trans_matrix[:3, 3]
         computation_t[i] = threading.Thread(
             target=computation_thread,
             args=(
