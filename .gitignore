@@ -1,5 +1,6 @@
 data/
 Log/
+AGENTS.md
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
