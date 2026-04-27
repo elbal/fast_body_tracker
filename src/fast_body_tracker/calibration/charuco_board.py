@@ -49,5 +49,23 @@ def save_charuco_board(path: str, board_id: int | list[int] = 0):
         canvas[y0 : y0 + h, x0 : x0 + w] = image
 
         marker_ids_str = "_".join(str(marker_id) for marker_id in marker_ids)
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        font_scale = 5.0
+        thickness = 12
+        (text_w, text_h), baseline = cv2.getTextSize(
+            marker_ids_str, font, font_scale, thickness
+        )
+        text_x = (pixel_w - text_w) // 2
+        text_y = max(text_h + 40, (y0 - baseline) // 2 + text_h // 2)
+        cv2.putText(
+            canvas,
+            marker_ids_str,
+            (text_x, text_y),
+            font,
+            font_scale,
+            0,
+            thickness,
+            cv2.LINE_AA,
+        )
         output_file = f"{path}charuco_board_A3_3x3_id_{marker_ids_str}.png"
         cv2.imwrite(output_file, canvas)
